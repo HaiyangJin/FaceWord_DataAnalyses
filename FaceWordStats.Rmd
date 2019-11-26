@@ -59,6 +59,7 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
 sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE), source)
 
 activationUL <- 2.75
+onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
 
 ```
 
@@ -78,13 +79,6 @@ df_clean_loc <- {
 }
 
 str(df_clean_loc)
-```
-
-### ROI information
-```{r roi information}
-df_loc %>% 
-  select(ExpCode, ROI, SubjCode, nVertices, LabelSize) %>% 
-  distinct()
 ```
 
 ## Data from functional scans for univarite analysis
@@ -148,7 +142,7 @@ df_mvpa_acc <- {
 ```{r descriptive analyses for mvpa}
 desc_mvpa_acc <- {
   df_mvpa_acc %>% 
-    group_by(ExpCode, ClassifyPair) %>% 
+    group_by(ExpCode, ROI, ClassifyPair) %>% 
     summarize(emmean = mean(Accuracy), Count = n(), SE = sd(Accuracy)/sqrt(Count)) %>%
     mutate(lower.CL = lower_ci(emmean, SE, Count),
            upper.CL = upper_ci(emmean, SE, Count)) %>% 
@@ -157,8 +151,42 @@ desc_mvpa_acc <- {
 
 ```
 
+## ROI information
+```{r roi information}
+# obtain from MVPA dataset
+roi_info <- {
+  df_mvpa %>% 
+    select(ExpCode, ROI, SubjCode, nVertices, LabelSize) %>% 
+    distinct()
+}
+
+# labels used in the analyses
+label_list <- unique(roi_info$ROI)
+
+# logical (which condition these labels are)
+isLeft <- grepl("lh", label_list) # is left hemisphere label
+isRight <- grepl("rh", label_list) # is right hemisphere label
+
+isFFA1 <- grepl("ffa1", label_list) # is FFA1
+isFFA2 <- grepl("ffa2", label_list) # is FFA2
+isVWFA <- grepl("w-vs-o", label_list) # is visual word form area
+isFFA <- !isFFA1 & !isFFA2 & !isVWFA
+
+# labels for each ROI
+label_lFFA <- label_list[isLeft & isFFA] # the labels for left FFA
+label_rFFA <- label_list[isRight & isFFA] # the labels for right FFA
+label_lFFA1 <- label_list[isLeft & isFFA1] # the labels for left FFA1
+label_rFFA1 <- label_list[isRight & isFFA1] # the labels for left FFA1
+label_lFFA2 <- label_list[isLeft & isFFA2] # the labels for left FFA2
+label_rFFA2 <- label_list[isRight & isFFA2] # the labels for left FFA1
+label_lVWFA <- label_list[isVWFA] # the labels for visual word form area
+
+# all the labels available in this analysis
+# label_list
+```
+
 # Experiment 1: faces and words
-## Univariate analyses for localizer scans
+## Localizer (Univariate analyses)
 ```{r only keep the univariate data for E1 loc}
 df_loc_E1 <- {
   df_clean_loc %>%  
@@ -167,7 +195,7 @@ df_loc_E1 <- {
 }
 # nlevels(df_loc_E1$SubjCode) # number of subjects
 ```
-The number of subjects included in this analysis is `r nlevels(df_loc_E1$SubjCode)`
+The ROI (label) used for this analysis is `r unique(df_loc_E1$ROI)`.
 
 ### rm-ANOVA
 ```{r}
@@ -221,15 +249,17 @@ plot_loc_E1
 ```
 
 
-## Univariate analyses for functional scans
+## Face vs. word scans
+
 ```{r only keep the univariate data for E1}
+# only keep data of E1
 df_univar_E1 <- {
   df_clean_univar %>% 
     filter(ExpCode == 1) %>% 
     mutate(FaceWord = factor(FaceWord, levels = facewordOrder),
            SubjCode = as.factor(SubjCode))
 }
-  
+
 df_univar_agg_E1 <- {
   df_univar_agg %>% 
     filter(ExpCode == 1) %>% 
@@ -237,10 +267,173 @@ df_univar_agg_E1 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-# nlevels(df_univar_E1$SubjCode) # number of subjects
 ```
 
-### rm-ANOVA 
+```{r only keep the multivariate (mvpa) data for E1}
+# only keep data of E1
+df_mvpa_E1 <- {
+  df_clean_mvpa %>% 
+    filter(ExpCode == 1) %>% 
+    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
+           SubjCode = as.factor(SubjCode))
+}
+
+df_mvpa_acc_E1 <- {
+  df_mvpa_acc %>% 
+    filter(ExpCode == 1) %>% 
+    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
+           SubjCode = as.factor(SubjCode))
+}
+
+desc_mvpa_acc_E1 <- {
+  desc_mvpa_acc %>% 
+    filter(ExpCode == 1) %>% 
+    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1))
+}
+
+```
+
+### Label:left FFA
+```{r the label used for left FFA E1}
+label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+```
+The label used for left FFA in Experiment 1 is `r label_lFFA_E1`.
+
+```{r only keep data for left FFA E1}
+# only keep data for this label
+df_univar_E1_lFFA <- filter(df_univar_E1, ROI %in% label_lFFA_E1)
+df_univar_agg_E1_lFFA <- filter(df_univar_agg_E1, ROI %in% label_lFFA_E1)
+df_mvpa_E1_lFFA <- filter(df_mvpa_E1, ROI %in% label_lFFA_E1)
+df_mvpa_acc_E1_lFFA <- filter(df_mvpa_acc_E1, ROI %in% label_lFFA_E1)
+desc_mvpa_acc_E1_lFFA <- filter(desc_mvpa_acc_E1, ROI %in% label_lFFA_E1)
+
+# nlevels(df_univar_E1_lFFA$SubjCode)
+```
+The number of subjects included in this analysis is `r nlevels(df_univar_E1_lFFA$SubjCode)`: `r unique(as.character(df_univar_E1_lFFA$SubjCode))`.
+
+#### Univariate analyses
+##### rm-ANOVA 
+```{r anova for univariate E1 lFFA}
+anova_E1_lFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = df_univar_agg_E1_lFFA)
+
+anova_E1_lFFA
+```
+
+```{r estimated marginal means for univairate E1 lFFA}
+emm_anova_E1_lFFA <- emmeans(anova_E1_lFFA, ~ FaceWord * Layout)
+
+emm_anova_E1_lFFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_lFFA}
+contrast(emmeans(emm_anova_E1_lFFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_lFFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_lFFA}
+contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E1 (anova) lFFA}
+plot_uni_E1_lFFA <- {
+  ggplot(data = as.data.frame(emm_anova_E1_lFFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E1_lFFA
+```
+
+#### Multivarate analyses (MVPA)
+##### One-sample t-test
+```{r one-sample for results of mvpa E1 lFFA}
+
+df_mvpa_acc_E1_lFFA %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) %>% # remove these columns
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+##### Plot
+```{r plots for functional scans mvpa E1 (anova) lFFA}
+
+plot_mvpa_E1_lFFA <- {
+  ggplot(data = desc_mvpa_acc_E1_lFFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E1_lFFA
+```
+
+### Label: right FFA
+```{r the label used for right FFA E1}
+label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+```
+The label used for right FFA in Experiment 1 is `r label_rFFA_E1`.
+
+```{r only keep data for right FFA E1}
+# only keep data for this label
+df_univar_E1_rFFA <- filter(df_univar_E1, ROI %in% label_rFFA_E1)
+df_univar_agg_E1_rFFA <- filter(df_univar_agg_E1, ROI %in% label_rFFA_E1)
+df_mvpa_E1_rFFA <- filter(df_mvpa_E1, ROI %in% label_rFFA_E1)
+df_mvpa_acc_E1_rFFA <- filter(df_mvpa_acc_E1, ROI %in% label_rFFA_E1)
+desc_mvpa_acc_E1_rFFA <- filter(desc_mvpa_acc_E1, ROI %in% label_rFFA_E1)
+
+# nlevels(df_univar_E1_rFFA$SubjCode)
+```
+The number of subjects included in this analysis is `r nlevels(df_univar_E1_rFFA$SubjCode)`: `r unique(as.character(df_univar_E1_rFFA$SubjCode))`.
+
+#### Univariate analyses
+##### rm-ANOVA 
+```{r anova for univariate E1 rFFA}
+anova_E1_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = df_univar_agg_E1_rFFA)
+
+anova_E1_rFFA
+```
+
+
+
+### Label: left FFA1
+
+
+### Label: right FFA1
+
+
+
+### Label: left FFA2
+
+
+
+### Label: right FFA2
+
+
+
+### Label: left Visual Word Form Area (VWFA)
+
+
+#### rm-ANOVA 
 ```{r anova for univariate E1}
 anova_uni_E1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), data = df_univar_agg_E1)
 
@@ -293,23 +486,7 @@ plot_uni_E1
 ```
 
 ## Multivariate analyses for functional scans
-```{r only keep the multivariate (mvpa) data for E1}
-df_mvpa_E1 <- {
-  df_clean_mvpa %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
-           SubjCode = as.factor(SubjCode))
-}
 
-df_mvpa_acc_E1 <- {
-  df_mvpa_acc %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
-           SubjCode = as.factor(SubjCode))
-}
-
-# nlevels(df_mvpa_E1$SubjCode) # number of subjects
-```
 
 ### One-sample t-test
 ```{r one-sample for results of mvpa E1}
