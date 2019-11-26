@@ -7,9 +7,9 @@ output:
     df_print: paged
     number_sections: true
     toc: true
-    toc_depth: 4
+    toc_depth: 5
     toc_float: 
-      collapsed: false
+      collapsed: true
       smooth_scroll: false
     includes:
       after_body: Utilities/footer.html
@@ -94,8 +94,9 @@ df_clean_univar <- {
   df_univar %>% 
     separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
     mutate(# FaceWord = as.factor(FaceWord),
-           Layout = factor(Layout, levels = layoutOrder)) %>% # convert the two IVs to factors
-    select(ExpCode, ROI, SubjCode, FaceWord, Layout, Resp) 
+           Layout = factor(Layout, levels = layoutOrder), # convert the two IVs to factors
+           Hemisphere = if_else(grepl("lh", ROI), "left", if_else(grepl("rh", ROI), "right", "NA"))) %>% 
+    select(ExpCode, Hemisphere, ROI, SubjCode, FaceWord, Layout, Resp) 
 }
 
 str(df_clean_univar)
@@ -104,7 +105,7 @@ str(df_clean_univar)
 ```{r aggregate data for running anova}
 df_univar_agg <- {
   df_clean_univar %>% 
-    group_by(ExpCode, ROI, SubjCode, FaceWord, Layout) %>% 
+    group_by(ExpCode, Hemisphere, ROI, SubjCode, FaceWord, Layout) %>% 
     summarize(meanResp = mean(Resp), Count = n()) %>% 
     ungroup()
 }
@@ -123,7 +124,8 @@ str(df_mvpa)
 ```{r clean the cosmomvpa data}
 df_clean_mvpa <- {
   df_mvpa %>% 
-    select(ExpCode, ROI, SubjCode, ClassifyPair, Predicted, Targets, ACC)
+    select(ExpCode, ROI, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
+    mutate(Hemisphere = if_else(grepl("lh", ROI), "left", if_else(grepl("rh", ROI), "right", "NA")))
 }
 
 str(df_clean_mvpa)
@@ -133,7 +135,7 @@ str(df_clean_mvpa)
 df_mvpa_acc <- {
   df_clean_mvpa %>% 
     select(-c(Predicted, Targets)) %>% # remove these two columns
-    group_by(ExpCode, ROI, SubjCode, ClassifyPair) %>% # divide the data into groups by these columns 
+    group_by(ExpCode, Hemisphere, ROI, SubjCode, ClassifyPair) %>% # divide the data into groups by these columns 
     summarize(Accuracy = mean(ACC), Count = n()) %>% 
     ungroup()
 }
@@ -142,7 +144,7 @@ df_mvpa_acc <- {
 ```{r descriptive analyses for mvpa}
 desc_mvpa_acc <- {
   df_mvpa_acc %>% 
-    group_by(ExpCode, ROI, ClassifyPair) %>% 
+    group_by(ExpCode, Hemisphere, ROI, ClassifyPair) %>% 
     summarize(emmean = mean(Accuracy), Count = n(), SE = sd(Accuracy)/sqrt(Count)) %>%
     mutate(lower.CL = lower_ci(emmean, SE, Count),
            upper.CL = upper_ci(emmean, SE, Count)) %>% 
@@ -183,6 +185,14 @@ label_lVWFA <- label_list[isVWFA] # the labels for visual word form area
 
 # all the labels available in this analysis
 # label_list
+```
+
+
+```{r number of subjects in for each label}
+desc_mvpa_acc %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct() %>%
+  spread(ROI, Count)
 ```
 
 # Experiment 1: faces and words
@@ -250,7 +260,6 @@ plot_loc_E1
 
 
 ## Face vs. word scans
-
 ```{r only keep the univariate data for E1}
 # only keep data of E1
 df_univar_E1 <- {
@@ -293,29 +302,38 @@ desc_mvpa_acc_E1 <- {
 
 ```
 
-### Label:left FFA
-```{r the label used for left FFA E1}
+### Label:FFA
+```{r the label used for FFA E1}
 label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+
+label_FFA_E1 <- c(label_lFFA_E1, label_rFFA_E1)
+
 ```
 The label used for left FFA in Experiment 1 is `r label_lFFA_E1`.
+The label used for right FFA in Experiment 1 is `r label_rFFA_E1`.
 
-```{r only keep data for left FFA E1}
-# only keep data for this label
-df_univar_E1_lFFA <- filter(df_univar_E1, ROI %in% label_lFFA_E1)
-df_univar_agg_E1_lFFA <- filter(df_univar_agg_E1, ROI %in% label_lFFA_E1)
-df_mvpa_E1_lFFA <- filter(df_mvpa_E1, ROI %in% label_lFFA_E1)
-df_mvpa_acc_E1_lFFA <- filter(df_mvpa_acc_E1, ROI %in% label_lFFA_E1)
-desc_mvpa_acc_E1_lFFA <- filter(desc_mvpa_acc_E1, ROI %in% label_lFFA_E1)
+```{r only keep data for FFA E1}
+# only keep data for these two labels
+df_univar_E1_FFA <- filter(df_univar_E1, ROI %in% label_FFA_E1) 
+df_univar_agg_E1_FFA <- filter(df_univar_agg_E1, ROI %in% label_FFA_E1)
+df_mvpa_E1_FFA <- filter(df_mvpa_E1, ROI %in% label_FFA_E1)
+df_mvpa_acc_E1_FFA <- filter(df_mvpa_acc_E1, ROI %in% label_FFA_E1)
+desc_mvpa_acc_E1_FFA <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA_E1)
 
 # nlevels(df_univar_E1_lFFA$SubjCode)
+
+desc_mvpa_acc_E1_FFA %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
 ```
-The number of subjects included in this analysis is `r nlevels(df_univar_E1_lFFA$SubjCode)`: `r unique(as.character(df_univar_E1_lFFA$SubjCode))`.
 
 #### Univariate analyses
 ##### rm-ANOVA 
-```{r anova for univariate E1 lFFA}
+###### Left FFA
+```{r anova for univariate E1 FFA left}
 anova_E1_lFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = df_univar_agg_E1_lFFA)
+                      data = filter(df_univar_agg_E1_FFA, ROI == label_lFFA_E1))
 
 anova_E1_lFFA
 ```
@@ -339,11 +357,44 @@ contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust 
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 ```
 
+###### Right FFA
+```{r anova for univariate E1 FFA right}
+anova_E1_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_FFA, ROI == label_rFFA_E1))
+
+anova_E1_rFFA
+```
+
+```{r estimated marginal means for univairate E1 FFA right}
+emm_anova_E1_rFFA <- emmeans(anova_E1_rFFA, ~ FaceWord * Layout)
+
+emm_anova_E1_rFFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_rFFA right}
+contrast(emmeans(emm_anova_E1_rFFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_rFFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_rFFA right}
+contrast(emm_anova_E1_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
 ##### Plot
-```{r plots for functional scans E1 (anova) lFFA}
-plot_uni_E1_lFFA <- {
-  ggplot(data = as.data.frame(emm_anova_E1_lFFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+```{r plots for functional scans E1 (anova) FFA}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
+
+plot_uni_E1_FFA <- {
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -352,26 +403,42 @@ plot_uni_E1_lFFA <- {
     general_theme
 }
 
-plot_uni_E1_lFFA
+plot_uni_E1_FFA
 ```
 
+
 #### Multivarate analyses (MVPA)
+
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 lFFA}
-
-df_mvpa_acc_E1_lFFA %>% 
+df_mvpa_agg_E1_FFA <- {
+  df_mvpa_acc_E1_FFA %>% 
   spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, ROI, SubjCode, Count)) %>% # remove these columns
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E1_FFA %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
   sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
 
 ```
 
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) lFFA}
+```{r one-sample for results of mvpa E1 rFFA}
+df_mvpa_agg_E1_FFA %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+```
 
-plot_mvpa_E1_lFFA <- {
-  ggplot(data = desc_mvpa_acc_E1_lFFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+
+##### Plot
+```{r plots for functional scans mvpa E1 (anova) FFA}
+
+plot_mvpa_E1_FFA <- {
+  ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -383,168 +450,422 @@ plot_mvpa_E1_lFFA <- {
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
 
-plot_mvpa_E1_lFFA
+plot_mvpa_E1_FFA
 ```
 
-### Label: right FFA
-```{r the label used for right FFA E1}
-label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
-```
-The label used for right FFA in Experiment 1 is `r label_rFFA_E1`.
 
-```{r only keep data for right FFA E1}
-# only keep data for this label
-df_univar_E1_rFFA <- filter(df_univar_E1, ROI %in% label_rFFA_E1)
-df_univar_agg_E1_rFFA <- filter(df_univar_agg_E1, ROI %in% label_rFFA_E1)
-df_mvpa_E1_rFFA <- filter(df_mvpa_E1, ROI %in% label_rFFA_E1)
-df_mvpa_acc_E1_rFFA <- filter(df_mvpa_acc_E1, ROI %in% label_rFFA_E1)
-desc_mvpa_acc_E1_rFFA <- filter(desc_mvpa_acc_E1, ROI %in% label_rFFA_E1)
+### Label:FFA1
+```{r the label used for FFA1 E1}
+label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
 
-# nlevels(df_univar_E1_rFFA$SubjCode)
+label_FFA1_E1 <- c(label_lFFA1_E1, label_rFFA1_E1)
+
 ```
-The number of subjects included in this analysis is `r nlevels(df_univar_E1_rFFA$SubjCode)`: `r unique(as.character(df_univar_E1_rFFA$SubjCode))`.
+The label used for left FFA1 in Experiment 1 is `r label_lFFA1_E1`.
+The label used for right FFA1 in Experiment 1 is `r label_rFFA1_E1`.
+
+```{r only keep data for FFA1 E1}
+# only keep data for these two labels
+df_univar_E1_FFA1 <- filter(df_univar_E1, ROI %in% label_FFA1_E1) 
+df_univar_agg_E1_FFA1 <- filter(df_univar_agg_E1, ROI %in% label_FFA1_E1)
+df_mvpa_E1_FFA1 <- filter(df_mvpa_E1, ROI %in% label_FFA1_E1)
+df_mvpa_acc_E1_FFA1 <- filter(df_mvpa_acc_E1, ROI %in% label_FFA1_E1)
+desc_mvpa_acc_E1_FFA1 <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA1_E1)
+
+# nlevels(df_univar_E1_lFFA1$SubjCode)
+
+desc_mvpa_acc_E1_FFA1 %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
 
 #### Univariate analyses
 ##### rm-ANOVA 
-```{r anova for univariate E1 rFFA}
-anova_E1_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = df_univar_agg_E1_rFFA)
+###### Left FFA1
+```{r anova for univariate E1 FFA1 left}
+anova_E1_lFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_FFA1, ROI == label_lFFA1_E1))
 
-anova_E1_rFFA
+anova_E1_lFFA1
 ```
 
+```{r estimated marginal means for univairate E1 lFFA1}
+emm_anova_E1_lFFA1 <- emmeans(anova_E1_lFFA1, ~ FaceWord * Layout)
 
-
-### Label: left FFA1
-
-
-### Label: right FFA1
-
-
-
-### Label: left FFA2
-
-
-
-### Label: right FFA2
-
-
-
-### Label: left Visual Word Form Area (VWFA)
-
-
-#### rm-ANOVA 
-```{r anova for univariate E1}
-anova_uni_E1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), data = df_univar_agg_E1)
-
-anova_uni_E1
-```
-
-```{r estimated marginal means for univairate E1}
-
-emm_uni_anova_E1 <- emmeans(anova_uni_E1, ~ FaceWord * Layout)
-
-emm_uni_anova_E1 %>% 
+emm_anova_E1_lFFA1 %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 
+```{r post-hoc for emm_anova_E1_lFFA1}
+contrast(emmeans(emm_anova_E1_lFFA1, ~ FaceWord), "pairwise")
 
-```{r}
-contrast(emmeans(anova_uni_E1, ~ FaceWord), "pairwise")
-
-contrast(emmeans(anova_uni_E1, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_anova_E1_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
-```{r}
-contrast(emm_uni_anova_E1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r simple effect analyses for emm_anova_E1_lFFA1}
+contrast(emm_anova_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 ```
 
-### Linear mixed model
-```{r lmm for univariate E1}
+###### Right FFA1
+```{r anova for univariate E1 FFA1 right}
+anova_E1_rFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_FFA1, ROI == label_rFFA1_E1))
 
-# lmm.uni.E1 <- lmer(Resp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), data = df_univar_E1)
-
-
+anova_E1_rFFA1
 ```
 
-### Plot
-```{r plots for functional scans E1 (anova)}
-plot_uni_E1 <- {
-  ggplot(data = as.data.frame(emm_uni_anova_E1), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+```{r estimated marginal means for univairate E1 FFA1 right}
+emm_anova_E1_rFFA1 <- emmeans(anova_E1_rFFA1, ~ FaceWord * Layout)
+
+emm_anova_E1_rFFA1 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_rFFA1 right}
+contrast(emmeans(emm_anova_E1_rFFA1, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_rFFA1 right}
+contrast(emm_anova_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E1 (anova) FFA1}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA1))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA1), as.data.frame(emm_anova_E1_rFFA1)))
+
+plot_uni_E1_FFA1 <- {
+  ggplot(data = desp_uni_E1_FFA1, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme
 }
 
-plot_uni_E1
+plot_uni_E1_FFA1
 ```
 
-## Multivariate analyses for functional scans
 
+#### Multivarate analyses (MVPA)
 
-### One-sample t-test
-```{r one-sample for results of mvpa E1}
-
-df_mvpa_acc_E1 %>% 
+##### One-sample t-test
+```{r one-sample for results of mvpa E1 lFFA1}
+df_mvpa_agg_E1_FFA1 <- {
+  df_mvpa_acc_E1_FFA1 %>% 
   spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, ROI, SubjCode, Count)) %>% # remove these columns
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E1_FFA1 %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
   sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
 
 ```
 
-### Logistic model
-```{r logistic linear model for results of mvpa E1 }
-
-glm_mvpa_E1 <- glm(ACC ~ ClassifyPair, family = binomial, data = df_mvpa_E1)
-
-summary(glm_mvpa_E1)
-```
-
-```{r estimated marginal means for mvpa E1}
-emm_mvpa_E1 <- emmeans(glm_mvpa_E1, ~ ClassifyPair)
-
-emm_mvpa_E1
+```{r one-sample for results of mvpa E1 rFFA1}
+df_mvpa_agg_E1_FFA1 %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
 ```
 
 
-```{r one-sample t-test for logistic models E1}
-test(emm_mvpa_E1, mu = 0, side = ">")
-```
+##### Plot
+```{r plots for functional scans mvpa E1 (anova) FFA1}
 
-### Plot
-```{r plots for functional scans mvpa E1 (anova)}
-
-desc_mvpa_acc_E1 <- {
-  desc_mvpa_acc %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1))
-}
-
-plot_mvpa_E1 <- {
-  ggplot(data = desc_mvpa_acc_E1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+plot_mvpa_E1_FFA1 <- {
+  ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
 
-plot_mvpa_E1
+plot_mvpa_E1_FFA1
 ```
 
+### Label:FFA2
+```{r the label used for FFA2 E1}
+label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+
+label_FFA2_E1 <- c(label_lFFA2_E1, label_rFFA2_E1)
+
+```
+The label used for left FFA2 in Experiment 1 is `r label_lFFA2_E1`.
+The label used for right FFA2 in Experiment 1 is `r label_rFFA2_E1`.
+
+```{r only keep data for FFA2 E1}
+# only keep data for these two labels
+df_univar_E1_FFA2 <- filter(df_univar_E1, ROI %in% label_FFA2_E1) 
+df_univar_agg_E1_FFA2 <- filter(df_univar_agg_E1, ROI %in% label_FFA2_E1)
+df_mvpa_E1_FFA2 <- filter(df_mvpa_E1, ROI %in% label_FFA2_E1)
+df_mvpa_acc_E1_FFA2 <- filter(df_mvpa_acc_E1, ROI %in% label_FFA2_E1)
+desc_mvpa_acc_E1_FFA2 <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA2_E1)
+
+# nlevels(df_univar_E1_lFFA2$SubjCode)
+
+desc_mvpa_acc_E1_FFA2 %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+###### Left FFA2
+```{r anova for univariate E1 FFA2 left}
+anova_E1_lFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_FFA2, ROI == label_lFFA2_E1))
+
+anova_E1_lFFA2
+```
+
+```{r estimated marginal means for univairate E1 lFFA2}
+emm_anova_E1_lFFA2 <- emmeans(anova_E1_lFFA2, ~ FaceWord * Layout)
+
+emm_anova_E1_lFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_lFFA2}
+contrast(emmeans(emm_anova_E1_lFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_lFFA2}
+contrast(emm_anova_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
+###### Right FFA2
+```{r anova for univariate E1 FFA2 right}
+anova_E1_rFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_FFA2, ROI == label_rFFA2_E1))
+
+anova_E1_rFFA2
+```
+
+```{r estimated marginal means for univairate E1 FFA2 right}
+emm_anova_E1_rFFA2 <- emmeans(anova_E1_rFFA2, ~ FaceWord * Layout)
+
+emm_anova_E1_rFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_rFFA2 right}
+contrast(emmeans(emm_anova_E1_rFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_rFFA2 right}
+contrast(emm_anova_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E1 (anova) FFA2}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA2))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA2), as.data.frame(emm_anova_E1_rFFA2)))
+
+plot_uni_E1_FFA2 <- {
+  ggplot(data = desp_uni_E1_FFA2, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E1_FFA2
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E1 lFFA2}
+df_mvpa_agg_E1_FFA2 <- {
+  df_mvpa_acc_E1_FFA2 %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E1_FFA2 %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+```{r one-sample for results of mvpa E1 rFFA2}
+df_mvpa_agg_E1_FFA2 %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E1 (anova) FFA2}
+
+plot_mvpa_E1_FFA2 <- {
+  ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E1_FFA2
+```
+
+
+### Label: left Visual Word Form Area (VWFA)
+```{r the label used for VWFA E1}
+label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+
+```
+The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E1`.
+
+```{r only keep data for VWFA E1}
+# only keep data for these two labels
+df_univar_E1_VWFA <- filter(df_univar_E1, ROI %in% label_VWFA_E1) 
+df_univar_agg_E1_VWFA <- filter(df_univar_agg_E1, ROI %in% label_VWFA_E1)
+df_mvpa_E1_VWFA <- filter(df_mvpa_E1, ROI %in% label_VWFA_E1)
+df_mvpa_acc_E1_VWFA <- filter(df_mvpa_acc_E1, ROI %in% label_VWFA_E1)
+desc_mvpa_acc_E1_VWFA <- filter(desc_mvpa_acc_E1, ROI %in% label_VWFA_E1)
+
+# nlevels(df_univar_E1_lVWFA$SubjCode)
+
+desc_mvpa_acc_E1_VWFA %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+```{r anova for univariate E1 VWFA left}
+anova_E1_VWFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E1_VWFA, ROI == label_VWFA_E1))
+
+anova_E1_VWFA
+```
+
+```{r estimated marginal means for univairate E1 VWFA}
+emm_anova_E1_VWFA <- emmeans(anova_E1_VWFA, ~ FaceWord * Layout)
+
+emm_anova_E1_VWFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E1_VWFA}
+contrast(emmeans(emm_anova_E1_VWFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E1_VWFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E1_VWFA}
+contrast(emm_anova_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E1 (anova) VWFA}
+
+plot_uni_E1_VWFA <- {
+  ggplot(data = as.data.frame(emm_anova_E1_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E1_VWFA
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E1 VWFA}
+df_mvpa_agg_E1_VWFA <- {
+  df_mvpa_acc_E1_VWFA %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E1_VWFA %>% 
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E1 (anova) VWFA}
+
+plot_mvpa_E1_VWFA <- {
+  ggplot(data = desc_mvpa_acc_E1_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E1_VWFA
+```
+
+
 # Experiment 2: Chinese and English
-## Univariate analyses for localizer scans
+## localizer (Univariate analyses)
 ```{r only keep the univariate data for E2 loc}
 df_loc_E2 <- {
   df_clean_loc %>% 
@@ -604,69 +925,28 @@ plot_loc_E2 <- {
 plot_loc_E2
 ```
 
-## Univariate analysis for functional scans
-```{r only keep the univariate data for E2}
 
-df_univar_E2<- {
+## Chinese vs. English scans
+```{r only keep the univariate data for E2}
+# only keep data of E2
+df_univar_E2 <- {
   df_clean_univar %>% 
     filter(ExpCode == 2) %>% 
     mutate(FaceWord = factor(FaceWord, levels = wordsOrder),
            SubjCode = as.factor(SubjCode))
 }
-  
-df_univar_agg_E2<- {
+
+df_univar_agg_E2 <- {
   df_univar_agg %>% 
     filter(ExpCode == 2) %>% 
     mutate(FaceWord = factor(FaceWord, levels = wordsOrder),
            SubjCode = as.factor(SubjCode))
 }
 
-# nlevels(df_univar_E2$SubjCode) # number of subjects
 ```
 
-### rm-ANOVA 
-```{r anova for univariate E2}
-anova_uni_E2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), data = df_univar_agg_E2)
-
-anova_uni_E2
-```
-
-```{r estimated marginal means for univairate E2}
-
-emm_uni_anova_E2 <- emmeans(anova_uni_E2, ~ FaceWord * Layout)
-
-emm_uni_anova_E2 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-
-```{r}
-# contrast(emm_uni_anova_E2, "pairwise")
-# 
-# contrast(emm_uni_anova_E2, interaction = "pairwise")
-
-contrast(emm_uni_anova_E2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-```
-
-### Plot
-```{r plots for functional scans E2 (anova)}
-plot_uni_E2 <- {
-  ggplot(data = as.data.frame(emm_uni_anova_E2), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
-    general_theme
-}
-
-plot_uni_E2
-```
-
-## Multivariate analyses for functional scans
 ```{r only keep the multivariate (mvpa) data for E2}
-
+# only keep data of E2
 df_mvpa_E2 <- {
   df_clean_mvpa %>% 
     filter(ExpCode == 2) %>% 
@@ -681,74 +961,573 @@ df_mvpa_acc_E2 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-# nlevels(df_mvpa_E2$SubjCode) # number of subjects
-```
-
-### One-sample t-test
-```{r one-sample for results of mvpa E2}
-
-df_mvpa_acc_E2 %>% 
-  spread(ClassifyPair, Accuracy) %>% 
-  select(-c(ExpCode, ROI, SubjCode, Count)) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater"))
-
-```
-
-### Logistic model
-```{r logistic linear model for results of mvpa E2 }
-
-glm_mvpa_E2 <- glm(ACC ~ ClassifyPair, family = binomial, data = df_mvpa_E2)
-
-summary(glm_mvpa_E2)
-```
-
-```{r estimated marginal means for mvpa E2}
-emm_mvpa_E2 <- emmeans(glm_mvpa_E2, ~ ClassifyPair)
-
-emm_mvpa_E2
-```
-
-
-```{r one-sample t-test for logistic models E2}
-test(emm_mvpa_E2, mu = 0, side = ">")
-```
-
-
-```{r}
-# glm_mvpa_E2_1 <- glm(ACC ~ 1, family = binomial, data = filter(df_mvpa_E2, ClassifyPair == levels(df_mvpa_E2$ClassifyPair)[5]))
-# 
-# # summary(glm_mvpa_E2_1)
-# 
-# emm_mvpa_E2_1 <- emmeans(glm_mvpa_E2_1, ~ 1)
-# 
-# test(emm_mvpa_E2_1, null = 0, side = ">")
-```
-
-
-### Plot
-```{r plots for functional scans mvpa E2 (anova)}
-
 desc_mvpa_acc_E2 <- {
   desc_mvpa_acc %>% 
     filter(ExpCode == 2) %>% 
     mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2))
 }
 
-plot_mvpa_E2 <- {
-  ggplot(data = desc_mvpa_acc_E2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+```
+
+### Label:FFA
+```{r the label used for FFA E2}
+label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+
+label_FFA_E2 <- c(label_lFFA_E2, label_rFFA_E2)
+
+```
+The label used for left FFA in Experiment 2 is `r label_lFFA_E2`.
+The label used for right FFA in Experiment 2 is `r label_rFFA_E2`.
+
+```{r only keep data for FFA E2}
+# only keep data for these two labels
+df_univar_E2_FFA <- filter(df_univar_E2, ROI %in% label_FFA_E2) 
+df_univar_agg_E2_FFA <- filter(df_univar_agg_E2, ROI %in% label_FFA_E2)
+df_mvpa_E2_FFA <- filter(df_mvpa_E2, ROI %in% label_FFA_E2)
+df_mvpa_acc_E2_FFA <- filter(df_mvpa_acc_E2, ROI %in% label_FFA_E2)
+desc_mvpa_acc_E2_FFA <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA_E2)
+
+# nlevels(df_univar_E2_lFFA$SubjCode)
+
+desc_mvpa_acc_E2_FFA %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+###### Left FFA
+```{r anova for univariate E2 FFA left}
+anova_E2_lFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA, ROI == label_lFFA_E2))
+
+anova_E2_lFFA
+```
+
+```{r estimated marginal means for univairate E2 lFFA}
+emm_anova_E2_lFFA <- emmeans(anova_E2_lFFA, ~ FaceWord * Layout)
+
+emm_anova_E2_lFFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_lFFA}
+contrast(emmeans(emm_anova_E2_lFFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_lFFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_lFFA}
+contrast(emm_anova_E2_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+###### Right FFA
+```{r anova for univariate E2 FFA right}
+anova_E2_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA, ROI == label_rFFA_E2))
+
+anova_E2_rFFA
+```
+
+```{r estimated marginal means for univairate E2 FFA right}
+emm_anova_E2_rFFA <- emmeans(anova_E2_rFFA, ~ FaceWord * Layout)
+
+emm_anova_E2_rFFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_rFFA right}
+contrast(emmeans(emm_anova_E2_rFFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_rFFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_rFFA right}
+contrast(emm_anova_E2_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E2 (anova) FFA}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA), as.data.frame(emm_anova_E2_rFFA)))
+
+plot_uni_E2_FFA <- {
+  ggplot(data = desp_uni_E2_FFA, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E2_FFA
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E2 lFFA}
+df_mvpa_agg_E2_FFA <- {
+  df_mvpa_acc_E2_FFA %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E2_FFA %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+```{r one-sample for results of mvpa E2 rFFA}
+df_mvpa_agg_E2_FFA %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E2 (anova) FFA}
+
+plot_mvpa_E2_FFA <- {
+  ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
 
-plot_mvpa_E2
+plot_mvpa_E2_FFA
+```
+
+
+### Label:FFA1
+```{r the label used for FFA1 E2}
+label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
+
+label_FFA1_E2 <- c(label_lFFA1_E2, label_rFFA1_E2)
+
+```
+The label used for left FFA1 in Experiment 2 is `r label_lFFA1_E2`.
+The label used for right FFA1 in Experiment 2 is `r label_rFFA1_E2`.
+
+```{r only keep data for FFA1 E2}
+# only keep data for these two labels
+df_univar_E2_FFA1 <- filter(df_univar_E2, ROI %in% label_FFA1_E2) 
+df_univar_agg_E2_FFA1 <- filter(df_univar_agg_E2, ROI %in% label_FFA1_E2)
+df_mvpa_E2_FFA1 <- filter(df_mvpa_E2, ROI %in% label_FFA1_E2)
+df_mvpa_acc_E2_FFA1 <- filter(df_mvpa_acc_E2, ROI %in% label_FFA1_E2)
+desc_mvpa_acc_E2_FFA1 <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA1_E2)
+
+# nlevels(df_univar_E2_lFFA1$SubjCode)
+
+desc_mvpa_acc_E2_FFA1 %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+###### Left FFA1
+```{r anova for univariate E2 FFA1 left}
+anova_E2_lFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA1, ROI == label_lFFA1_E2))
+
+anova_E2_lFFA1
+```
+
+```{r estimated marginal means for univairate E2 lFFA1}
+emm_anova_E2_lFFA1 <- emmeans(anova_E2_lFFA1, ~ FaceWord * Layout)
+
+emm_anova_E2_lFFA1 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_lFFA1}
+contrast(emmeans(emm_anova_E2_lFFA1, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_lFFA1}
+contrast(emm_anova_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+###### Right FFA1
+```{r anova for univariate E2 FFA1 right}
+anova_E2_rFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA1, ROI == label_rFFA1_E2))
+
+anova_E2_rFFA1
+```
+
+```{r estimated marginal means for univairate E2 FFA1 right}
+emm_anova_E2_rFFA1 <- emmeans(anova_E2_rFFA1, ~ FaceWord * Layout)
+
+emm_anova_E2_rFFA1 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_rFFA1 right}
+contrast(emmeans(emm_anova_E2_rFFA1, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_rFFA1 right}
+contrast(emm_anova_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E2 (anova) FFA1}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA1))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA1), as.data.frame(emm_anova_E2_rFFA1)))
+
+plot_uni_E2_FFA1 <- {
+  ggplot(data = desp_uni_E2_FFA1, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E2_FFA1
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E2 lFFA1}
+df_mvpa_agg_E2_FFA1 <- {
+  df_mvpa_acc_E2_FFA1 %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E2_FFA1 %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+```{r one-sample for results of mvpa E2 rFFA1}
+df_mvpa_agg_E2_FFA1 %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E2 (anova) FFA1}
+
+plot_mvpa_E2_FFA1 <- {
+  ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E2_FFA1
+```
+
+### Label:FFA2
+```{r the label used for FFA2 E2}
+label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+
+label_FFA2_E2 <- c(label_lFFA2_E2, label_rFFA2_E2)
+
+```
+The label used for left FFA2 in Experiment 1 is `r label_lFFA2_E2`.
+The label used for right FFA2 in Experiment 1 is `r label_rFFA2_E2`.
+
+```{r only keep data for FFA2 E2}
+# only keep data for these two labels
+df_univar_E2_FFA2 <- filter(df_univar_E2, ROI %in% label_FFA2_E2) 
+df_univar_agg_E2_FFA2 <- filter(df_univar_agg_E2, ROI %in% label_FFA2_E2)
+df_mvpa_E2_FFA2 <- filter(df_mvpa_E2, ROI %in% label_FFA2_E2)
+df_mvpa_acc_E2_FFA2 <- filter(df_mvpa_acc_E2, ROI %in% label_FFA2_E2)
+desc_mvpa_acc_E2_FFA2 <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA2_E2)
+
+# nlevels(df_univar_E2_lFFA2$SubjCode)
+
+desc_mvpa_acc_E2_FFA2 %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+###### Left FFA2
+```{r anova for univariate E2 FFA2 left}
+anova_E2_lFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA2, ROI == label_lFFA2_E2))
+
+anova_E2_lFFA2
+```
+
+```{r estimated marginal means for univairate E2 lFFA2}
+emm_anova_E2_lFFA2 <- emmeans(anova_E2_lFFA2, ~ FaceWord * Layout)
+
+emm_anova_E2_lFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_lFFA2}
+contrast(emmeans(emm_anova_E2_lFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_lFFA2}
+contrast(emm_anova_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+###### Right FFA2
+```{r anova for univariate E2 FFA2 right}
+anova_E2_rFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_FFA2, ROI == label_rFFA2_E2))
+
+anova_E2_rFFA2
+```
+
+```{r estimated marginal means for univairate E2 FFA2 right}
+emm_anova_E2_rFFA2 <- emmeans(anova_E2_rFFA2, ~ FaceWord * Layout)
+
+emm_anova_E2_rFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_rFFA2 right}
+contrast(emmeans(emm_anova_E2_rFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_rFFA2 right}
+contrast(emm_anova_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E2 (anova) FFA2}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA2))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA2), as.data.frame(emm_anova_E2_rFFA2)))
+
+plot_uni_E2_FFA2 <- {
+  ggplot(data = desp_uni_E2_FFA2, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.5, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E2_FFA2
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E2 lFFA2}
+df_mvpa_agg_E2_FFA2 <- {
+  df_mvpa_acc_E2_FFA2 %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E2_FFA2 %>% 
+  filter(Hemisphere == "left") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+```{r one-sample for results of mvpa E2 rFFA2}
+df_mvpa_agg_E2_FFA2 %>% 
+  filter(Hemisphere == "right") %>%  
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E2 (anova) FFA2}
+
+plot_mvpa_E2_FFA2 <- {
+  ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E2_FFA2
+```
+
+
+### Label: left Visual Word Form Area (VWFA)
+```{r the label used for VWFA E2}
+label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+
+```
+The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E2`.
+
+```{r only keep data for VWFA E2}
+# only keep data for these two labels
+df_univar_E2_VWFA <- filter(df_univar_E2, ROI %in% label_VWFA_E2) 
+df_univar_agg_E2_VWFA <- filter(df_univar_agg_E2, ROI %in% label_VWFA_E2)
+df_mvpa_E2_VWFA <- filter(df_mvpa_E2, ROI %in% label_VWFA_E2)
+df_mvpa_acc_E2_VWFA <- filter(df_mvpa_acc_E2, ROI %in% label_VWFA_E2)
+desc_mvpa_acc_E2_VWFA <- filter(desc_mvpa_acc_E2, ROI %in% label_VWFA_E2)
+
+# nlevels(df_univar_E2_lVWFA$SubjCode)
+
+desc_mvpa_acc_E2_VWFA %>% 
+  select(ExpCode, ROI, Count) %>% 
+  distinct()
+```
+
+#### Univariate analyses
+##### rm-ANOVA 
+```{r anova for univariate E2 VWFA left}
+anova_E2_VWFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
+                      data = filter(df_univar_agg_E2_VWFA, ROI == label_VWFA_E2))
+
+anova_E2_VWFA
+```
+
+```{r estimated marginal means for univairate E2 VWFA}
+emm_anova_E2_VWFA <- emmeans(anova_E2_VWFA, ~ FaceWord * Layout)
+
+emm_anova_E2_VWFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+
+```{r post-hoc for emm_anova_E2_VWFA}
+contrast(emmeans(emm_anova_E2_VWFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_anova_E2_VWFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+
+```{r simple effect analyses for emm_anova_E2_VWFA}
+contrast(emm_anova_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+```
+
+##### Plot
+```{r plots for functional scans E2 (anova) VWFA}
+
+plot_uni_E2_VWFA <- {
+  ggplot(data = as.data.frame(emm_anova_E2_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme
+}
+
+plot_uni_E2_VWFA
+```
+
+
+#### Multivarate analyses (MVPA)
+
+##### One-sample t-test
+```{r one-sample for results of mvpa E2 VWFA}
+df_mvpa_agg_E2_VWFA <- {
+  df_mvpa_acc_E2_VWFA %>% 
+  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
+  select(-c(ExpCode, ROI, SubjCode, Count)) # remove these columns
+}
+
+df_mvpa_agg_E2_VWFA %>% 
+  select(-Hemisphere) %>% 
+  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+
+```
+
+
+##### Plot
+```{r plots for functional scans mvpa E2 (anova) VWFA}
+
+plot_mvpa_E2_VWFA <- {
+  ggplot(data = desc_mvpa_acc_E2_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(Hemisphere ~ .) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    general_theme 
+  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+}
+
+plot_mvpa_E2_VWFA
 ```
 
 # Versions of packages used
