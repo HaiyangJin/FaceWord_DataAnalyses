@@ -297,7 +297,8 @@ df_mvpa_acc_E1 <- {
 desc_mvpa_acc_E1 <- {
   desc_mvpa_acc %>% 
     filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1))
+    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1)) %>% 
+    arrange(ExpCode, Hemisphere, ROI, ClassifyPair) 
 }
 
 ```
@@ -446,6 +447,7 @@ plot_mvpa_E1_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "*", "", "", "***", "*", "*", "", ""), color = c(rep("red", 6), "blue", rep("red", 3)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -598,6 +600,7 @@ plot_mvpa_E1_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "*", "", "*", "***", "", "***", "", ""), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -749,6 +752,7 @@ plot_mvpa_E1_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "*", "", "", "***", "**", "", "*", ""), color = c(rep("red", 8), "blue", rep("red", 1)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -856,6 +860,7 @@ plot_mvpa_E1_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "", "*", ""), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1113,6 +1118,7 @@ plot_mvpa_E2_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("**", "", "", "", "*", "***", "", "*", "*", "*"), color = c(rep("red", 8), rep("blue", 2)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1265,6 +1271,7 @@ plot_mvpa_E2_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("**", "*", "", "", "*", "***", "", "*", "", "**"), color = c(rep("red", 4), "blue", rep("red", 2), "blue", rep("red", 2)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1416,6 +1423,7 @@ plot_mvpa_E2_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "**", "*", "*", "**", "", "", "", "*"), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1523,6 +1531,7 @@ plot_mvpa_E2_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = c("***", "", "", "", "*"), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
