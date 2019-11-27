@@ -322,7 +322,8 @@ df_mvpa_E1_FFA <- filter(df_mvpa_E1, ROI %in% label_FFA_E1)
 df_mvpa_acc_E1_FFA <- filter(df_mvpa_acc_E1, ROI %in% label_FFA_E1)
 desc_mvpa_acc_E1_FFA <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA_E1)
 
-# nlevels(df_univar_E1_lFFA$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E1_FFA %>% filter(ROI == label_rFFA_E1))$SubjCode))
 
 desc_mvpa_acc_E1_FFA %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -475,7 +476,8 @@ df_mvpa_E1_FFA1 <- filter(df_mvpa_E1, ROI %in% label_FFA1_E1)
 df_mvpa_acc_E1_FFA1 <- filter(df_mvpa_acc_E1, ROI %in% label_FFA1_E1)
 desc_mvpa_acc_E1_FFA1 <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA1_E1)
 
-# nlevels(df_univar_E1_lFFA1$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E1_FFA1 %>% filter(ROI == label_rFFA1_E1))$SubjCode))
 
 desc_mvpa_acc_E1_FFA1 %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -627,7 +629,8 @@ df_mvpa_E1_FFA2 <- filter(df_mvpa_E1, ROI %in% label_FFA2_E1)
 df_mvpa_acc_E1_FFA2 <- filter(df_mvpa_acc_E1, ROI %in% label_FFA2_E1)
 desc_mvpa_acc_E1_FFA2 <- filter(desc_mvpa_acc_E1, ROI %in% label_FFA2_E1)
 
-# nlevels(df_univar_E1_lFFA2$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E1_FFA2 %>% filter(ROI == label_lFFA2_E1))$SubjCode))
 
 desc_mvpa_acc_E1_FFA2 %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -776,7 +779,8 @@ df_mvpa_E1_VWFA <- filter(df_mvpa_E1, ROI %in% label_VWFA_E1)
 df_mvpa_acc_E1_VWFA <- filter(df_mvpa_acc_E1, ROI %in% label_VWFA_E1)
 desc_mvpa_acc_E1_VWFA <- filter(desc_mvpa_acc_E1, ROI %in% label_VWFA_E1)
 
-# nlevels(df_univar_E1_lVWFA$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E1_VWFA %>% filter(ROI == label_VWFA_E1))$SubjCode))
 
 desc_mvpa_acc_E1_VWFA %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -969,7 +973,8 @@ df_mvpa_acc_E2 <- {
 desc_mvpa_acc_E2 <- {
   desc_mvpa_acc %>% 
     filter(ExpCode == 2) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2))
+    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2)) %>% 
+    arrange(ExpCode, Hemisphere, ROI, ClassifyPair)
 }
 
 ```
@@ -993,7 +998,8 @@ df_mvpa_E2_FFA <- filter(df_mvpa_E2, ROI %in% label_FFA_E2)
 df_mvpa_acc_E2_FFA <- filter(df_mvpa_acc_E2, ROI %in% label_FFA_E2)
 desc_mvpa_acc_E2_FFA <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA_E2)
 
-# nlevels(df_univar_E2_lFFA$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E2_FFA %>% filter(ROI == label_lFFA_E1))$SubjCode))
 
 desc_mvpa_acc_E2_FFA %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -1146,7 +1152,8 @@ df_mvpa_E2_FFA1 <- filter(df_mvpa_E2, ROI %in% label_FFA1_E2)
 df_mvpa_acc_E2_FFA1 <- filter(df_mvpa_acc_E2, ROI %in% label_FFA1_E2)
 desc_mvpa_acc_E2_FFA1 <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA1_E2)
 
-# nlevels(df_univar_E2_lFFA1$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E2_FFA1 %>% filter(ROI == label_rFFA1_E1))$SubjCode))
 
 desc_mvpa_acc_E2_FFA1 %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -1298,7 +1305,8 @@ df_mvpa_E2_FFA2 <- filter(df_mvpa_E2, ROI %in% label_FFA2_E2)
 df_mvpa_acc_E2_FFA2 <- filter(df_mvpa_acc_E2, ROI %in% label_FFA2_E2)
 desc_mvpa_acc_E2_FFA2 <- filter(desc_mvpa_acc_E2, ROI %in% label_FFA2_E2)
 
-# nlevels(df_univar_E2_lFFA2$SubjCode)
+# subjects used for each hemisphere
+unique(as.character((df_univar_agg_E2_FFA2 %>% filter(ROI == label_rFFA2_E1))$SubjCode))
 
 desc_mvpa_acc_E2_FFA2 %>% 
   select(ExpCode, ROI, Count) %>% 
@@ -1375,7 +1383,7 @@ plot_uni_E2_FFA2 <- {
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(-0.5, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.1, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme
 }
@@ -1447,9 +1455,10 @@ df_mvpa_E2_VWFA <- filter(df_mvpa_E2, ROI %in% label_VWFA_E2)
 df_mvpa_acc_E2_VWFA <- filter(df_mvpa_acc_E2, ROI %in% label_VWFA_E2)
 desc_mvpa_acc_E2_VWFA <- filter(desc_mvpa_acc_E2, ROI %in% label_VWFA_E2)
 
-# nlevels(df_univar_E2_lVWFA$SubjCode)
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E2_VWFA %>% filter(ROI == label_VWFA_E2))$SubjCode))
 
-desc_mvpa_acc_E2_VWFA %>% 
+# desc_mvpa_acc_E2_VWFA %>% 
   select(ExpCode, ROI, Count) %>% 
   distinct()
 ```
