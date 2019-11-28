@@ -16,6 +16,12 @@ output:
 ---
 
 # Preparations
+```{r general setting for this document, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
+knitr::opts_chunk$set(message = FALSE)  # hide all messages
+showAll = FALSE
+```
+
 ```{r preparation}
 # load library
 library(tidyverse)
@@ -27,7 +33,7 @@ library(emmeans)
 ```
 
 # Load and clean data 
-```{r assign filenames}
+```{r assign filenames, include=showAll}
 # assign filenames
 fn_loc <- "FaceWord_Loc_Univariate.csv"
 fn_univar <- "FaceWord_Univariate.csv"
@@ -53,10 +59,10 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
 
 ```
 
-```{r setting for plots}
+```{r setting for plots, include=showAll}
 # set up the theme for plot and rainclound plot
-# load all the R files in Utilities/
-sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE), source)
+# load all the R files in "Utilities/"
+tmp <- sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE), source)
 
 activationUL <- 2.75
 onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
@@ -64,14 +70,14 @@ onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
 ```
 
 ## Data from localizer scans
-```{r load data file from localizer scans for univerate analysis}
+```{r load data file from localizer scans for univerate analysis, include=showAll}
 # load data file from localizer scans for univerate analysis
 df_loc <- read_csv(fn_loc)
 
 str(df_loc)
 ```
 
-```{r clean the loc data}
+```{r clean the loc data, include=showAll}
 df_clean_loc <- {
   df_loc %>% 
     mutate(Conditions = factor(Conditions, levels = locOrder)) %>% # convert Conditions to factors
@@ -81,15 +87,15 @@ df_clean_loc <- {
 str(df_clean_loc)
 ```
 
-## Data from functional scans for univarite analysis
-```{r load data file for univariate analysis}
+## Data for univariate analyses
+```{r load data file for univariate analysis, include=showAll}
 # load data file from functional scans for univerate analysis
 df_univar <- read_csv(fn_univar)
 
 str(df_univar)
 ```
 
-```{r clean the univariate data}
+```{r clean the univariate data, include=showAll}
 df_clean_univar <- {
   df_univar %>% 
     separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
@@ -102,7 +108,7 @@ df_clean_univar <- {
 str(df_clean_univar)
 ```
 
-```{r aggregate data for running anova}
+```{r aggregate data for running anova, include=showAll}
 df_univar_agg <- {
   df_clean_univar %>% 
     group_by(ExpCode, Hemisphere, ROI, SubjCode, FaceWord, Layout) %>% 
@@ -114,14 +120,14 @@ str(df_univar_agg)
 ```
 
 
-## Data from functional scans for CoSMoMVPA
-```{r load data file from cosmoMVPA}
+## Data from CoSMoMVPA
+```{r load data file from cosmoMVPA, include=showAll}
 df_mvpa <- read_csv(fn_cosmo)
 
 str(df_mvpa)
 ```
 
-```{r clean the cosmomvpa data}
+```{r clean the cosmomvpa data, include=showAll}
 df_clean_mvpa <- {
   df_mvpa %>% 
     select(ExpCode, ROI, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
@@ -131,7 +137,7 @@ df_clean_mvpa <- {
 str(df_clean_mvpa)
 ```
 
-```{r calculate accuracy for each condition}
+```{r calculate accuracy for each condition, include=showAll}
 df_mvpa_acc <- {
   df_clean_mvpa %>% 
     select(-c(Predicted, Targets)) %>% # remove these two columns
@@ -141,7 +147,7 @@ df_mvpa_acc <- {
 }
 ```
 
-```{r descriptive analyses for mvpa}
+```{r descriptive analyses for mvpa, include=showAll}
 desc_mvpa_acc <- {
   df_mvpa_acc %>% 
     group_by(ExpCode, Hemisphere, ROI, ClassifyPair) %>% 
@@ -154,7 +160,7 @@ desc_mvpa_acc <- {
 ```
 
 ## ROI information
-```{r roi information}
+```{r roi information, include=showAll}
 # obtain from MVPA dataset
 roi_info <- {
   df_mvpa %>% 
@@ -1458,7 +1464,7 @@ desc_mvpa_acc_E2_VWFA <- filter(desc_mvpa_acc_E2, ROI %in% label_VWFA_E2)
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E2_VWFA %>% filter(ROI == label_VWFA_E2))$SubjCode))
 
-# desc_mvpa_acc_E2_VWFA %>% 
+desc_mvpa_acc_E2_VWFA %>%
   select(ExpCode, ROI, Count) %>% 
   distinct()
 ```
