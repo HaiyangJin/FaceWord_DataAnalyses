@@ -194,6 +194,25 @@ label_lVWFA <- label_list[isVWFA] # the labels for visual word form area
 ```
 
 
+## Size of labels
+```{r size (mm2) of labels for each subject}
+roi_info %>% 
+  select(-nVertices) %>% 
+  spread(ROI, LabelSize) 
+
+```
+
+
+## Number of vertices for each label
+```{r}
+roi_info %>% 
+  select(-LabelSize) %>% 
+  spread(ROI, nVertices) 
+
+```
+
+
+## Number of subjects 
 ```{r number of subjects in for each label}
 desc_mvpa_acc %>% 
   select(ExpCode, ROI, Count) %>% 
