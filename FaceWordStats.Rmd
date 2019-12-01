@@ -159,7 +159,7 @@ desc_mvpa_acc <- {
 
 ```
 
-## ROI information
+# ROI information
 ```{r roi information, include=showAll}
 # obtain from MVPA dataset
 roi_info <- {
@@ -193,6 +193,43 @@ label_lVWFA <- label_list[isVWFA] # the labels for visual word form area
 # label_list
 ```
 
+
+## Label used for each ROI
+```{r}
+# Experiment 1
+label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+
+label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
+
+label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+
+label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+
+# Experiment 2
+label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+
+label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
+
+label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+
+label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+
+ROI <- c("FFA", "FFA1", "FFA2", "VWFA")
+left_E1 <- c(label_lFFA_E1, label_lFFA1_E1, label_lFFA2_E1, label_VWFA_E1)
+right_E1 <- c(label_rFFA_E1, label_rFFA1_E1, label_rFFA2_E1, 'NA')
+left_E2 <- c(label_lFFA_E2, label_lFFA1_E2, label_lFFA2_E2, label_VWFA_E2)
+right_E2 <- c(label_rFFA_E2, label_rFFA1_E2, label_rFFA2_E2, 'NA')
+
+label_ROI <- tibble("ROI" = ROI, "left_E1" = left_E1, "right_E1"= right_E1, "left_E2" = left_E2, "right_E2" = right_E2)
+
+label_ROI
+```
 
 ## Size of labels
 ```{r size (mm2) of labels for each subject}
@@ -284,7 +321,7 @@ plot_loc_E1
 ```
 
 
-## Face vs. word scans
+## Main runs
 ```{r only keep the univariate data for E1}
 # only keep data of E1
 df_univar_E1 <- {
@@ -330,8 +367,8 @@ desc_mvpa_acc_E1 <- {
 
 ### Label:FFA
 ```{r the label used for FFA E1}
-label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+# label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+# label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
 
 label_FFA_E1 <- c(label_lFFA_E1, label_rFFA_E1)
 
@@ -484,8 +521,8 @@ plot_mvpa_E1_FFA
 
 ### Label:FFA1
 ```{r the label used for FFA1 E1}
-label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
+# label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+# label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
 
 label_FFA1_E1 <- c(label_lFFA1_E1, label_rFFA1_E1)
 
@@ -637,8 +674,8 @@ plot_mvpa_E1_FFA1
 
 ### Label:FFA2
 ```{r the label used for FFA2 E1}
-label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+# label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+# label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
 
 label_FFA2_E1 <- c(label_lFFA2_E1, label_rFFA2_E1)
 
@@ -791,7 +828,7 @@ plot_mvpa_E1_FFA2
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E1}
-label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+# label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
 
 ```
 The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E1`.
@@ -960,7 +997,7 @@ plot_loc_E2
 ```
 
 
-## Chinese vs. English scans
+## Main runs
 ```{r only keep the univariate data for E2}
 # only keep data of E2
 df_univar_E2 <- {
@@ -1006,8 +1043,8 @@ desc_mvpa_acc_E2 <- {
 
 ### Label:FFA
 ```{r the label used for FFA E2}
-label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
+# label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
+# label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
 
 label_FFA_E2 <- c(label_lFFA_E2, label_rFFA_E2)
 
@@ -1160,8 +1197,8 @@ plot_mvpa_E2_FFA
 
 ### Label:FFA1
 ```{r the label used for FFA1 E2}
-label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
+# label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
+# label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
 
 label_FFA1_E2 <- c(label_lFFA1_E2, label_rFFA1_E2)
 
@@ -1313,8 +1350,8 @@ plot_mvpa_E2_FFA1
 
 ### Label:FFA2
 ```{r the label used for FFA2 E2}
-label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
+# label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
+# label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
 
 label_FFA2_E2 <- c(label_lFFA2_E2, label_rFFA2_E2)
 
@@ -1467,7 +1504,7 @@ plot_mvpa_E2_FFA2
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E2}
-label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
+# label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
 
 ```
 The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E2`.
