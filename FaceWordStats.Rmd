@@ -7,7 +7,7 @@ output:
     df_print: paged
     number_sections: true
     toc: true
-    toc_depth: 5
+    toc_depth: 6
     toc_float: 
       collapsed: true
       smooth_scroll: false
@@ -57,6 +57,9 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
                   "English_intact-English_exchange",
                   "English_top-English_bottom")
 
+# criterion of vertex number
+nVtx_min <- 50
+
 ```
 
 ```{r setting for plots, include=showAll}
@@ -98,6 +101,7 @@ str(df_univar)
 ```{r clean the univariate data, include=showAll}
 df_clean_univar <- {
   df_univar %>% 
+    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
     mutate(# FaceWord = as.factor(FaceWord),
            Layout = factor(Layout, levels = layoutOrder), # convert the two IVs to factors
@@ -130,6 +134,7 @@ str(df_mvpa)
 ```{r clean the cosmomvpa data, include=showAll}
 df_clean_mvpa <- {
   df_mvpa %>% 
+    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     select(ExpCode, ROI, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
     mutate(Hemisphere = if_else(grepl("lh", ROI), "left", if_else(grepl("rh", ROI), "right", "NA")))
 }
@@ -164,6 +169,7 @@ desc_mvpa_acc <- {
 # obtain from MVPA dataset
 roi_info <- {
   df_mvpa %>% 
+    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     select(ExpCode, ROI, SubjCode, nVertices, LabelSize) %>% 
     distinct()
 }
@@ -254,8 +260,20 @@ roi_info %>%
 desc_mvpa_acc %>% 
   select(ExpCode, ROI, Count) %>% 
   distinct() %>%
+  spread(ROI, Count) 
+```
+
+## Number of subjects excluded
+```{r Number of subjects excluded}
+df_mvpa %>% 
+  filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
+  select(ExpCode, ROI, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, ROI) %>% 
+  summarize(Count = n()) %>% 
   spread(ROI, Count)
 ```
+
 
 # Experiment 1: faces and words
 ## Localizer (Univariate analyses)
