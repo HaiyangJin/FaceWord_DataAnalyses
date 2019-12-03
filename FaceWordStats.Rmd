@@ -257,21 +257,51 @@ roi_info %>%
 
 ## Number of subjects 
 ```{r number of subjects in for each label}
-desc_mvpa_acc %>% 
+# desc_mvpa_acc %>% 
+#   select(ExpCode, ROI, Count) %>% 
+#   distinct() %>%
+#   spread(ROI, Count) 
+
+desc_mvpa_acc %>%
   select(ExpCode, ROI, Count) %>% 
-  distinct() %>%
-  spread(ROI, Count) 
+  distinct() %>% 
+  filter(ROI %in% c(left_E1, right_E1, left_E2, right_E2)) %>% 
+  mutate(Hemi = substr(ROI, 5,6),
+         Hemisphere = if_else(Hemi == "lh", "left", if_else(Hemi == "rh", "right", "NA")),
+         Col_name = paste(Hemisphere, paste0("E", ExpCode), sep = "_"),
+         ROI = if_else(grepl("ffa1", ROI), "FFA1", if_else(grepl("ffa2", ROI), "FFA2", if_else(grepl("w-vs-o", ROI), "VWFA", "FFA")))) %>% 
+  select(ROI, Col_name, Count) %>% 
+  spread(Col_name, Count) %>% 
+  select(ROI, left_E1, right_E1, everything()) 
+  
 ```
 
 ## Number of subjects excluded
 ```{r Number of subjects excluded}
-df_mvpa %>% 
+# df_mvpa %>%
+#   filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
+#   select(ExpCode, ROI, SubjCode) %>%
+#   distinct() %>%
+#   group_by(ExpCode, ROI) %>%
+#   summarize(Count = n()) %>%
+#   ungroup() %>% 
+#   spread(ROI, Count)
+
+df_mvpa %>%
   filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-  select(ExpCode, ROI, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, ROI) %>% 
+  select(ExpCode, ROI, SubjCode) %>%
+  distinct() %>%
+  group_by(ExpCode, ROI) %>%
   summarize(Count = n()) %>% 
-  spread(ROI, Count)
+  ungroup() %>% 
+  filter(ROI %in% c(left_E1, right_E1, left_E2, right_E2)) %>% 
+  mutate(Hemi = substr(ROI, 5,6),
+         Hemisphere = if_else(Hemi == "lh", "left", if_else(Hemi == "rh", "right", "NA")),
+         Col_name = paste(Hemisphere, paste0("E", ExpCode), sep = "_"),
+         ROI = if_else(grepl("ffa1", ROI), "FFA1", if_else(grepl("ffa2", ROI), "FFA2", if_else(grepl("w-vs-o", ROI), "VWFA", "FFA")))) %>% 
+  select(ROI, Col_name, Count) %>% 
+  spread(Col_name, Count) %>% 
+  select(ROI, left_E1, right_E1, everything()) 
 ```
 
 
@@ -391,8 +421,8 @@ desc_mvpa_acc_E1 <- {
 label_FFA_E1 <- c(label_lFFA_E1, label_rFFA_E1)
 
 ```
-The label used for left FFA in Experiment 1 is `r label_lFFA_E1`.
-The label used for right FFA in Experiment 1 is `r label_rFFA_E1`.
+The label used for left FFA in Experiment 1 is *`r label_lFFA_E1`*. <br>
+The label used for right FFA in Experiment 1 is *`r label_rFFA_E1`*.
 
 ```{r only keep data for FFA E1}
 # only keep data for these two labels
@@ -528,7 +558,7 @@ plot_mvpa_E1_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "*", "", "", "***", "*", "*", "", ""), color = c(rep("red", 6), "blue", rep("red", 3)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("***", "", "", "", "", "***", "*", "**", "", ""), color = c(rep("red", 10)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -545,8 +575,8 @@ plot_mvpa_E1_FFA
 label_FFA1_E1 <- c(label_lFFA1_E1, label_rFFA1_E1)
 
 ```
-The label used for left FFA1 in Experiment 1 is `r label_lFFA1_E1`.
-The label used for right FFA1 in Experiment 1 is `r label_rFFA1_E1`.
+The label used for left FFA1 in Experiment 1 is *`r label_lFFA1_E1`*. <br>
+The label used for right FFA1 in Experiment 1 is *`r label_rFFA1_E1`*.
 
 ```{r only keep data for FFA1 E1}
 # only keep data for these two labels
@@ -682,7 +712,7 @@ plot_mvpa_E1_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "*", "", "*", "***", "", "***", "", ""), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("***", "", "*", "", "", "***", "*", "*", "", ""), color = c(rep("red", 6), "blue", rep("red", 3)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -698,8 +728,8 @@ plot_mvpa_E1_FFA1
 label_FFA2_E1 <- c(label_lFFA2_E1, label_rFFA2_E1)
 
 ```
-The label used for left FFA2 in Experiment 1 is `r label_lFFA2_E1`.
-The label used for right FFA2 in Experiment 1 is `r label_rFFA2_E1`.
+The label used for left FFA2 in Experiment 1 is *`r label_lFFA2_E1`*. <br>
+The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E1`*.
 
 ```{r only keep data for FFA2 E1}
 # only keep data for these two labels
@@ -835,7 +865,7 @@ plot_mvpa_E1_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "*", "", "", "***", "**", "", "*", ""), color = c(rep("red", 8), "blue", rep("red", 1)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("***", "*", "", "", "", "***", "**", "*", "*", "*"), color = c(rep("red", 7), "blue", rep("red", 1), "blue"), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -849,7 +879,7 @@ plot_mvpa_E1_FFA2
 # label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
 
 ```
-The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E1`.
+The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E1`*.
 
 ```{r only keep data for VWFA E1}
 # only keep data for these two labels
@@ -944,7 +974,7 @@ plot_mvpa_E1_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "", "*", ""), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("***", "*", "", "", ""), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1067,8 +1097,8 @@ desc_mvpa_acc_E2 <- {
 label_FFA_E2 <- c(label_lFFA_E2, label_rFFA_E2)
 
 ```
-The label used for left FFA in Experiment 2 is `r label_lFFA_E2`.
-The label used for right FFA in Experiment 2 is `r label_rFFA_E2`.
+The label used for left FFA in Experiment 2 is *`r label_lFFA_E2`*. <br>
+The label used for right FFA in Experiment 2 is *`r label_rFFA_E2`*.
 
 ```{r only keep data for FFA E2}
 # only keep data for these two labels
@@ -1204,7 +1234,7 @@ plot_mvpa_E2_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("**", "", "", "", "*", "***", "", "*", "*", "*"), color = c(rep("red", 8), rep("blue", 2)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("*", "", "", "*", "**", "***", "", "", "*", "*"), color = c(rep("red", 8), rep("blue", 1), "red"), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1221,8 +1251,8 @@ plot_mvpa_E2_FFA
 label_FFA1_E2 <- c(label_lFFA1_E2, label_rFFA1_E2)
 
 ```
-The label used for left FFA1 in Experiment 2 is `r label_lFFA1_E2`.
-The label used for right FFA1 in Experiment 2 is `r label_rFFA1_E2`.
+The label used for left FFA1 in Experiment 2 is *`r label_lFFA1_E2`*. <br>
+The label used for right FFA1 in Experiment 2 is *`r label_rFFA1_E2`*.
 
 ```{r only keep data for FFA1 E2}
 # only keep data for these two labels
@@ -1358,7 +1388,7 @@ plot_mvpa_E2_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("**", "*", "", "", "*", "***", "", "*", "", "**"), color = c(rep("red", 4), "blue", rep("red", 2), "blue", rep("red", 2)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("**", "", "", "", "*", "***", "", "*", "", ""), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1374,8 +1404,8 @@ plot_mvpa_E2_FFA1
 label_FFA2_E2 <- c(label_lFFA2_E2, label_rFFA2_E2)
 
 ```
-The label used for left FFA2 in Experiment 1 is `r label_lFFA2_E2`.
-The label used for right FFA2 in Experiment 1 is `r label_rFFA2_E2`.
+The label used for left FFA2 in Experiment 1 is *`r label_lFFA2_E2`*. <br>
+The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E2`*.
 
 ```{r only keep data for FFA2 E2}
 # only keep data for these two labels
@@ -1511,7 +1541,7 @@ plot_mvpa_E2_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "**", "*", "*", "**", "", "", "", "*"), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = c("***", "", "", "", "*", "*", "", "", "", ""), color = c(rep("red", 5), "blue", rep("red", 4)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1525,7 +1555,7 @@ plot_mvpa_E2_FFA2
 # label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
 
 ```
-The label used for (left) VWFA in Experiment 1 is `r label_VWFA_E2`.
+The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E2`*.
 
 ```{r only keep data for VWFA E2}
 # only keep data for these two labels
