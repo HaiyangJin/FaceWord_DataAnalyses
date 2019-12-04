@@ -60,6 +60,16 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
 
 # criterion of vertex number
 nVtx_min <- 50
+nDigitals <- 3 # number of digitials of p-values in plots
+sig_size <- 5 # font size of p-values in plots
+
+# function to obtain the p values for one-sample t-test
+one_sig <- function(one_results, nDigitals = 4) {
+  sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
+  
+  # sig_vector <- as.character(sig_vector)
+  return(sig_vector)
+}
 
 ```
 
@@ -382,7 +392,7 @@ plot_loc_E1 <- {
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme
 }
 
@@ -486,8 +496,9 @@ contrast(emmeans(emm_anova_E1_lFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_lFFA}
-contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_lFFA <- contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_lFFA
 ```
 
 ###### Right FFA
@@ -513,12 +524,18 @@ contrast(emmeans(emm_anova_E1_rFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_rFFA right}
-contrast(emm_anova_E1_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_rFFA <- contrast(emm_anova_E1_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_rFFA
 ```
 
 ##### Plot
 ```{r plots for functional scans E1 (anova) FFA}
+
+sig_uni_E1_FFA <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_FFA <- sig_colors(sig_uni_E1_FFA)
+
 # add the column of Hemisphere
 nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
@@ -533,6 +550,7 @@ plot_uni_E1_FFA <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -550,23 +568,33 @@ df_mvpa_agg_E1_FFA <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E1_FFA %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E1_lFFA <- {
+  df_mvpa_agg_E1_FFA %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately
+}
 
+one_mvpa_agg_E1_lFFA
 ```
 
 ```{r one-sample for results of mvpa E1 rFFA}
-df_mvpa_agg_E1_FFA %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E1_rFFA <- {
+  df_mvpa_agg_E1_FFA %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+
+one_mvpa_agg_E1_rFFA
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA}
+
+sig_mvpa_agg_E1_FFA <- c(one_sig(one_mvpa_agg_E1_lFFA), one_sig(one_mvpa_agg_E1_rFFA))
+color_uni_E1_FFA <- sig_colors(sig_mvpa_agg_E1_FFA)
 
 plot_mvpa_E1_FFA <- {
   ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -578,8 +606,8 @@ plot_mvpa_E1_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "", "", "", "***", "*", "**", "", ""), color = c(rep("red", 10)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -640,8 +668,9 @@ contrast(emmeans(emm_anova_E1_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_lFFA1}
-contrast(emm_anova_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_lFFA1 <- contrast(emm_anova_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_lFFA1
 ```
 
 ###### Right FFA1
@@ -667,12 +696,18 @@ contrast(emmeans(emm_anova_E1_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_rFFA1 right}
-contrast(emm_anova_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_rFFA1 <- contrast(emm_anova_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_rFFA1
 ```
 
 ##### Plot
 ```{r plots for functional scans E1 (anova) FFA1}
+
+sig_uni_E1_FFA1 <- c(signif(as.data.frame(contr_anova_E1_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E1_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_FFA1 <- sig_colors(sig_uni_E1_FFA1)
+
 # add the column of Hemisphere
 nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA1))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
@@ -687,6 +722,7 @@ plot_uni_E1_FFA1 <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E1_FFA1, color = color_uni_E1_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -704,23 +740,31 @@ df_mvpa_agg_E1_FFA1 <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E1_FFA1 %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E1_lFFA1 <- {
+  df_mvpa_agg_E1_FFA1 %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_lFFA1
 ```
 
 ```{r one-sample for results of mvpa E1 rFFA1}
-df_mvpa_agg_E1_FFA1 %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E1_rFFA1 <- {
+  df_mvpa_agg_E1_FFA1 %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_rFFA1
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA1}
+
+sig_mvpa_agg_E1_FFA1 <- c(one_sig(one_mvpa_agg_E1_lFFA1), one_sig(one_mvpa_agg_E1_rFFA1))
+color_uni_E1_FFA1 <- sig_colors(sig_mvpa_agg_E1_FFA1)
 
 plot_mvpa_E1_FFA1 <- {
   ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -732,8 +776,8 @@ plot_mvpa_E1_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "*", "", "", "***", "*", "*", "", ""), color = c(rep("red", 6), "blue", rep("red", 3)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E1_FFA1, color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -793,8 +837,9 @@ contrast(emmeans(emm_anova_E1_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_lFFA2}
-contrast(emm_anova_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_lFFA2 <- contrast(emm_anova_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_lFFA2
 ```
 
 ###### Right FFA2
@@ -820,12 +865,18 @@ contrast(emmeans(emm_anova_E1_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_rFFA2 right}
-contrast(emm_anova_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_rFFA2 <- contrast(emm_anova_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_rFFA2
 ```
 
 ##### Plot
 ```{r plots for functional scans E1 (anova) FFA2}
+
+sig_uni_E1_FFA2 <- c(signif(as.data.frame(contr_anova_E1_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E1_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_FFA2 <- sig_colors(sig_uni_E1_FFA2)
+
 # add the column of Hemisphere
 nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA2))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
@@ -840,6 +891,7 @@ plot_uni_E1_FFA2 <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E1_FFA2, color = color_uni_E1_FFA2, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -857,23 +909,31 @@ df_mvpa_agg_E1_FFA2 <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E1_FFA2 %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E1_lFFA2<- {
+  df_mvpa_agg_E1_FFA2 %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_lFFA2
 ```
 
 ```{r one-sample for results of mvpa E1 rFFA2}
-df_mvpa_agg_E1_FFA2 %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E1_rFFA2 <- {
+  df_mvpa_agg_E1_FFA2 %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_rFFA2
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA2}
+
+sig_mvpa_agg_E1_FFA2 <- c(one_sig(one_mvpa_agg_E1_lFFA2), one_sig(one_mvpa_agg_E1_rFFA2))
+color_uni_E1_FFA2 <- sig_colors(sig_mvpa_agg_E1_FFA2)
 
 plot_mvpa_E1_FFA2 <- {
   ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -885,8 +945,8 @@ plot_mvpa_E1_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "*", "", "", "", "***", "**", "*", "*", "*"), color = c(rep("red", 7), "blue", rep("red", 1), "blue"), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E1_FFA2, color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -942,12 +1002,16 @@ contrast(emmeans(emm_anova_E1_VWFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_VWFA}
-contrast(emm_anova_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_VWFA <- contrast(emm_anova_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_VWFA
 ```
 
 ##### Plot
 ```{r plots for functional scans E1 (anova) VWFA}
+
+sig_uni_E1_VWFA <- c(signif(as.data.frame(contr_anova_E1_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_VWFA <- sig_colors(sig_uni_E1_VWFA)
 
 plot_uni_E1_VWFA <- {
   ggplot(data = as.data.frame(emm_anova_E1_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
@@ -957,6 +1021,7 @@ plot_uni_E1_VWFA <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E1_VWFA, color = color_uni_E1_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -974,15 +1039,20 @@ df_mvpa_agg_E1_VWFA <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E1_VWFA %>% 
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E1_VWFA <- {
+  df_mvpa_agg_E1_VWFA %>% 
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_VWFA
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) VWFA}
+
+sig_mvpa_agg_E1_VWFA <- c(one_sig(one_mvpa_agg_E1_VWFA))
+color_uni_E1_VWFA <- sig_colors(sig_mvpa_agg_E1_VWFA)
 
 plot_mvpa_E1_VWFA <- {
   ggplot(data = desc_mvpa_acc_E1_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -994,8 +1064,8 @@ plot_mvpa_E1_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "*", "", "", ""), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E1_VWFA, color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1056,8 +1126,9 @@ contrast(emmeans(emm_anova_E1_lLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_lLOC}
-contrast(emm_anova_E1_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_lLOC <- contrast(emm_anova_E1_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_lLOC
 ```
 
 ###### Right LOC
@@ -1083,12 +1154,18 @@ contrast(emmeans(emm_anova_E1_rLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E1_rLOC right}
-contrast(emm_anova_E1_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E1_rLOC <- contrast(emm_anova_E1_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
+contr_anova_E1_rLOC
 ```
 
 ##### Plot
 ```{r plots for functional scans E1 (anova) LOC}
+
+sig_uni_E1_LOC <- c(signif(as.data.frame(contr_anova_E1_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E1_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_LOC <- sig_colors(sig_uni_E1_LOC)
+
 # add the column of Hemisphere
 nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lLOC))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
@@ -1103,6 +1180,7 @@ plot_uni_E1_LOC <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E1_LOC, color = color_uni_E1_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1120,23 +1198,31 @@ df_mvpa_agg_E1_LOC <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E1_LOC %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E1_lLOC <- {
+  df_mvpa_agg_E1_LOC %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_lLOC
 ```
 
 ```{r one-sample for results of mvpa E1 rLOC}
-df_mvpa_agg_E1_LOC %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E1_rLOC <- {
+  df_mvpa_agg_E1_LOC %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E1_rLOC
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) LOC}
+
+sig_mvpa_agg_E1_LOC <- c(one_sig(one_mvpa_agg_E1_lLOC), one_sig(one_mvpa_agg_E1_rLOC))
+color_uni_E1_LOC <- sig_colors(sig_mvpa_agg_E1_LOC)
 
 plot_mvpa_E1_LOC <- {
   ggplot(data = desc_mvpa_acc_E1_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1148,16 +1234,14 @@ plot_mvpa_E1_LOC <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "*", "**", "**", "**", "***", "*", "***", "***", "**"), color = c(rep("red", 6), "blue", rep("red", 3)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E1_LOC, color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
 
 plot_mvpa_E1_LOC
 ```
-
-
 
 
 # Experiment 2: Chinese and English
@@ -1214,7 +1298,7 @@ plot_loc_E2 <- {
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Neural Responses") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     general_theme
 }
 
@@ -1318,8 +1402,9 @@ contrast(emmeans(emm_anova_E2_lFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_lFFA}
-contrast(emm_anova_E2_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_lFFA <- contrast(emm_anova_E2_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_lFFA
 ```
 
 ###### Right FFA
@@ -1345,12 +1430,18 @@ contrast(emmeans(emm_anova_E2_rFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_rFFA right}
-contrast(emm_anova_E2_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_rFFA <- contrast(emm_anova_E2_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_rFFA
 ```
 
 ##### Plot
 ```{r plots for functional scans E2 (anova) FFA}
+
+sig_uni_E2_FFA <- c(signif(as.data.frame(contr_anova_E2_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E2_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E2_FFA <- sig_colors(sig_uni_E2_FFA)
+
 # add the column of Hemisphere
 nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
@@ -1365,6 +1456,7 @@ plot_uni_E2_FFA <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+     geom_text(label = sig_uni_E2_FFA, color = color_uni_E2_FFA, size = 5, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1382,23 +1474,31 @@ df_mvpa_agg_E2_FFA <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E2_FFA %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E2_lFFA <- {
+  df_mvpa_agg_E2_FFA %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_lFFA
 ```
 
 ```{r one-sample for results of mvpa E2 rFFA}
-df_mvpa_agg_E2_FFA %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E2_rFFA <- {
+  df_mvpa_agg_E2_FFA %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_rFFA
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA}
+
+sig_mvpa_agg_E2_FFA <- c(one_sig(one_mvpa_agg_E2_lFFA), one_sig(one_mvpa_agg_E2_rFFA))
+color_uni_E2_FFA <- sig_colors(sig_mvpa_agg_E2_FFA)
 
 plot_mvpa_E2_FFA <- {
   ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1410,8 +1510,8 @@ plot_mvpa_E2_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("*", "", "", "*", "**", "***", "", "", "*", "*"), color = c(rep("red", 8), rep("blue", 1), "red"), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E2_FFA, color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1472,8 +1572,9 @@ contrast(emmeans(emm_anova_E2_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_lFFA1}
-contrast(emm_anova_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_lFFA1 <- contrast(emm_anova_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_lFFA1
 ```
 
 ###### Right FFA1
@@ -1499,12 +1600,18 @@ contrast(emmeans(emm_anova_E2_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_rFFA1 right}
-contrast(emm_anova_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_rFFA1 <- contrast(emm_anova_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_rFFA1
 ```
 
 ##### Plot
 ```{r plots for functional scans E2 (anova) FFA1}
+
+sig_uni_E2_FFA1 <- c(signif(as.data.frame(contr_anova_E2_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E2_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E2_FFA1 <- sig_colors(sig_uni_E2_FFA1)
+
 # add the column of Hemisphere
 nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA1))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
@@ -1519,6 +1626,7 @@ plot_uni_E2_FFA1 <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E2_FFA1, color = color_uni_E2_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1536,23 +1644,31 @@ df_mvpa_agg_E2_FFA1 <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
+one_mvpa_agg_E2_lFFA1 <- {
 df_mvpa_agg_E2_FFA1 %>% 
   filter(Hemisphere == "left") %>%  
   select(-Hemisphere) %>% 
   sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+}
+one_mvpa_agg_E2_lFFA1
 ```
 
 ```{r one-sample for results of mvpa E2 rFFA1}
-df_mvpa_agg_E2_FFA1 %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E2_rFFA1 <- {
+  df_mvpa_agg_E2_FFA1 %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_rFFA1
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA1}
+
+sig_mvpa_agg_E2_FFA1 <- c(one_sig(one_mvpa_agg_E2_lFFA1), one_sig(one_mvpa_agg_E2_rFFA1))
+color_uni_E2_FFA1 <- sig_colors(sig_mvpa_agg_E2_FFA1)
 
 plot_mvpa_E2_FFA1 <- {
   ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1564,8 +1680,8 @@ plot_mvpa_E2_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("**", "", "", "", "*", "***", "", "*", "", ""), color = c(rep("red", 4), "blue", rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E2_FFA1, color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1625,8 +1741,9 @@ contrast(emmeans(emm_anova_E2_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_lFFA2}
-contrast(emm_anova_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_lFFA2 <- contrast(emm_anova_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_lFFA2
 ```
 
 ###### Right FFA2
@@ -1652,12 +1769,18 @@ contrast(emmeans(emm_anova_E2_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_rFFA2 right}
-contrast(emm_anova_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_rFFA2 <- contrast(emm_anova_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_rFFA2
 ```
 
 ##### Plot
 ```{r plots for functional scans E2 (anova) FFA2}
+
+sig_uni_E2_FFA2 <- c(signif(as.data.frame(contr_anova_E2_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E2_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E2_FFA2 <- sig_colors(sig_uni_E2_FFA2)
+
 # add the column of Hemisphere
 nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA2))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
@@ -1672,6 +1795,7 @@ plot_uni_E2_FFA2 <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(-0.1, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1689,23 +1813,31 @@ df_mvpa_agg_E2_FFA2 <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E2_FFA2 %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E2_lFFA2 <- {
+  df_mvpa_agg_E2_FFA2 %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_lFFA2
 ```
 
 ```{r one-sample for results of mvpa E2 rFFA2}
-df_mvpa_agg_E2_FFA2 %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E2_rFFA2 <- {
+  df_mvpa_agg_E2_FFA2 %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_rFFA2
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA2}
+
+sig_mvpa_agg_E2_FFA2 <- c(one_sig(one_mvpa_agg_E2_lFFA2), one_sig(one_mvpa_agg_E2_rFFA2))
+color_uni_E2_FFA2 <- sig_colors(sig_mvpa_agg_E2_FFA2)
 
 plot_mvpa_E2_FFA2 <- {
   ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1717,8 +1849,8 @@ plot_mvpa_E2_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "", "", "*", "*", "", "", "", ""), color = c(rep("red", 5), "blue", rep("red", 4)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1774,12 +1906,16 @@ contrast(emmeans(emm_anova_E2_VWFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_VWFA}
-contrast(emm_anova_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_VWFA <- contrast(emm_anova_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_VWFA
 ```
 
 ##### Plot
 ```{r plots for functional scans E2 (anova) VWFA}
+
+sig_uni_E2_VWFA <- c(signif(as.data.frame(contr_anova_E2_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E2_VWFA <- sig_colors(sig_uni_E2_VWFA)
 
 plot_uni_E2_VWFA <- {
   ggplot(data = as.data.frame(emm_anova_E2_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
@@ -1787,8 +1923,9 @@ plot_uni_E2_VWFA <- {
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    scale_y_continuous(expand= c(0, 0), limits = c(-0.3, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E2_VWFA, color = color_uni_E2_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1806,15 +1943,20 @@ df_mvpa_agg_E2_VWFA <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E2_VWFA %>% 
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E2_lVWFA <- {
+  df_mvpa_agg_E2_VWFA %>% 
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_lVWFA
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) VWFA}
+
+sig_mvpa_agg_E2_VWFA <- one_sig(one_mvpa_agg_E2_lVWFA)
+color_uni_E2_VWFA <- sig_colors(sig_mvpa_agg_E2_VWFA)
 
 plot_mvpa_E2_VWFA <- {
   ggplot(data = desc_mvpa_acc_E2_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1826,8 +1968,8 @@ plot_mvpa_E2_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "", "", "*"), color = c(rep("red", 5)), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E2_VWFA, color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
@@ -1887,8 +2029,9 @@ contrast(emmeans(emm_anova_E2_lLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_lLOC}
-contrast(emm_anova_E2_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_lLOC <- contrast(emm_anova_E2_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_lLOC
 ```
 
 ###### Right LOC
@@ -1914,12 +2057,18 @@ contrast(emmeans(emm_anova_E2_rLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
 
 ```{r simple effect analyses for emm_anova_E2_rLOC right}
-contrast(emm_anova_E2_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+contr_anova_E2_rLOC <- contrast(emm_anova_E2_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_anova_E2_rLOC
 ```
 
 ##### Plot
 ```{r plots for functional scans E2 (anova) LOC}
+
+sig_uni_E2_LOC <- c(signif(as.data.frame(contr_anova_E2_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E2_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E2_LOC <- sig_colors(sig_uni_E2_LOC)
+
 # add the column of Hemisphere
 nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lLOC))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
@@ -1934,6 +2083,7 @@ plot_uni_E2_LOC <- {
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
     labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_uni_E2_LOC, color = color_uni_E2_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
 
@@ -1951,23 +2101,31 @@ df_mvpa_agg_E2_LOC <- {
   select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
 }
 
-df_mvpa_agg_E2_LOC %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-
+one_mvpa_agg_E2_lLOC <- {
+  df_mvpa_agg_E2_LOC %>% 
+    filter(Hemisphere == "left") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_lLOC
 ```
 
 ```{r one-sample for results of mvpa E2 rLOC}
-df_mvpa_agg_E2_LOC %>% 
-  filter(Hemisphere == "right") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+one_mvpa_agg_E2_rLOC <- {
+  df_mvpa_agg_E2_LOC %>% 
+    filter(Hemisphere == "right") %>%  
+    select(-Hemisphere) %>% 
+    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+}
+one_mvpa_agg_E2_rLOC
 ```
 
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) LOC}
+
+sig_mvpa_agg_E2_LOC <- c(one_sig(one_mvpa_agg_E2_lLOC), one_sig(one_mvpa_agg_E2_rLOC))
+color_uni_E2_LOC <- sig_colors(sig_mvpa_agg_E2_LOC)
 
 plot_mvpa_E2_LOC <- {
   ggplot(data = desc_mvpa_acc_E2_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1979,8 +2137,8 @@ plot_mvpa_E2_LOC <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Stimuli", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = c("***", "", "***", "*", "***", "***", "*", "*", "**", "*"), color = c(rep("red", 6), "blue", rep("red", 2), "blue"), size = 10, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = sig_mvpa_agg_E2_LOC, color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme 
   # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
 }
