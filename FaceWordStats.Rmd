@@ -60,16 +60,7 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
 
 # criterion of vertex number
 nVtx_min <- 50
-nDigitals <- 3 # number of digitials of p-values in plots
-sig_size <- 5 # font size of p-values in plots
 
-# function to obtain the p values for one-sample t-test
-one_sig <- function(one_results, nDigitals = 4) {
-  sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
-  
-  # sig_vector <- as.character(sig_vector)
-  return(sig_vector)
-}
 
 ```
 
@@ -80,6 +71,15 @@ tmp <- sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE
 
 activationUL <- 2.75
 onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
+nDigitals <- 3 # number of digitials of p-values in plots
+sig_size <- 5 # font size of p-values in plots
+
+# function to obtain the p values for one-sample t-test
+one_sig <- function(one_results, nDigitals = 4) {
+  sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
+  # sig_vector <- as.character(sig_vector)
+  return(sig_vector)
+}
 
 ```
 
@@ -588,7 +588,6 @@ one_mvpa_agg_E1_rFFA <- {
 
 one_mvpa_agg_E1_rFFA
 ```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA}
