@@ -384,10 +384,10 @@ contrast(emm_loc_lmm_E1, "pairwise")
 ```
 
 ### Plot
-```{r plots for loc E1 (anova)}
+```{r plots for loc E1 (anova), fig.asp=1.5}
 plot_loc_E1 <- {
   ggplot(data = as.data.frame(emm_loc_anova_E1), aes(y = emmean, x = Conditions)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    geom_col(position = "identity", color = "black", alpha = .7) +  # position of columns and countour of columns
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -542,14 +542,14 @@ Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
 
 plot_uni_E1_FFA <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -598,7 +598,7 @@ color_uni_E1_FFA <- sig_colors(sig_mvpa_agg_E1_FFA)
 plot_mvpa_E1_FFA <- {
   ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -607,8 +607,9 @@ plot_mvpa_E1_FFA <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA
@@ -713,14 +714,14 @@ Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA1), as.data.frame(emm_anova_E1_rFFA1)))
 
 plot_uni_E1_FFA1 <- {
-  ggplot(data = desp_uni_E1_FFA1, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E1_FFA1, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E1_FFA1, color = color_uni_E1_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -768,7 +769,7 @@ color_uni_E1_FFA1 <- sig_colors(sig_mvpa_agg_E1_FFA1)
 plot_mvpa_E1_FFA1 <- {
   ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -777,8 +778,9 @@ plot_mvpa_E1_FFA1 <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA1, color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA1
@@ -882,14 +884,14 @@ Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA2), as.data.frame(emm_anova_E1_rFFA2)))
 
 plot_uni_E1_FFA2 <- {
-  ggplot(data = desp_uni_E1_FFA2, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E1_FFA2, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E1_FFA2, color = color_uni_E1_FFA2, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -937,7 +939,7 @@ color_uni_E1_FFA2 <- sig_colors(sig_mvpa_agg_E1_FFA2)
 plot_mvpa_E1_FFA2 <- {
   ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -946,8 +948,9 @@ plot_mvpa_E1_FFA2 <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA2, color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA2
@@ -1048,7 +1051,7 @@ one_mvpa_agg_E1_VWFA
 
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) VWFA}
+```{r plots for functional scans mvpa E1 (anova) VWFA, fig.asp=1.5}
 
 sig_mvpa_agg_E1_VWFA <- c(one_sig(one_mvpa_agg_E1_VWFA))
 color_uni_E1_VWFA <- sig_colors(sig_mvpa_agg_E1_VWFA)
@@ -1065,8 +1068,9 @@ plot_mvpa_E1_VWFA <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_VWFA, color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_VWFA
@@ -1171,14 +1175,14 @@ Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_LOC <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lLOC), as.data.frame(emm_anova_E1_rLOC)))
 
 plot_uni_E1_LOC <- {
-  ggplot(data = desp_uni_E1_LOC, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E1_LOC, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E1_LOC, color = color_uni_E1_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1226,7 +1230,7 @@ color_uni_E1_LOC <- sig_colors(sig_mvpa_agg_E1_LOC)
 plot_mvpa_E1_LOC <- {
   ggplot(data = desc_mvpa_acc_E1_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1235,8 +1239,9 @@ plot_mvpa_E1_LOC <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_LOC, color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_LOC
@@ -1289,7 +1294,7 @@ contrast(emm_loc_lmm_E2, "pairwise")
 ```
 
 ### Plot
-```{r plots for loc E2 (anova)}
+```{r plots for loc E2 (anova), fig.asp=1.5}
 plot_loc_E2 <- {
   ggplot(data = as.data.frame(emm_loc_anova_E2), aes(y = emmean, x = Conditions)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
@@ -1447,14 +1452,14 @@ Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
 desp_uni_E2_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA), as.data.frame(emm_anova_E2_rFFA)))
 
 plot_uni_E2_FFA <- {
-  ggplot(data = desp_uni_E2_FFA, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E2_FFA, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
      geom_text(label = sig_uni_E2_FFA, color = color_uni_E2_FFA, size = 5, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1502,7 +1507,7 @@ color_uni_E2_FFA <- sig_colors(sig_mvpa_agg_E2_FFA)
 plot_mvpa_E2_FFA <- {
   ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1511,8 +1516,9 @@ plot_mvpa_E2_FFA <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA, color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA
@@ -1617,14 +1623,14 @@ Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
 desp_uni_E2_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA1), as.data.frame(emm_anova_E2_rFFA1)))
 
 plot_uni_E2_FFA1 <- {
-  ggplot(data = desp_uni_E2_FFA1, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E2_FFA1, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E2_FFA1, color = color_uni_E2_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1672,7 +1678,7 @@ color_uni_E2_FFA1 <- sig_colors(sig_mvpa_agg_E2_FFA1)
 plot_mvpa_E2_FFA1 <- {
   ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1681,8 +1687,9 @@ plot_mvpa_E2_FFA1 <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA1, color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA1
@@ -1786,14 +1793,14 @@ Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
 desp_uni_E2_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA2), as.data.frame(emm_anova_E2_rFFA2)))
 
 plot_uni_E2_FFA2 <- {
-  ggplot(data = desp_uni_E2_FFA2, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E2_FFA2, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(-0.1, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1841,7 +1848,7 @@ color_uni_E2_FFA2 <- sig_colors(sig_mvpa_agg_E2_FFA2)
 plot_mvpa_E2_FFA2 <- {
   ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1850,8 +1857,9 @@ plot_mvpa_E2_FFA2 <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA2
@@ -1952,7 +1960,7 @@ one_mvpa_agg_E2_lVWFA
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) VWFA}
+```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=1.5}
 
 sig_mvpa_agg_E2_VWFA <- one_sig(one_mvpa_agg_E2_lVWFA)
 color_uni_E2_VWFA <- sig_colors(sig_mvpa_agg_E2_VWFA)
@@ -1969,8 +1977,9 @@ plot_mvpa_E2_VWFA <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_VWFA, color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_VWFA
@@ -2074,14 +2083,14 @@ Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
 desp_uni_E2_LOC <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lLOC), as.data.frame(emm_anova_E2_rLOC)))
 
 plot_uni_E2_LOC <- {
-  ggplot(data = desp_uni_E2_LOC, aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
+  ggplot(data = desp_uni_E2_LOC, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_uni_E2_LOC, color = color_uni_E2_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -2129,7 +2138,7 @@ color_uni_E2_LOC <- sig_colors(sig_mvpa_agg_E2_LOC)
 plot_mvpa_E2_LOC <- {
   ggplot(data = desc_mvpa_acc_E2_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -2138,8 +2147,9 @@ plot_mvpa_E2_LOC <- {
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_LOC, color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme 
-  # theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+          axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_LOC
