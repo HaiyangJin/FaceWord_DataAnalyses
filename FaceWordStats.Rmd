@@ -596,7 +596,7 @@ sig_mvpa_agg_E1_FFA <- c(one_sig(one_mvpa_agg_E1_lFFA), one_sig(one_mvpa_agg_E1_
 color_uni_E1_FFA <- sig_colors(sig_mvpa_agg_E1_FFA)
 
 plot_mvpa_E1_FFA <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -608,8 +608,12 @@ plot_mvpa_E1_FFA <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA
@@ -767,7 +771,7 @@ sig_mvpa_agg_E1_FFA1 <- c(one_sig(one_mvpa_agg_E1_lFFA1), one_sig(one_mvpa_agg_E
 color_uni_E1_FFA1 <- sig_colors(sig_mvpa_agg_E1_FFA1)
 
 plot_mvpa_E1_FFA1 <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -779,8 +783,12 @@ plot_mvpa_E1_FFA1 <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA1, color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA1
@@ -937,7 +945,7 @@ sig_mvpa_agg_E1_FFA2 <- c(one_sig(one_mvpa_agg_E1_lFFA2), one_sig(one_mvpa_agg_E
 color_uni_E1_FFA2 <- sig_colors(sig_mvpa_agg_E1_FFA2)
 
 plot_mvpa_E1_FFA2 <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -949,8 +957,12 @@ plot_mvpa_E1_FFA2 <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_FFA2, color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_FFA2
@@ -1057,7 +1069,7 @@ sig_mvpa_agg_E1_VWFA <- c(one_sig(one_mvpa_agg_E1_VWFA))
 color_uni_E1_VWFA <- sig_colors(sig_mvpa_agg_E1_VWFA)
 
 plot_mvpa_E1_VWFA <- {
-  ggplot(data = desc_mvpa_acc_E1_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E1_VWFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1069,8 +1081,12 @@ plot_mvpa_E1_VWFA <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_VWFA, color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_VWFA
@@ -1228,7 +1244,7 @@ sig_mvpa_agg_E1_LOC <- c(one_sig(one_mvpa_agg_E1_lLOC), one_sig(one_mvpa_agg_E1_
 color_uni_E1_LOC <- sig_colors(sig_mvpa_agg_E1_LOC)
 
 plot_mvpa_E1_LOC <- {
-  ggplot(data = desc_mvpa_acc_E1_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E1_LOC, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1240,8 +1256,12 @@ plot_mvpa_E1_LOC <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E1_LOC, color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E1_LOC
@@ -1505,7 +1525,7 @@ sig_mvpa_agg_E2_FFA <- c(one_sig(one_mvpa_agg_E2_lFFA), one_sig(one_mvpa_agg_E2_
 color_uni_E2_FFA <- sig_colors(sig_mvpa_agg_E2_FFA)
 
 plot_mvpa_E2_FFA <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1517,8 +1537,12 @@ plot_mvpa_E2_FFA <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA, color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA
@@ -1676,7 +1700,7 @@ sig_mvpa_agg_E2_FFA1 <- c(one_sig(one_mvpa_agg_E2_lFFA1), one_sig(one_mvpa_agg_E
 color_uni_E2_FFA1 <- sig_colors(sig_mvpa_agg_E2_FFA1)
 
 plot_mvpa_E2_FFA1 <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1688,8 +1712,12 @@ plot_mvpa_E2_FFA1 <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA1, color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA1
@@ -1846,7 +1874,7 @@ sig_mvpa_agg_E2_FFA2 <- c(one_sig(one_mvpa_agg_E2_lFFA2), one_sig(one_mvpa_agg_E
 color_uni_E2_FFA2 <- sig_colors(sig_mvpa_agg_E2_FFA2)
 
 plot_mvpa_E2_FFA2 <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1858,8 +1886,12 @@ plot_mvpa_E2_FFA2 <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_FFA2
@@ -1966,7 +1998,7 @@ sig_mvpa_agg_E2_VWFA <- one_sig(one_mvpa_agg_E2_lVWFA)
 color_uni_E2_VWFA <- sig_colors(sig_mvpa_agg_E2_VWFA)
 
 plot_mvpa_E2_VWFA <- {
-  ggplot(data = desc_mvpa_acc_E2_VWFA, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E2_VWFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1978,8 +2010,12 @@ plot_mvpa_E2_VWFA <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_VWFA, color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_VWFA
@@ -2136,7 +2172,7 @@ sig_mvpa_agg_E2_LOC <- c(one_sig(one_mvpa_agg_E2_lLOC), one_sig(one_mvpa_agg_E2_
 color_uni_E2_LOC <- sig_colors(sig_mvpa_agg_E2_LOC)
 
 plot_mvpa_E2_LOC <- {
-  ggplot(data = desc_mvpa_acc_E2_LOC, aes(y = emmean, x = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = desc_mvpa_acc_E2_LOC, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -2148,8 +2184,12 @@ plot_mvpa_E2_LOC <- {
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = sig_mvpa_agg_E2_LOC, color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-          axis.line = element_line(size = 3)) 
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
 }
 
 plot_mvpa_E2_LOC
