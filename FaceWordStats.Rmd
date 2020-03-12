@@ -76,11 +76,11 @@ nDigitals <- 3 # number of digitials of p-values in plots
 sig_size <- 5 # font size of p-values in plots
 
 # function to obtain the p values for one-sample t-test
-one_sig <- function(one_results, nDigitals = 4) {
-  sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
-  # sig_vector <- as.character(sig_vector)
-  return(sig_vector)
-}
+# one_sig <- function(one_results, nDigitals = 4) {
+#   sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
+#   # sig_vector <- as.character(sig_vector)
+#   return(sig_vector)
+# }
 
 ```
 
@@ -169,11 +169,11 @@ df_mvpa_acc <- {
 
 ```{r descriptive analyses for mvpa, include=showAll}
 desc_mvpa_acc <- {
-  df_mvpa_acc %>% 
-    group_by(ExpCode, Hemisphere, Label, ClassifyPair) %>% 
+  df_mvpa_acc %>%
+    group_by(ExpCode, Hemisphere, Label, ClassifyPair) %>%
     summarize(emmean = mean(Accuracy), Count = n(), SE = sd(Accuracy)/sqrt(Count)) %>%
     mutate(lower.CL = lower_ci(emmean, SE, Count),
-           upper.CL = upper_ci(emmean, SE, Count)) %>% 
+           upper.CL = upper_ci(emmean, SE, Count)) %>%
     ungroup()
   }
 
@@ -610,42 +610,35 @@ plot_uni_E1_FFA
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
-```{r one-sample for results of mvpa E1 lFFA}
-df_mvpa_agg_E1_FFA <- {
+```{r one-sample for results of mvpa E1 FFA}
+
+one_mvpa_agg_E1_FFA <- {
   df_mvpa_acc_E1_FFA %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E1_lFFA <- {
-  df_mvpa_agg_E1_FFA %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately
-}
+one_mvpa_agg_E1_FFA
 
-one_mvpa_agg_E1_lFFA
 ```
 
-```{r one-sample for results of mvpa E1 rFFA}
-one_mvpa_agg_E1_rFFA <- {
-  df_mvpa_agg_E1_FFA %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-
-one_mvpa_agg_E1_rFFA
-```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA, fig.height=3.5, fig.width=6}
+```{r plots for functional scans mvpa E1 (anova) FFA, fig.asp=0.5}
 
-sig_mvpa_agg_E1_FFA <- c(one_sig(one_mvpa_agg_E1_lFFA), one_sig(one_mvpa_agg_E1_rFFA))
-color_uni_E1_FFA <- sig_colors(sig_mvpa_agg_E1_FFA)
+color_uni_E1_FFA <- sig_colors(one_mvpa_agg_E1_FFA$p)
 
 plot_mvpa_E1_FFA <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -653,9 +646,9 @@ plot_mvpa_E1_FFA <- {
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_FFA$p, 4), color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -672,7 +665,8 @@ plot_mvpa_E1_FFA
 ##### One-sample t-test
 ```{r Similarity of top + bottom to intact vs. misconfigured in FFA}
 
-one_simi_E1_FFA <- df_simi_rate_E1_FFA %>% 
+one_simi_E1_FFA <- {
+  df_simi_rate_E1_FFA %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
               SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
@@ -835,41 +829,34 @@ plot_uni_E1_FFA1
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E1 lFFA1}
-df_mvpa_agg_E1_FFA1 <- {
+```{r one-sample for results of mvpa E1 FFA1}
+
+one_mvpa_agg_E1_FFA1 <- {
   df_mvpa_acc_E1_FFA1 %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E1_lFFA1 <- {
-  df_mvpa_agg_E1_FFA1 %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_lFFA1
+one_mvpa_agg_E1_FFA1
+
 ```
-
-```{r one-sample for results of mvpa E1 rFFA1}
-one_mvpa_agg_E1_rFFA1 <- {
-  df_mvpa_agg_E1_FFA1 %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_rFFA1
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA1, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E1_FFA1 <- c(one_sig(one_mvpa_agg_E1_lFFA1), one_sig(one_mvpa_agg_E1_rFFA1))
-color_uni_E1_FFA1 <- sig_colors(sig_mvpa_agg_E1_FFA1)
+color_uni_E1_FFA1 <- sig_colors(one_mvpa_agg_E1_FFA1$p)
 
 plot_mvpa_E1_FFA1 <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA1, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E1_FFA1, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -877,9 +864,8 @@ plot_mvpa_E1_FFA1 <- {
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E1_FFA1, color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
+    geom_text(label = signif(one_mvpa_agg_E1_FFA1$p, 4), color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -997,7 +983,7 @@ plot_uni_E1_FFA2 <- {
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises 
     geom_text(label = sig_uni_E1_FFA2, color = color_uni_E1_FFA2, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1009,41 +995,34 @@ plot_uni_E1_FFA2
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E1 lFFA2}
-df_mvpa_agg_E1_FFA2 <- {
+```{r one-sample for results of mvpa E1 FFA2}
+
+one_mvpa_agg_E1_FFA2 <- {
   df_mvpa_acc_E1_FFA2 %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E1_lFFA2<- {
-  df_mvpa_agg_E1_FFA2 %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_lFFA2
+one_mvpa_agg_E1_FFA2
+
 ```
-
-```{r one-sample for results of mvpa E1 rFFA2}
-one_mvpa_agg_E1_rFFA2 <- {
-  df_mvpa_agg_E1_FFA2 %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_rFFA2
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) FFA2, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E1_FFA2 <- c(one_sig(one_mvpa_agg_E1_lFFA2), one_sig(one_mvpa_agg_E1_rFFA2))
-color_uni_E1_FFA2 <- sig_colors(sig_mvpa_agg_E1_FFA2)
+color_uni_E1_FFA2 <- sig_colors(one_mvpa_agg_E1_FFA2$p)
 
 plot_mvpa_E1_FFA2 <- {
-  ggplot(data = desc_mvpa_acc_E1_FFA2, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E1_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1051,9 +1030,8 @@ plot_mvpa_E1_FFA2 <- {
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E1_FFA2, color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = signif(one_mvpa_agg_E1_FFA2$p, 4), color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1132,7 +1110,7 @@ plot_uni_E1_VWFA <- {
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "Decoding accuracy in FFA2", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises 
     geom_text(label = sig_uni_E1_VWFA, color = color_uni_E1_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -1145,29 +1123,33 @@ plot_uni_E1_VWFA
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 VWFA}
-df_mvpa_agg_E1_VWFA <- {
-  df_mvpa_acc_E1_VWFA %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
-}
 
 one_mvpa_agg_E1_VWFA <- {
-  df_mvpa_agg_E1_VWFA %>% 
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
+  df_mvpa_acc_E1_VWFA %>% 
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
-one_mvpa_agg_E1_VWFA
-```
 
+one_mvpa_agg_E1_VWFA
+
+```
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) VWFA, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E1_VWFA <- c(one_sig(one_mvpa_agg_E1_VWFA))
-color_uni_E1_VWFA <- sig_colors(sig_mvpa_agg_E1_VWFA)
+color_uni_E1_VWFA <- sig_colors(one_mvpa_agg_E1_VWFA$p)
 
 plot_mvpa_E1_VWFA <- {
-  ggplot(data = desc_mvpa_acc_E1_VWFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E1_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1176,8 +1158,8 @@ plot_mvpa_E1_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E1_VWFA, color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
+    geom_text(label = signif(one_mvpa_agg_E1_VWFA$p, 4), color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1308,41 +1290,34 @@ plot_uni_E1_LOC
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E1 lLOC}
-df_mvpa_agg_E1_LOC <- {
+```{r one-sample for results of mvpa E1 LOC}
+
+one_mvpa_agg_E1_LOC <- {
   df_mvpa_acc_E1_LOC %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E1_lLOC <- {
-  df_mvpa_agg_E1_LOC %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_lLOC
+one_mvpa_agg_E1_LOC
+
 ```
-
-```{r one-sample for results of mvpa E1 rLOC}
-one_mvpa_agg_E1_rLOC <- {
-  df_mvpa_agg_E1_LOC %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E1_rLOC
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E1 (anova) LOC, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E1_LOC <- c(one_sig(one_mvpa_agg_E1_lLOC), one_sig(one_mvpa_agg_E1_rLOC))
-color_uni_E1_LOC <- sig_colors(sig_mvpa_agg_E1_LOC)
+color_uni_E1_LOC <- sig_colors(one_mvpa_agg_E1_LOC$p)
 
 plot_mvpa_E1_LOC <- {
-  ggplot(data = desc_mvpa_acc_E1_LOC, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E1_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1352,7 +1327,7 @@ plot_mvpa_E1_LOC <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E1_LOC, color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_LOC$p, 4), color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1589,41 +1564,34 @@ plot_uni_E2_FFA
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E2 lFFA}
-df_mvpa_agg_E2_FFA <- {
+```{r one-sample for results of mvpa E2 FFA}
+
+one_mvpa_agg_E2_FFA <- {
   df_mvpa_acc_E2_FFA %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E2_lFFA <- {
-  df_mvpa_agg_E2_FFA %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_lFFA
+one_mvpa_agg_E2_FFA
+
 ```
-
-```{r one-sample for results of mvpa E2 rFFA}
-one_mvpa_agg_E2_rFFA <- {
-  df_mvpa_agg_E2_FFA %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_rFFA
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E2_FFA <- c(one_sig(one_mvpa_agg_E2_lFFA), one_sig(one_mvpa_agg_E2_rFFA))
-color_uni_E2_FFA <- sig_colors(sig_mvpa_agg_E2_FFA)
+color_uni_E2_FFA <- sig_colors(one_mvpa_agg_E2_FFA$p)
 
 plot_mvpa_E2_FFA <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E2_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1632,8 +1600,8 @@ plot_mvpa_E2_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E2_FFA, color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding Accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
+    geom_text(label = signif(one_mvpa_agg_E2_FFA$p, 4), color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1764,41 +1732,34 @@ plot_uni_E2_FFA1
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E2 lFFA1}
-df_mvpa_agg_E2_FFA1 <- {
+```{r one-sample for results of mvpa E2 FFA1}
+
+one_mvpa_agg_E2_FFA1 <- {
   df_mvpa_acc_E2_FFA1 %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E2_lFFA1 <- {
-df_mvpa_agg_E2_FFA1 %>% 
-  filter(Hemisphere == "left") %>%  
-  select(-Hemisphere) %>% 
-  sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_lFFA1
+one_mvpa_agg_E2_FFA1
+
 ```
-
-```{r one-sample for results of mvpa E2 rFFA1}
-one_mvpa_agg_E2_rFFA1 <- {
-  df_mvpa_agg_E2_FFA1 %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_rFFA1
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA1, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E2_FFA1 <- c(one_sig(one_mvpa_agg_E2_lFFA1), one_sig(one_mvpa_agg_E2_rFFA1))
-color_uni_E2_FFA1 <- sig_colors(sig_mvpa_agg_E2_FFA1)
+color_uni_E2_FFA1 <- sig_colors(one_mvpa_agg_E2_FFA1$p)
 
 plot_mvpa_E2_FFA1 <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA1, aes(y = emmean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E2_FFA1, aes(y = mean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1807,8 +1768,8 @@ plot_mvpa_E2_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E2_FFA1, color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding Accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
+    geom_text(label = signif(one_mvpa_agg_E2_FFA1$p), color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1938,41 +1899,34 @@ plot_uni_E2_FFA2
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E2 lFFA2}
-df_mvpa_agg_E2_FFA2 <- {
+```{r one-sample for results of mvpa E2 FFA2}
+
+one_mvpa_agg_E2_FFA2 <- {
   df_mvpa_acc_E2_FFA2 %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E2_lFFA2 <- {
-  df_mvpa_agg_E2_FFA2 %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_lFFA2
+one_mvpa_agg_E2_FFA2
+
 ```
-
-```{r one-sample for results of mvpa E2 rFFA2}
-one_mvpa_agg_E2_rFFA2 <- {
-  df_mvpa_agg_E2_FFA2 %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_rFFA2
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) FFA2, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E2_FFA2 <- c(one_sig(one_mvpa_agg_E2_lFFA2), one_sig(one_mvpa_agg_E2_rFFA2))
-color_uni_E2_FFA2 <- sig_colors(sig_mvpa_agg_E2_FFA2)
+color_uni_E2_FFA2 <- sig_colors(one_mvpa_agg_E2_FFA2$p)
 
 plot_mvpa_E2_FFA2 <- {
-  ggplot(data = desc_mvpa_acc_E2_FFA2, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E2_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -1981,8 +1935,8 @@ plot_mvpa_E2_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding Accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = signif(one_mvpa_agg_E2_FFA2$p), color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2074,29 +2028,33 @@ plot_uni_E2_VWFA
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 VWFA}
-df_mvpa_agg_E2_VWFA <- {
+
+one_mvpa_agg_E2_VWFA <- {
   df_mvpa_acc_E2_VWFA %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E2_lVWFA <- {
-  df_mvpa_agg_E2_VWFA %>% 
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_lVWFA
+one_mvpa_agg_E2_VWFA
+
 ```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) VWFA, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E2_VWFA <- one_sig(one_mvpa_agg_E2_lVWFA)
-color_uni_E2_VWFA <- sig_colors(sig_mvpa_agg_E2_VWFA)
+color_uni_E2_VWFA <- sig_colors(one_mvpa_agg_E2_VWFA$p)
 
 plot_mvpa_E2_VWFA <- {
-  ggplot(data = desc_mvpa_acc_E2_VWFA, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E2_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Hemisphere ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -2105,8 +2063,8 @@ plot_mvpa_E2_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E2_VWFA, color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding Accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = signif(one_mvpa_agg_E2_VWFA$p, 4), color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2236,41 +2194,34 @@ plot_uni_E2_LOC
 #### Multivarate analyses (MVPA)
 
 ##### One-sample t-test
-```{r one-sample for results of mvpa E2 lLOC}
-df_mvpa_agg_E2_LOC <- {
+```{r one-sample for results of mvpa E2 LOC}
+
+one_mvpa_agg_E2_LOC <- {
   df_mvpa_acc_E2_LOC %>% 
-  spread(ClassifyPair, Accuracy) %>% # change to table (each row is one subject)
-  select(-c(ExpCode, Label, SubjCode, Count)) # remove these columns
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
 }
 
-one_mvpa_agg_E2_lLOC <- {
-  df_mvpa_agg_E2_LOC %>% 
-    filter(Hemisphere == "left") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_lLOC
+one_mvpa_agg_E2_LOC
+
 ```
-
-```{r one-sample for results of mvpa E2 rLOC}
-one_mvpa_agg_E2_rLOC <- {
-  df_mvpa_agg_E2_LOC %>% 
-    filter(Hemisphere == "right") %>%  
-    select(-Hemisphere) %>% 
-    sapply(function(x) t.test(x, mu = 0.5, alternative = "greater")) # apply one-sample t-test to each column separately 
-}
-one_mvpa_agg_E2_rLOC
-```
-
 
 ##### Plot
 ```{r plots for functional scans mvpa E2 (anova) LOC, fig.height=3.5, fig.width=6}
 
-sig_mvpa_agg_E2_LOC <- c(one_sig(one_mvpa_agg_E2_lLOC), one_sig(one_mvpa_agg_E2_rLOC))
-color_uni_E2_LOC <- sig_colors(sig_mvpa_agg_E2_LOC)
+color_uni_E2_LOC <- sig_colors(one_mvpa_agg_E2_LOC$p)
 
 plot_mvpa_E2_LOC <- {
-  ggplot(data = desc_mvpa_acc_E2_LOC, aes(y = emmean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+  ggplot(data = one_mvpa_agg_E2_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
@@ -2279,8 +2230,8 @@ plot_mvpa_E2_LOC <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_mvpa_agg_E2_LOC, color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    labs(title = "Decoding Accuracy in LOC", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    geom_text(label = signif(one_mvpa_agg_E2_LOC$p, 4), color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
