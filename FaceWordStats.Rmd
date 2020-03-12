@@ -35,9 +35,9 @@ library(emmeans)
 # Load and clean data 
 ```{r assign filenames, include=showAll}
 # assign filenames
-fn_loc <- "FaceWord_Loc_Univariate.csv"
-fn_univar <- "FaceWord_Univariate.csv"
-fn_cosmo <- "FaceWord_CosmoMVPA.csv"
+fn_loc <- "FaceWord_Loc_Univariate.csv"  # univarite analysis Localizer
+fn_univar <- "FaceWord_Univariate.csv"  # univariate analysis main runs
+fn_cosmo <- "FaceWord_CosmoMVPA.csv"  # decoding MVPA main runs
 fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. misconfigured. 
 
 # set the order of levels in factors
@@ -45,18 +45,18 @@ locOrder <- c("face", "object", "word", "scrambled")
 
 facewordOrder <- c("face", "word")
 wordsOrder <- c("Chinese", "English")
-layoutOrder <- c("intact", "exchange", "top", "bottom")
+layoutOrder <- c("intact", "misconfigured", "top", "bottom")
 ROIOrder <- c("FFA", "FFA1", "FFA2", "VWFA", "LOC")
 
 pairOrder_E1 <- c("face_intact-word_intact",
-                  "face_intact-face_exchange",
+                  "face_intact-face_miscon",
                   "face_top-face_bottom",
-                  "word_intact-word_exchange",
+                  "word_intact-word_miscon",
                   "word_top-word_bottom")
 pairOrder_E2 <- c("Chinese_intact-English_intact",
-                  "Chinese_intact-Chinese_exchange",
+                  "Chinese_intact-Chinese_miscon",
                   "Chinese_top-Chinese_bottom",
-                  "English_intact-English_exchange",
+                  "English_intact-English_miscon",
                   "English_top-English_bottom")
 
 # criterion of vertex number
@@ -117,6 +117,7 @@ df_clean_univar <- {
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
     mutate(# FaceWord = as.factor(FaceWord),
+           Layout = gsub("exchange", "misconfigured", Layout),  # replace exchange with misconfigured
            Layout = factor(Layout, levels = layoutOrder), # convert the two IVs to factors
            Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
     select(ExpCode, Hemisphere, Label, SubjCode, FaceWord, Layout, Resp) 
@@ -149,7 +150,8 @@ df_clean_mvpa <- {
   df_mvpa %>% 
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     select(ExpCode, Label, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
-    mutate(Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")))
+    mutate(Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")),
+           ClassifyPair = gsub("exchange", "miscon", ClassifyPair))  # replace exchanged with miscon
 }
 
 str(df_clean_mvpa)
@@ -373,7 +375,7 @@ df_mvpa %>%
 ```
 
 
-# Experiment 1: faces and words
+# Experiment 1: Chinese faces and Chinese characters
 ## Localizer (Univariate analyses)
 ```{r only keep the univariate data for E1 loc}
 df_loc_E1 <- {
@@ -509,6 +511,7 @@ df_univar_agg_E1_FFA <- filter(df_univar_agg_E1, Label %in% label_FFA_E1)
 df_mvpa_E1_FFA <- filter(df_mvpa_E1, Label %in% label_FFA_E1)
 df_mvpa_acc_E1_FFA <- filter(df_mvpa_acc_E1, Label %in% label_FFA_E1)
 desc_mvpa_acc_E1_FFA <- filter(desc_mvpa_acc_E1, Label %in% label_FFA_E1)
+df_simi_rate_E1_FFA <- filter(df_rate_simi_E1, Labelname %in% label_FFA_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_FFA %>% filter(Label == label_rFFA_E1))$SubjCode))
@@ -596,7 +599,7 @@ plot_uni_E1_FFA <- {
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "Mean neural responses in FFA (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises 
     geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
@@ -606,7 +609,6 @@ plot_uni_E1_FFA
 
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 lFFA}
 df_mvpa_agg_E1_FFA <- {
@@ -637,7 +639,7 @@ one_mvpa_agg_E1_rFFA
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA}
+```{r plots for functional scans mvpa E1 (anova) FFA, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E1_FFA <- c(one_sig(one_mvpa_agg_E1_lFFA), one_sig(one_mvpa_agg_E1_rFFA))
 color_uni_E1_FFA <- sig_colors(sig_mvpa_agg_E1_FFA)
@@ -652,7 +654,7 @@ plot_mvpa_E1_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
+    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
     geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -861,7 +863,7 @@ one_mvpa_agg_E1_rFFA1
 
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA1}
+```{r plots for functional scans mvpa E1 (anova) FFA1, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E1_FFA1 <- c(one_sig(one_mvpa_agg_E1_lFFA1), one_sig(one_mvpa_agg_E1_rFFA1))
 color_uni_E1_FFA1 <- sig_colors(sig_mvpa_agg_E1_FFA1)
@@ -1035,7 +1037,7 @@ one_mvpa_agg_E1_rFFA2
 
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA2}
+```{r plots for functional scans mvpa E1 (anova) FFA2, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E1_FFA2 <- c(one_sig(one_mvpa_agg_E1_lFFA2), one_sig(one_mvpa_agg_E1_rFFA2))
 color_uni_E1_FFA2 <- sig_colors(sig_mvpa_agg_E1_FFA2)
@@ -1159,7 +1161,7 @@ one_mvpa_agg_E1_VWFA
 
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) VWFA, fig.asp=1.5}
+```{r plots for functional scans mvpa E1 (anova) VWFA, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E1_VWFA <- c(one_sig(one_mvpa_agg_E1_VWFA))
 color_uni_E1_VWFA <- sig_colors(sig_mvpa_agg_E1_VWFA)
@@ -1334,7 +1336,7 @@ one_mvpa_agg_E1_rLOC
 
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) LOC}
+```{r plots for functional scans mvpa E1 (anova) LOC, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E1_LOC <- c(one_sig(one_mvpa_agg_E1_lLOC), one_sig(one_mvpa_agg_E1_rLOC))
 color_uni_E1_LOC <- sig_colors(sig_mvpa_agg_E1_LOC)
@@ -1615,7 +1617,7 @@ one_mvpa_agg_E2_rFFA
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA}
+```{r plots for functional scans mvpa E2 (anova) FFA, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E2_FFA <- c(one_sig(one_mvpa_agg_E2_lFFA), one_sig(one_mvpa_agg_E2_rFFA))
 color_uni_E2_FFA <- sig_colors(sig_mvpa_agg_E2_FFA)
@@ -1790,7 +1792,7 @@ one_mvpa_agg_E2_rFFA1
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA1}
+```{r plots for functional scans mvpa E2 (anova) FFA1, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E2_FFA1 <- c(one_sig(one_mvpa_agg_E2_lFFA1), one_sig(one_mvpa_agg_E2_rFFA1))
 color_uni_E2_FFA1 <- sig_colors(sig_mvpa_agg_E2_FFA1)
@@ -1964,7 +1966,7 @@ one_mvpa_agg_E2_rFFA2
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA2}
+```{r plots for functional scans mvpa E2 (anova) FFA2, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E2_FFA2 <- c(one_sig(one_mvpa_agg_E2_lFFA2), one_sig(one_mvpa_agg_E2_rFFA2))
 color_uni_E2_FFA2 <- sig_colors(sig_mvpa_agg_E2_FFA2)
@@ -2088,7 +2090,7 @@ one_mvpa_agg_E2_lVWFA
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=1.5}
+```{r plots for functional scans mvpa E2 (anova) VWFA, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E2_VWFA <- one_sig(one_mvpa_agg_E2_lVWFA)
 color_uni_E2_VWFA <- sig_colors(sig_mvpa_agg_E2_VWFA)
@@ -2262,7 +2264,7 @@ one_mvpa_agg_E2_rLOC
 
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) LOC}
+```{r plots for functional scans mvpa E2 (anova) LOC, fig.height=3.5, fig.width=6}
 
 sig_mvpa_agg_E2_LOC <- c(one_sig(one_mvpa_agg_E2_lLOC), one_sig(one_mvpa_agg_E2_rLOC))
 color_uni_E2_LOC <- sig_colors(sig_mvpa_agg_E2_LOC)
