@@ -38,6 +38,7 @@ library(emmeans)
 fn_loc <- "FaceWord_Loc_Univariate.csv"
 fn_univar <- "FaceWord_Univariate.csv"
 fn_cosmo <- "FaceWord_CosmoMVPA.csv"
+fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. misconfigured. 
 
 # set the order of levels in factors
 locOrder <- c("face", "object", "word", "scrambled")
@@ -175,6 +176,42 @@ desc_mvpa_acc <- {
   }
 
 ```
+
+## Data for the Similarity of top + bottom
+```{r Data for the Similarity of top + bottom}
+df_simi <- read_csv(fn_simi)
+
+str(df_simi)
+```
+
+```{r clean the similarity data}
+
+df_clean_simi <- {
+  df_simi %>% 
+    mutate(ClassPair_2 = gsub("exchange", "misconfigured", ClassPair_2),
+           PredictCond = gsub("exchange", "misconfigured", PredictCond),
+           asMiscon = if_else(grepl("misconfigured", PredictCond), 1, 0),
+           pMiscon = Probability_2,
+           ExpCode = if_else(grepl("facewordN", SubjCode), 2, 1))
+}
+
+str(df_clean_simi)
+```
+
+```{r rate of decoding as misconfigured}
+
+df_rate_simi <- {
+  df_clean_simi %>% 
+    group_by(ExpCode, SubjCode, Labelname, ClassPair_1, Combination) %>% 
+    summarize(RateAsMiscon = mean(asMiscon),
+              pAsMiscon = mean(pMiscon)) %>% 
+    ungroup() %>% 
+    mutate(Hemisphere = if_else(grepl("lh", Labelname), 'left', if_else(grepl("rh", Labelname), "right", "NA")))
+}
+
+str(df_rate_simi)
+```
+
 
 # ROI information
 ```{r roi information, include=showAll}
@@ -444,6 +481,16 @@ desc_mvpa_acc_E1 <- {
 
 ```
 
+```{r only keep the similarity for E1}
+df_rate_simi_E1 <- {
+  df_rate_simi %>% 
+    filter(ExpCode == 1) %>% 
+    mutate(SubjCode = as.factor(SubjCode))
+}
+
+```
+
+
 ### Label:FFA
 ```{r the label used for FFA E1}
 # label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
@@ -617,6 +664,55 @@ plot_mvpa_E1_FFA <- {
 }
 
 plot_mvpa_E1_FFA
+```
+
+#### Similarity of top + bottom to intact vs. misconfigured
+##### One-sample t-test
+```{r Similarity of top + bottom to intact vs. misconfigured in FFA}
+
+one_simi_E1_FFA <- df_simi_rate_E1_FFA %>% 
+    group_by(Hemisphere, Combination) %>% 
+    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
+              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
+              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
+              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
+              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
+              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    )
+
+one_simi_E1_FFA
+
+```
+
+##### Plot
+```{r Similarity of top+bottom to intact vs. misconfigured in FFA, fig.height=3.5, fig.width=6}
+
+plot_simi_E1_FFA <- {
+  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    facet_grid(. ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Decoding as misconfigured") +  # set the names for main, x and y axises
+    # geom_text(label = sig_mvpa_agg_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    general_theme +
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
+}
+
+
+plot_simi_E1_FFA
 ```
 
 
