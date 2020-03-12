@@ -17,12 +17,12 @@ output:
 
 # Preparations
 ```{r general setting for this document, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE,
-                      message = FALSE,
-                      fig.width = 11)  # hide all warnings
-knitr::opts_chunk$set()  # hide all messages
+knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
+knitr::opts_chunk$set(message = FALSE)  # hide all messages
+# knitr::opts_chunk$set(fig.width = 11)  
+
 options(width = 450)
-showAll = FALSE
+showAll = FALSE  # if show steps for cleaning 
 ```
 
 ```{r preparation}
@@ -181,13 +181,13 @@ desc_mvpa_acc <- {
 ```
 
 ## Data for the Similarity of top + bottom
-```{r Data for the Similarity of top + bottom}
+```{r Data for the Similarity of top + bottom, include=showAll}
 df_simi <- read_csv(fn_simi)
 
 str(df_simi)
 ```
 
-```{r clean the similarity data}
+```{r clean the similarity data, include=showAll}
 
 df_clean_simi <- {
   df_simi %>% 
@@ -201,7 +201,7 @@ df_clean_simi <- {
 str(df_clean_simi)
 ```
 
-```{r rate of decoding as misconfigured}
+```{r rate of decoding as misconfigured, include=showAll}
 
 df_rate_simi <- {
   df_clean_simi %>% 
@@ -576,7 +576,7 @@ contr_anova_E1_rFFA
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) FFA, fig.asp = .75}
+```{r plots for functional scans E1 (anova) FFA, fig.asp = .75, fig.width = 8}
 
 sig_uni_E1_FFA <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -791,7 +791,7 @@ contr_anova_E1_rFFA1
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) FFA1, fig.asp = .75}
+```{r plots for functional scans E1 (anova) FFA1, fig.asp = .75, fig.width = 8}
 
 sig_uni_E1_FFA1 <- c(signif(as.data.frame(contr_anova_E1_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E1_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -956,7 +956,7 @@ contr_anova_E1_rFFA2
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) FFA2, fig.asp = .75}
+```{r plots for functional scans E1 (anova) FFA2, fig.asp = .75, fig.width = 8}
 
 sig_uni_E1_FFA2 <- c(signif(as.data.frame(contr_anova_E1_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E1_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -1088,7 +1088,7 @@ contr_anova_E1_VWFA
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) VWFA, fig.asp = .45}
+```{r plots for functional scans E1 (anova) VWFA, fig.asp = .45, fig.width = 11}
 
 sig_uni_E1_VWFA <- c(signif(as.data.frame(contr_anova_E1_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
 color_uni_E1_VWFA <- sig_colors(sig_uni_E1_VWFA)
@@ -1247,7 +1247,7 @@ contr_anova_E1_rLOC
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) LOC, fig.asp = .75}
+```{r plots for functional scans E1 (anova) LOC, fig.asp = .75, fig.width = 8}
 
 sig_uni_E1_LOC <- c(signif(as.data.frame(contr_anova_E1_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E1_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -1518,7 +1518,7 @@ contr_anova_E2_rFFA
 ```
 
 ##### Plot
-```{r plots for functional scans E2 (anova) FFA, fig.asp = .75}
+```{r plots for functional scans E2 (anova) FFA, fig.asp = .75, fig.width = 8}
 
 sig_uni_E2_FFA <- c(signif(as.data.frame(contr_anova_E2_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E2_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -1684,7 +1684,7 @@ contr_anova_E2_rFFA1
 ```
 
 ##### Plot
-```{r plots for functional scans E2 (anova) FFA1, fig.asp = .75}
+```{r plots for functional scans E2 (anova) FFA1, fig.asp = .75, fig.width = 8}
 
 sig_uni_E2_FFA1 <- c(signif(as.data.frame(contr_anova_E2_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E2_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -1850,7 +1850,7 @@ contr_anova_E2_rFFA2
 ```
 
 ##### Plot
-```{r plots for functional scans E2 (anova) FFA2, fig.asp = .75}
+```{r plots for functional scans E2 (anova) FFA2, fig.asp = .75, fig.width = 8}
 
 sig_uni_E2_FFA2 <- c(signif(as.data.frame(contr_anova_E2_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E2_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
@@ -1983,7 +1983,7 @@ contr_anova_E2_VWFA
 ```
 
 ##### Plot
-```{r plots for functional scans E2 (anova) VWFA, fig.asp = .45}
+```{r plots for functional scans E2 (anova) VWFA, fig.asp = .45, fig.width = 11}
 
 sig_uni_E2_VWFA <- c(signif(as.data.frame(contr_anova_E2_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
 color_uni_E2_VWFA <- sig_colors(sig_uni_E2_VWFA)
@@ -2142,7 +2142,7 @@ contr_anova_E2_rLOC
 ```
 
 ##### Plot
-```{r plots for functional scans E2 (anova) LOC, fig.asp = .75}
+```{r plots for functional scans E2 (anova) LOC, fig.asp = .75, fig.width = 8}
 
 sig_uni_E2_LOC <- c(signif(as.data.frame(contr_anova_E2_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
                      signif(as.data.frame(contr_anova_E2_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
