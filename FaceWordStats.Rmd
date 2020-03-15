@@ -15,6 +15,48 @@ output:
       after_body: Utilities/footer.html
 ---
 
+# Introduction
+## Experiment designs
+This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (Layout: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (Layout: intact, misconfigured, top and bottom) and completed an additional localizer (Caucasian faces, English words, top [left two letters] and bottom [right four letters]).
+
+## Introduction to the analyses included in this file
+For the **localizer**, results of univariate analysis in the right FFA is displayed.  
+
+For the **main runs**, analysis is conducted for each ROI separately (FFA, FFA1, FFA2, VWFA, LOC).   
+For each ROI, three analyses are performed: 
+
+1. Univariate analysis (Repeated-measures ANOVA) is performed to compare the neural responses (beta values) of different conditions.
+    + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, misconfigured, top vs. bottom); 
+    + E2: 2(Chinese characters vs. English words) * 4 (intact, misconfigured, top vs. bottom).
+  
+2. Multivariate pattern analysis (MVPA) with libsvm is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [accuracy is significantly larger than the chancel level (0.5)].
+    + Pairs in E1: 
+        + face_intact vs. word_intact;
+        + face_intact vs. face_miscon;
+        + face_top vs. face_bottom;
+        + word_intact vs. word_miscon;
+        + word_top vs. word_bottom.
+    + Pairs in E2:
+        + Chinese_intact vs. English_intact;
+        + Chinese_intact vs. Chinese_miscon;
+        + Chinese_top vs. Chinese_bottom;
+        + English_intact vs. English_miscon;
+        + English_top vs. English_bottom.
+    
+3. Similarity of top+bottom to intact vs. misconfigured: The dependent variable is the probability of top+bottom was decoded as misconfigured conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to misconfigured relative to intact.
+    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be significantly larger than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be significantly smaller than the chance level (0.5).
+
+## How is the probability of top+bottom being decoded as misconfigued calculated?
+The probability was calculated individually:
+
+1. The patterns of top and bottom are combined with three different weights (0.5/0.5, 0.25/0.75, 0.75/0.25).
+2. Supported Vector Machine (libsvm) is trained with the patterns of intact vs. misconfigued (10 runs).
+3. The trained model is used to predict the condition of the combined pattern for each run separately. 
+    + Mark as 1 if the combination is predicted as misconfigued;
+    + Mark as 0 if the combination is predicted as intact.
+4. The probability is calcualted by averaging all the predictions (1 or 0).
+    
 # Preparations
 ```{r general setting for this document, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
@@ -35,7 +77,7 @@ library(emmeans)
 
 ```
 
-```{r colors}
+```{r colors, include=showAll}
 mvpaColors <- c("#e67639","#000097","#552eff","#02b762","#59ea91")
 simiColors <- c("#000064","#0000ff","#6565ce","#003500","#009900","#08f74d")
 ```
@@ -186,7 +228,7 @@ desc_mvpa_acc <- {
   }
 ```
 
-```{r vertex information}
+```{r vertex information, include=showAll}
 # obtain from MVPA dataset
 roi_info <- {
   df_mvpa %>% 
