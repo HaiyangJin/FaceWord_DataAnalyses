@@ -35,6 +35,12 @@ library(emmeans)
 
 ```
 
+```{r colors}
+mvpaColors <- c("#e67639","#000097","#552eff","#02b762","#59ea91")
+simiColors <- c("#000064","#0000ff","#6565ce","#003500","#009900","#08f74d")
+```
+
+
 # Load and clean data 
 ```{r assign filenames, include=showAll}
 # assign filenames
@@ -180,6 +186,17 @@ desc_mvpa_acc <- {
   }
 ```
 
+```{r vertex information}
+# obtain from MVPA dataset
+roi_info <- {
+  df_mvpa %>% 
+    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
+    select(ExpCode, Label, SubjCode, nVertices, LabelSize) %>% 
+    distinct()
+}
+```
+
+
 ## Data for the Similarity of top + bottom
 ```{r Data for the Similarity of top + bottom, include=showAll}
 df_simi <- read_csv(fn_simi)
@@ -218,13 +235,13 @@ str(df_rate_simi)
 
 # ROI information
 ```{r roi information, include=showAll}
-# obtain from MVPA dataset
-roi_info <- {
-  df_mvpa %>% 
-    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-    select(ExpCode, Label, SubjCode, nVertices, LabelSize) %>% 
-    distinct()
-}
+# # obtain from MVPA dataset
+# roi_info <- {
+#   df_mvpa %>% 
+#     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
+#     select(ExpCode, Label, SubjCode, nVertices, LabelSize) %>% 
+#     distinct()
+# }
 
 # labels used in the analyses
 label_list <- unique(roi_info$Label)
@@ -437,15 +454,8 @@ plot_loc_E1
 ```
 
 ## Main runs
-```{r only keep the univariate data for E1}
-# only keep data of E1
-df_univar_E1 <- {
-  df_clean_univar %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(FaceWord = factor(FaceWord, levels = facewordOrder),
-           SubjCode = as.factor(SubjCode))
-}
-
+```{r only keep data of E1}
+# only keep the univariate data for E1
 df_univar_agg_E1 <- {
   df_univar_agg %>% 
     filter(ExpCode == 1) %>% 
@@ -453,17 +463,7 @@ df_univar_agg_E1 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-```
-
-```{r only keep the multivariate (mvpa) data for E1}
-# only keep data of E1
-df_mvpa_E1 <- {
-  df_clean_mvpa %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
-           SubjCode = as.factor(SubjCode))
-}
-
+# only keep the multivariate (mvpa) data for E1
 df_mvpa_acc_E1 <- {
   df_mvpa_acc %>% 
     filter(ExpCode == 1) %>% 
@@ -471,16 +471,7 @@ df_mvpa_acc_E1 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-desc_mvpa_acc_E1 <- {
-  desc_mvpa_acc %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1)) %>% 
-    arrange(ExpCode, Hemisphere, Label, ClassifyPair) 
-}
-
-```
-
-```{r only keep the similarity for E1}
+# only keep the similarity for E1
 df_rate_simi_E1 <- {
   df_rate_simi %>% 
     filter(ExpCode == 1) %>% 
@@ -502,19 +493,19 @@ The label used for right FFA in Experiment 1 is *`r label_rFFA_E1`*.
 
 ```{r only keep data for FFA E1}
 # only keep data for these two labels
-df_univar_E1_FFA <- filter(df_univar_E1, Label %in% label_FFA_E1) 
 df_univar_agg_E1_FFA <- filter(df_univar_agg_E1, Label %in% label_FFA_E1)
-df_mvpa_E1_FFA <- filter(df_mvpa_E1, Label %in% label_FFA_E1)
 df_mvpa_acc_E1_FFA <- filter(df_mvpa_acc_E1, Label %in% label_FFA_E1)
-desc_mvpa_acc_E1_FFA <- filter(desc_mvpa_acc_E1, Label %in% label_FFA_E1)
+df_simi_rate_E1_FFA <- filter(df_rate_simi_E1, Label %in% label_FFA_E1)
 df_simi_rate_E1_FFA <- filter(df_rate_simi_E1, Labelname %in% label_FFA_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_FFA %>% filter(Label == label_rFFA_E1))$SubjCode))
 
-desc_mvpa_acc_E1_FFA %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E1_FFA %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -642,7 +633,7 @@ plot_mvpa_E1_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_mvpa_agg_E1_FFA$p, 4), color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -718,18 +709,18 @@ The label used for right FFA1 in Experiment 1 is *`r label_rFFA1_E1`*.
 
 ```{r only keep data for FFA1 E1}
 # only keep data for these two labels
-df_univar_E1_FFA1 <- filter(df_univar_E1, Label %in% label_FFA1_E1) 
 df_univar_agg_E1_FFA1 <- filter(df_univar_agg_E1, Label %in% label_FFA1_E1)
-df_mvpa_E1_FFA1 <- filter(df_mvpa_E1, Label %in% label_FFA1_E1)
 df_mvpa_acc_E1_FFA1 <- filter(df_mvpa_acc_E1, Label %in% label_FFA1_E1)
-desc_mvpa_acc_E1_FFA1 <- filter(desc_mvpa_acc_E1, Label %in% label_FFA1_E1)
+df_simi_rate_E1_FFA1 <- filter(df_rate_simi_E1, Label %in% label_FFA1_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_FFA1 %>% filter(Label == label_rFFA1_E1))$SubjCode))
 
-desc_mvpa_acc_E1_FFA1 %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E1_FFA1 %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -822,7 +813,7 @@ plot_uni_E1_FFA1
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA1}
-
+# one-sample for results of mvpa E1 FFA1
 one_mvpa_agg_E1_FFA1 <- {
   df_mvpa_acc_E1_FFA1 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -839,13 +830,10 @@ one_mvpa_agg_E1_FFA1 <- {
 }
 
 one_mvpa_agg_E1_FFA1
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA1, fig.asp=0.5}
-
-color_uni_E1_FFA1 <- sig_colors(one_mvpa_agg_E1_FFA1$p)
+```{r plots for functional scans mvpa E1 (anova) FFA1, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E1_FFA1 <- {
   ggplot(data = one_mvpa_agg_E1_FFA1, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -857,7 +845,7 @@ plot_mvpa_E1_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     labs(title = "Decoding accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E1_FFA1$p, 4), color = color_uni_E1_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_FFA1$p), color = sig_colors(one_mvpa_agg_E1_FFA1$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -883,18 +871,18 @@ The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E1`*.
 
 ```{r only keep data for FFA2 E1}
 # only keep data for these two labels
-df_univar_E1_FFA2 <- filter(df_univar_E1, Label %in% label_FFA2_E1) 
 df_univar_agg_E1_FFA2 <- filter(df_univar_agg_E1, Label %in% label_FFA2_E1)
-df_mvpa_E1_FFA2 <- filter(df_mvpa_E1, Label %in% label_FFA2_E1)
 df_mvpa_acc_E1_FFA2 <- filter(df_mvpa_acc_E1, Label %in% label_FFA2_E1)
-desc_mvpa_acc_E1_FFA2 <- filter(desc_mvpa_acc_E1, Label %in% label_FFA2_E1)
+df_simi_rate_E1_FFA2 <- filter(df_rate_simi_E1, Label %in% label_FFA2_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_FFA2 %>% filter(Label == label_lFFA2_E1))$SubjCode))
 
-desc_mvpa_acc_E1_FFA2 %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E1_FFA2 %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -987,7 +975,7 @@ plot_uni_E1_FFA2
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA2}
-
+# one-sample for results of mvpa E1 FFA2
 one_mvpa_agg_E1_FFA2 <- {
   df_mvpa_acc_E1_FFA2 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1004,13 +992,10 @@ one_mvpa_agg_E1_FFA2 <- {
 }
 
 one_mvpa_agg_E1_FFA2
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA2, fig.asp=0.5}
-
-color_uni_E1_FFA2 <- sig_colors(one_mvpa_agg_E1_FFA2$p)
+```{r plots for functional scans mvpa E1 (anova) FFA2, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E1_FFA2 <- {
   ggplot(data = one_mvpa_agg_E1_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1022,7 +1007,7 @@ plot_mvpa_E1_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     labs(title = "Decoding accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E1_FFA2$p, 4), color = color_uni_E1_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_FFA2$p), color = sig_colors(one_mvpa_agg_E1_FFA2$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1044,18 +1029,18 @@ The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E1`*.
 
 ```{r only keep data for VWFA E1}
 # only keep data for these two labels
-df_univar_E1_VWFA <- filter(df_univar_E1, Label %in% label_VWFA_E1) 
 df_univar_agg_E1_VWFA <- filter(df_univar_agg_E1, Label %in% label_VWFA_E1)
-df_mvpa_E1_VWFA <- filter(df_mvpa_E1, Label %in% label_VWFA_E1)
 df_mvpa_acc_E1_VWFA <- filter(df_mvpa_acc_E1, Label %in% label_VWFA_E1)
-desc_mvpa_acc_E1_VWFA <- filter(desc_mvpa_acc_E1, Label %in% label_VWFA_E1)
+df_simi_rate_E1_VWFA <- filter(df_rate_simi_E1, Label %in% label_VWFA_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_VWFA %>% filter(Label == label_VWFA_E1))$SubjCode))
 
-desc_mvpa_acc_E1_VWFA %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E1_VWFA %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -1112,7 +1097,7 @@ plot_uni_E1_VWFA
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 VWFA}
-
+# one-sample for results of mvpa E1 VWFA
 one_mvpa_agg_E1_VWFA <- {
   df_mvpa_acc_E1_VWFA %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1133,9 +1118,9 @@ one_mvpa_agg_E1_VWFA
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) VWFA, fig.asp=0.5}
+```{r plots for functional scans mvpa E1 (anova) VWFA, fig.asp=0.5, fig.width = 5.5}
 
-color_uni_E1_VWFA <- sig_colors(one_mvpa_agg_E1_VWFA$p)
+color_uni_E1_VWFA <- 
 
 plot_mvpa_E1_VWFA <- {
   ggplot(data = one_mvpa_agg_E1_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1148,7 +1133,7 @@ plot_mvpa_E1_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E1_VWFA$p, 4), color = color_uni_E1_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_VWFA$p), color = sig_colors(one_mvpa_agg_E1_VWFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1174,18 +1159,18 @@ The label used for right LOC in Experiment 1 is *`r label_rLOC_E1`*.
 
 ```{r only keep data for LOC E1}
 # only keep data for these two labels
-df_univar_E1_LOC <- filter(df_univar_E1, Label %in% label_LOC_E1) 
 df_univar_agg_E1_LOC <- filter(df_univar_agg_E1, Label %in% label_LOC_E1)
-df_mvpa_E1_LOC <- filter(df_mvpa_E1, Label %in% label_LOC_E1)
 df_mvpa_acc_E1_LOC <- filter(df_mvpa_acc_E1, Label %in% label_LOC_E1)
-desc_mvpa_acc_E1_LOC <- filter(desc_mvpa_acc_E1, Label %in% label_LOC_E1)
+df_simi_rate_E1_LOC <- filter(df_rate_simi_E1, Label %in% label_LOC_E1)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_LOC %>% filter(Label == label_lLOC_E1))$SubjCode))
 
-desc_mvpa_acc_E1_LOC %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E1_LOC %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -1275,10 +1260,9 @@ plot_uni_E1_LOC
 ```
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 LOC}
-
+# one-sample for results of mvpa E1 LOC
 one_mvpa_agg_E1_LOC <- {
   df_mvpa_acc_E1_LOC %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1295,13 +1279,10 @@ one_mvpa_agg_E1_LOC <- {
 }
 
 one_mvpa_agg_E1_LOC
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) LOC, fig.asp=0.5}
-
-color_uni_E1_LOC <- sig_colors(one_mvpa_agg_E1_LOC$p)
+```{r plots for functional scans mvpa E1 (anova) LOC, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E1_LOC <- {
   ggplot(data = one_mvpa_agg_E1_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1314,7 +1295,7 @@ plot_mvpa_E1_LOC <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E1_LOC$p, 4), color = color_uni_E1_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E1_LOC$p), color = sig_colors(one_mvpa_agg_E1_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1389,15 +1370,8 @@ plot_loc_E2
 ```
 
 ## Main runs
-```{r only keep the univariate data for E2}
-# only keep data of E2
-df_univar_E2 <- {
-  df_clean_univar %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(FaceWord = factor(FaceWord, levels = wordsOrder),
-           SubjCode = as.factor(SubjCode))
-}
-
+```{r only keep data of E2}
+# only keep the univariate data for E2
 df_univar_agg_E2 <- {
   df_univar_agg %>% 
     filter(ExpCode == 2) %>% 
@@ -1405,17 +1379,7 @@ df_univar_agg_E2 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-```
-
-```{r only keep the multivariate (mvpa) data for E2}
-# only keep data of E2
-df_mvpa_E2 <- {
-  df_clean_mvpa %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2),
-           SubjCode = as.factor(SubjCode))
-}
-
+# only keep the multivariate (mvpa) data for E2
 df_mvpa_acc_E2 <- {
   df_mvpa_acc %>% 
     filter(ExpCode == 2) %>% 
@@ -1423,11 +1387,11 @@ df_mvpa_acc_E2 <- {
            SubjCode = as.factor(SubjCode))
 }
 
-desc_mvpa_acc_E2 <- {
-  desc_mvpa_acc %>% 
+# only keep the similarity for E2
+df_rate_simi_E2 <- {
+  df_rate_simi %>% 
     filter(ExpCode == 2) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2)) %>% 
-    arrange(ExpCode, Hemisphere, Label, ClassifyPair)
+    mutate(SubjCode = as.factor(SubjCode))
 }
 
 ```
@@ -1445,18 +1409,17 @@ The label used for right FFA in Experiment 2 is *`r label_rFFA_E2`*.
 
 ```{r only keep data for FFA E2}
 # only keep data for these two labels
-df_univar_E2_FFA <- filter(df_univar_E2, Label %in% label_FFA_E2) 
 df_univar_agg_E2_FFA <- filter(df_univar_agg_E2, Label %in% label_FFA_E2)
-df_mvpa_E2_FFA <- filter(df_mvpa_E2, Label %in% label_FFA_E2)
 df_mvpa_acc_E2_FFA <- filter(df_mvpa_acc_E2, Label %in% label_FFA_E2)
-desc_mvpa_acc_E2_FFA <- filter(desc_mvpa_acc_E2, Label %in% label_FFA_E2)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E2_FFA %>% filter(Label == label_lFFA_E2))$SubjCode))
 
-desc_mvpa_acc_E2_FFA %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E2_FFA %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -1549,7 +1512,7 @@ plot_uni_E2_FFA
 
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA}
-
+# one-sample for results of mvpa E2 FFA
 one_mvpa_agg_E2_FFA <- {
   df_mvpa_acc_E2_FFA %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1566,13 +1529,10 @@ one_mvpa_agg_E2_FFA <- {
 }
 
 one_mvpa_agg_E2_FFA
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA, fig.asp=0.5}
-
-color_uni_E2_FFA <- sig_colors(one_mvpa_agg_E2_FFA$p)
+```{r plots for functional scans mvpa E2 (anova) FFA, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E2_FFA <- {
   ggplot(data = one_mvpa_agg_E2_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1585,7 +1545,7 @@ plot_mvpa_E2_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E2_FFA$p, 4), color = color_uni_E2_FFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E2_FFA$p), color = sig_colors(one_mvpa_agg_E2_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1611,18 +1571,17 @@ The label used for right FFA1 in Experiment 2 is *`r label_rFFA1_E2`*.
 
 ```{r only keep data for FFA1 E2}
 # only keep data for these two labels
-df_univar_E2_FFA1 <- filter(df_univar_E2, Label %in% label_FFA1_E2) 
 df_univar_agg_E2_FFA1 <- filter(df_univar_agg_E2, Label %in% label_FFA1_E2)
-df_mvpa_E2_FFA1 <- filter(df_mvpa_E2, Label %in% label_FFA1_E2)
 df_mvpa_acc_E2_FFA1 <- filter(df_mvpa_acc_E2, Label %in% label_FFA1_E2)
-desc_mvpa_acc_E2_FFA1 <- filter(desc_mvpa_acc_E2, Label %in% label_FFA1_E2)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E2_FFA1 %>% filter(Label == label_rFFA1_E2))$SubjCode))
 
-desc_mvpa_acc_E2_FFA1 %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E2_FFA1 %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -1712,10 +1671,9 @@ plot_uni_E2_FFA1
 ```
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA1}
-
+# one-sample for results of mvpa E2 FFA1
 one_mvpa_agg_E2_FFA1 <- {
   df_mvpa_acc_E2_FFA1 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1732,13 +1690,10 @@ one_mvpa_agg_E2_FFA1 <- {
 }
 
 one_mvpa_agg_E2_FFA1
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA1, fig.asp=0.5}
-
-color_uni_E2_FFA1 <- sig_colors(one_mvpa_agg_E2_FFA1$p)
+```{r plots for functional scans mvpa E2 (anova) FFA1, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E2_FFA1 <- {
   ggplot(data = one_mvpa_agg_E2_FFA1, aes(y = mean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1751,7 +1706,7 @@ plot_mvpa_E2_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E2_FFA1$p), color = color_uni_E2_FFA1, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E2_FFA1$p), color = sig_colors(one_mvpa_agg_E2_FFA1$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1777,18 +1732,17 @@ The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E2`*.
 
 ```{r only keep data for FFA2 E2}
 # only keep data for these two labels
-df_univar_E2_FFA2 <- filter(df_univar_E2, Label %in% label_FFA2_E2) 
 df_univar_agg_E2_FFA2 <- filter(df_univar_agg_E2, Label %in% label_FFA2_E2)
-df_mvpa_E2_FFA2 <- filter(df_mvpa_E2, Label %in% label_FFA2_E2)
 df_mvpa_acc_E2_FFA2 <- filter(df_mvpa_acc_E2, Label %in% label_FFA2_E2)
-desc_mvpa_acc_E2_FFA2 <- filter(desc_mvpa_acc_E2, Label %in% label_FFA2_E2)
 
 # subjects used for each hemisphere
-unique(as.character((df_univar_agg_E2_FFA2 %>% filter(Label == label_rFFA2_E2))$SubjCode))
+# unique(as.character((df_univar_agg_E2_FFA2 %>% filter(Label == label_rFFA2_E2))$SubjCode))
 
-desc_mvpa_acc_E2_FFA2 %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E2_FFA2 %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -1878,10 +1832,9 @@ plot_uni_E2_FFA2
 ```
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA2}
-
+# one-sample for results of mvpa E2 FFA2
 one_mvpa_agg_E2_FFA2 <- {
   df_mvpa_acc_E2_FFA2 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -1898,13 +1851,10 @@ one_mvpa_agg_E2_FFA2 <- {
 }
 
 one_mvpa_agg_E2_FFA2
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA2, fig.asp=0.5}
-
-color_uni_E2_FFA2 <- sig_colors(one_mvpa_agg_E2_FFA2$p)
+```{r plots for functional scans mvpa E2 (anova) FFA2, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E2_FFA2 <- {
   ggplot(data = one_mvpa_agg_E2_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -1917,7 +1867,7 @@ plot_mvpa_E2_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_FFA2$p), color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E2_FFA2$p), color = sig_colors(one_mvpa_agg_E2_FFA2$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1939,18 +1889,17 @@ The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E2`*.
 
 ```{r only keep data for VWFA E2}
 # only keep data for these two labels
-df_univar_E2_VWFA <- filter(df_univar_E2, Label %in% label_VWFA_E2) 
 df_univar_agg_E2_VWFA <- filter(df_univar_agg_E2, Label %in% label_VWFA_E2)
-df_mvpa_E2_VWFA <- filter(df_mvpa_E2, Label %in% label_VWFA_E2)
 df_mvpa_acc_E2_VWFA <- filter(df_mvpa_acc_E2, Label %in% label_VWFA_E2)
-desc_mvpa_acc_E2_VWFA <- filter(desc_mvpa_acc_E2, Label %in% label_VWFA_E2)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E2_VWFA %>% filter(Label == label_VWFA_E2))$SubjCode))
 
-desc_mvpa_acc_E2_VWFA %>%
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E2_VWFA %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -2004,10 +1953,9 @@ plot_uni_E2_VWFA
 ```
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 VWFA}
-
+# one-sample for results of mvpa E2 VWFA
 one_mvpa_agg_E2_VWFA <- {
   df_mvpa_acc_E2_VWFA %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -2024,13 +1972,10 @@ one_mvpa_agg_E2_VWFA <- {
 }
 
 one_mvpa_agg_E2_VWFA
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=0.5}
-
-color_uni_E2_VWFA <- sig_colors(one_mvpa_agg_E2_VWFA$p)
+```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=0.5, fig.width = 5.5}
 
 plot_mvpa_E2_VWFA <- {
   ggplot(data = one_mvpa_agg_E2_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -2043,7 +1988,7 @@ plot_mvpa_E2_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_VWFA$p, 4), color = color_uni_E2_VWFA, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E2_VWFA$p, 4), color = sig_colors(one_mvpa_agg_E2_VWFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2069,18 +2014,17 @@ The label used for right LOC in Experiment 1 is *`r label_rLOC_E2`*.
 
 ```{r only keep data for LOC E2}
 # only keep data for these two labels
-df_univar_E2_LOC <- filter(df_univar_E2, Label %in% label_LOC_E2) 
 df_univar_agg_E2_LOC <- filter(df_univar_agg_E2, Label %in% label_LOC_E2)
-df_mvpa_E2_LOC <- filter(df_mvpa_E2, Label %in% label_LOC_E2)
 df_mvpa_acc_E2_LOC <- filter(df_mvpa_acc_E2, Label %in% label_LOC_E2)
-desc_mvpa_acc_E2_LOC <- filter(desc_mvpa_acc_E2, Label %in% label_LOC_E2)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E2_LOC %>% filter(Label == label_lLOC_E2))$SubjCode))
 
-desc_mvpa_acc_E2_LOC %>% 
-  select(ExpCode, Label, Count) %>% 
-  distinct()
+df_univar_agg_E2_LOC %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+  distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) 
 ```
 
 #### Univariate analyses
@@ -2170,10 +2114,9 @@ plot_uni_E2_LOC
 ```
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 LOC}
-
+# one-sample for results of mvpa E2 LOC
 one_mvpa_agg_E2_LOC <- {
   df_mvpa_acc_E2_LOC %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
@@ -2190,13 +2133,10 @@ one_mvpa_agg_E2_LOC <- {
 }
 
 one_mvpa_agg_E2_LOC
-
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) LOC, fig.asp=0.5}
-
-color_uni_E2_LOC <- sig_colors(one_mvpa_agg_E2_LOC$p)
+```{r plots for functional scans mvpa E2 (anova) LOC, fig.asp=0.5, fig.width = 11}
 
 plot_mvpa_E2_LOC <- {
   ggplot(data = one_mvpa_agg_E2_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
@@ -2209,7 +2149,7 @@ plot_mvpa_E2_LOC <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in LOC", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_LOC$p, 4), color = color_uni_E2_LOC, size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    geom_text(label = signif(one_mvpa_agg_E2_LOC$p, 4), color = sig_colors(one_mvpa_agg_E2_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
