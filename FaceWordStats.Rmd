@@ -465,23 +465,7 @@ emm_loc_anova_E1
 contrast(emm_loc_anova_E1, "pairwise")
 
 ```
-
-### Linear mixed model
-```{r lmm for E1 loc}
-lmm_loc_E1 <- lmer(Resp ~ Conditions + (1 | SubjCode), data = df_loc_E1)
-
-summary(lmm_loc_E1)
-```
-
-```{r estimated marginal means for lmm loc E1}
-emm_loc_lmm_E1 <- emmeans(lmm_loc_E1, ~ Conditions)
-
-emm_loc_lmm_E1
-```
-
-```{r comparison among levels in Conditions lmm loc E1}
-contrast(emm_loc_lmm_E1, "pairwise")
-```
+The above table displays the Posthoc anlaysis results (corrected with Tukey for 4 estimates).
 
 ### Plot
 ```{r plots for loc E1 (anova), fig.asp=1.3, fig.width= 6}
@@ -1582,23 +1566,6 @@ emm_loc_anova_E2
 
 ```{r Post-hoc analysis for anova loc E2}
 contrast(emm_loc_anova_E2, "pairwise")
-```
-
-### Linear mixed model
-```{r lmm for E2 loc}
-lmm_loc_E2 <- lmer(Resp ~ Conditions + (1 | SubjCode), data = df_loc_E2)
-
-summary(lmm_loc_E2)
-```
-
-```{r estimated marginal means for lmm loc E2}
-emm_loc_lmm_E2 <- emmeans(lmm_loc_E2, ~ Conditions)
-
-emm_loc_lmm_E2
-```
-
-```{r comparison among levels in Conditions lmm loc E2}
-contrast(emm_loc_lmm_E2, "pairwise")
 ```
 
 ### Plot
