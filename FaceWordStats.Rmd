@@ -624,6 +624,7 @@ plot_mvpa_E1_FFA <- {
   ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -837,6 +838,7 @@ plot_mvpa_E1_FFA1 <- {
   ggplot(data = one_mvpa_agg_E1_FFA1, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1050,6 +1052,7 @@ plot_mvpa_E1_FFA2 <- {
   ggplot(data = one_mvpa_agg_E1_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1224,7 +1227,8 @@ color_uni_E1_VWFA <-
 plot_mvpa_E1_VWFA <- {
   ggplot(data = one_mvpa_agg_E1_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
+    facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
@@ -1437,12 +1441,13 @@ plot_mvpa_E1_LOC <- {
   ggplot(data = one_mvpa_agg_E1_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = signif(one_mvpa_agg_E1_LOC$p), color = sig_colors(one_mvpa_agg_E1_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
@@ -1738,12 +1743,13 @@ plot_mvpa_E2_FFA <- {
   ggplot(data = one_mvpa_agg_E2_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
     geom_text(label = signif(one_mvpa_agg_E2_FFA$p), color = sig_colors(one_mvpa_agg_E2_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
@@ -1951,12 +1957,13 @@ plot_mvpa_E2_FFA1 <- {
   ggplot(data = one_mvpa_agg_E2_FFA1, aes(y = mean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
     geom_text(label = signif(one_mvpa_agg_E2_FFA1$p), color = sig_colors(one_mvpa_agg_E2_FFA1$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
@@ -2163,12 +2170,13 @@ plot_mvpa_E2_FFA2 <- {
   ggplot(data = one_mvpa_agg_E2_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = signif(one_mvpa_agg_E2_FFA2$p), color = sig_colors(one_mvpa_agg_E2_FFA2$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
@@ -2329,18 +2337,19 @@ one_mvpa_agg_E2_VWFA
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=0.5, fig.width = 5.5}
+```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=0.5, fig.width = 9}
 
 plot_mvpa_E2_VWFA <- {
   ggplot(data = one_mvpa_agg_E2_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(Hemisphere ~ .) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = signif(one_mvpa_agg_E2_VWFA$p, 4), color = sig_colors(one_mvpa_agg_E2_VWFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
@@ -2547,12 +2556,13 @@ plot_mvpa_E2_LOC <- {
   ggplot(data = one_mvpa_agg_E2_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
     facet_grid(. ~ Hemisphere) +
+    scale_fill_manual(values = mvpaColors) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Decoding Accuracy in LOC", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
     geom_text(label = signif(one_mvpa_agg_E2_LOC$p, 4), color = sig_colors(one_mvpa_agg_E2_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
     general_theme +
