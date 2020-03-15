@@ -16,6 +16,9 @@ output:
 ---
 
 # Introduction
+## Usage of this file
+This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypothses, which are not included in the corresponding slides. [Please refers to the slides for the hypotheses of this project.] 
+
 ## Experiment designs
 This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (Layout: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (Layout: intact, misconfigured, top and bottom) and completed an additional localizer (Caucasian faces, English words, top [left two letters] and bottom [right four letters]).
 
@@ -52,10 +55,8 @@ The probability was calculated individually:
 
 1. The patterns of top and bottom are combined with three different weights (0.5/0.5, 0.25/0.75, 0.75/0.25).
 2. Supported Vector Machine (libsvm) is trained with the patterns of intact vs. misconfigued (10 runs).
-3. The trained model is used to predict the condition of the combined pattern for each run separately. 
-    + Mark as 1 if the combination is predicted as misconfigued;
-    + Mark as 0 if the combination is predicted as intact.
-4. The probability is calcualted by averaging all the predictions (1 or 0).
+3. The trained model is used to predict the probability of the combined pattern being misconfigured [for each run separately]. 
+4. The probability of top+bottom being decoded as misconfigued for each participant is calculated by averaging the probability for each run.
     
 # Preparations
 ```{r general setting for this document, include=FALSE}
@@ -268,7 +269,8 @@ df_rate_simi <- {
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     group_by(ExpCode, SubjCode, Label, ClassPair_1, Combination) %>% 
     summarize(RateAsMiscon = mean(asMiscon),
-              pAsMiscon = mean(pMiscon)) %>% 
+              pAsMiscon = mean(pMiscon),
+              RateAsMiscon = pAsMiscon) %>%  # use the probability instead of the categorical prediction
     ungroup() %>% 
     mutate(Hemisphere = if_else(grepl("lh", Label), 'left', if_else(grepl("rh", Label), "right", "NA")))
 }
