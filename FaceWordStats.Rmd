@@ -1,5 +1,5 @@
 ---
-title: "Face Word Projects -- Data Analysis"
+title: "FaceWord Project -- Data Analysis"
 author: "[Haiyang Jin](https://haiyangjin.github.io/)"
 date: "`r format(Sys.time(), '%d-%m-%Y')`"
 output:
@@ -349,6 +349,7 @@ label_ROI <- tibble("ROI" = ROI, "left_E1" = left_E1, "right_E1"= right_E1, "lef
 
 label_ROI
 ```
+The above table displays the label used for each ROI and each Experiment. (VWFA is only found on the left hemisphere.)
 
 ## Size of labels
 ```{r size (mm2) of labels for each subject}
@@ -364,6 +365,7 @@ roi_info %>%
   select(-LabelSize) %>% 
   spread(Label, nVertices) 
 ```
+The above table displays the number of vertices for each label and each participant. (NA denotes there is no this label for that particiapnt.)
 
 ## Number of subjects 
 ```{r number of subjects for each label}
@@ -389,17 +391,10 @@ df_univar_agg %>%
   select(ROI, left_E1, right_E1, everything()) 
   
 ```
+The above table dispalys the number of participants included in the following analyses for each ROI. (VWFA is only found on the left hemisphere.)
 
 ## Number of subjects excluded
 ```{r Number of subjects excluded}
-# df_mvpa %>%
-#   filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-#   select(ExpCode, Label, SubjCode) %>%
-#   distinct() %>%
-#   group_by(ExpCode, Label) %>%
-#   summarize(Count = n()) %>%
-#   ungroup() %>% 
-#   spread(Label, Count)
 
 df_mvpa %>%
   filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
@@ -422,6 +417,7 @@ df_mvpa %>%
   spread(Col_name, Count) %>% 
   select(ROI, left_E1, right_E1, everything()) 
 ```
+The number of participants excluded from following analysis due to the vertex number being smaller than `r nVtx_min`. (NA denotes no participants were excluded or VWFA was not found on the right hemisphere.)
 
 # Experiment 1: Chinese faces and Chinese characters
 ## Localizer
@@ -433,7 +429,7 @@ df_loc_E1 <- {
 }
 # nlevels(df_loc_E1$SubjCode) # number of subjects
 ```
-The ROI (label) used for this analysis is `r unique(df_loc_E1$LOC)`.
+The ROI (label) used for this analysis is `r unique(df_loc_E1$Label)`.
 
 ### rm-ANOVA
 ```{r}
@@ -441,12 +437,14 @@ anova_loc_E1 <- aov_4(Resp ~ Conditions + (Conditions | SubjCode), data = df_loc
 
 anova_loc_E1
 ```
+The above table displays the repeated-measures ANOVA results for the localizer in E1.
 
 ```{r estimated marginal means for loc E1}
 emm_loc_anova_E1 <- emmeans(anova_loc_E1, ~ Conditions)
 
 emm_loc_anova_E1
 ```
+The above table displays the average respones for the localizer in E1.
 
 ```{r Post-hoc analysis for anova loc E1}
 contrast(emm_loc_anova_E1, "pairwise")
@@ -541,14 +539,16 @@ emm_anova_E1_lFFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_lFFA}
 contrast(emmeans(emm_anova_E1_lFFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_lFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_lFFA}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_lFFA}
 contr_anova_E1_lFFA <- contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_lFFA
@@ -569,14 +569,16 @@ emm_anova_E1_rFFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_rFFA right}
 contrast(emmeans(emm_anova_E1_rFFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_rFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_rFFA right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_rFFA right}
 contr_anova_E1_rFFA <- contrast(emm_anova_E1_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_rFFA
@@ -609,6 +611,7 @@ plot_uni_E1_FFA <- {
 
 plot_uni_E1_FFA
 ```
+The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -659,6 +662,7 @@ plot_mvpa_E1_FFA <- {
 
 plot_mvpa_E1_FFA
 ```
+The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -709,6 +713,7 @@ plot_simi_E1_FFA <- {
 
 plot_simi_E1_FFA
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA1
 ```{r the label used for FFA1 E1}
@@ -754,14 +759,16 @@ emm_anova_E1_lFFA1 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_lFFA1}
 contrast(emmeans(emm_anova_E1_lFFA1, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_lFFA1}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_lFFA1}
 contr_anova_E1_lFFA1 <- contrast(emm_anova_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_lFFA1
@@ -782,14 +789,16 @@ emm_anova_E1_rFFA1 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_rFFA1 right}
 contrast(emmeans(emm_anova_E1_rFFA1, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_rFFA1 right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_rFFA1 right}
 contr_anova_E1_rFFA1 <- contrast(emm_anova_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_rFFA1
@@ -822,9 +831,9 @@ plot_uni_E1_FFA1 <- {
 
 plot_uni_E1_FFA1
 ```
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA1}
 # one-sample for results of mvpa E1 FFA1
@@ -872,6 +881,7 @@ plot_mvpa_E1_FFA1 <- {
 
 plot_mvpa_E1_FFA1
 ```
+The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -923,6 +933,7 @@ plot_simi_E1_FFA1 <- {
 
 plot_simi_E1_FFA
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA2
 ```{r the label used for FFA2 E1}
@@ -968,14 +979,16 @@ emm_anova_E1_lFFA2 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_lFFA2}
 contrast(emmeans(emm_anova_E1_lFFA2, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_lFFA2}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_lFFA2}
 contr_anova_E1_lFFA2 <- contrast(emm_anova_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_lFFA2
@@ -996,14 +1009,16 @@ emm_anova_E1_rFFA2 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_rFFA2 right}
 contrast(emmeans(emm_anova_E1_rFFA2, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_rFFA2 right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_rFFA2 right}
 contr_anova_E1_rFFA2 <- contrast(emm_anova_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_rFFA2
@@ -1036,9 +1051,9 @@ plot_uni_E1_FFA2 <- {
 
 plot_uni_E1_FFA2
 ```
+The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA2}
 # one-sample for results of mvpa E1 FFA2
@@ -1086,6 +1101,7 @@ plot_mvpa_E1_FFA2 <- {
 
 plot_mvpa_E1_FFA2
 ```
+The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -1136,6 +1152,7 @@ plot_simi_E1_FFA2 <- {
 
 plot_simi_E1_FFA2
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E1}
@@ -1176,14 +1193,16 @@ emm_anova_E1_VWFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_VWFA}
 contrast(emmeans(emm_anova_E1_VWFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_VWFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_VWFA}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_VWFA}
 contr_anova_E1_VWFA <- contrast(emm_anova_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_VWFA
@@ -1209,9 +1228,9 @@ plot_uni_E1_VWFA <- {
 
 plot_uni_E1_VWFA
 ```
+The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 VWFA}
 # one-sample for results of mvpa E1 VWFA
@@ -1263,6 +1282,7 @@ plot_mvpa_E1_VWFA <- {
 
 plot_mvpa_E1_VWFA
 ```
+The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -1313,6 +1333,7 @@ plot_simi_E1_VWFA <- {
 
 plot_simi_E1_VWFA
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:Lateral Occipital Cortex
 ```{r the label used for LOC E1}
@@ -1358,14 +1379,16 @@ emm_anova_E1_lLOC %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_lLOC}
 contrast(emmeans(emm_anova_E1_lLOC, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_lLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_lLOC}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_lLOC}
 contr_anova_E1_lLOC <- contrast(emm_anova_E1_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_lLOC
@@ -1386,14 +1409,16 @@ emm_anova_E1_rLOC %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E1_rLOC right}
 contrast(emmeans(emm_anova_E1_rLOC, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E1_rLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E1_rLOC right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E1_rLOC right}
 contr_anova_E1_rLOC <- contrast(emm_anova_E1_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
 contr_anova_E1_rLOC
@@ -1426,6 +1451,7 @@ plot_uni_E1_LOC <- {
 
 plot_uni_E1_LOC
 ```
+The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -1476,6 +1502,7 @@ plot_mvpa_E1_LOC <- {
 
 plot_mvpa_E1_LOC
 ```
+The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -1526,6 +1553,7 @@ plot_simi_E1_LOC <- {
 
 plot_simi_E1_LOC
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 # Experiment 2: Chinese and English
 ## localizer
@@ -1537,6 +1565,7 @@ df_loc_E2 <- {
 }
 # nlevels(df_loc_E2$SubjCode) # number of subjects
 ```
+The ROI (label) used for this analysis is `r unique(df_loc_E2$Label)`.
 
 ### rm-ANOVA
 ```{r}
@@ -1642,14 +1671,16 @@ emm_anova_E2_lFFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_lFFA}
 contrast(emmeans(emm_anova_E2_lFFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_lFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_lFFA}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_lFFA}
 contr_anova_E2_lFFA <- contrast(emm_anova_E2_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_lFFA
@@ -1670,14 +1701,16 @@ emm_anova_E2_rFFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_rFFA right}
 contrast(emmeans(emm_anova_E2_rFFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_rFFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_rFFA right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_rFFA right}
 contr_anova_E2_rFFA <- contrast(emm_anova_E2_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_rFFA
@@ -1710,9 +1743,9 @@ plot_uni_E2_FFA <- {
 
 plot_uni_E2_FFA
 ```
+The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
-
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA}
 # one-sample for results of mvpa E2 FFA
@@ -1761,6 +1794,7 @@ plot_mvpa_E2_FFA <- {
 
 plot_mvpa_E2_FFA
 ```
+The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -1811,7 +1845,7 @@ plot_simi_E2_FFA <- {
 
 plot_simi_E2_FFA
 ```
-
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA1
 ```{r the label used for FFA1 E2}
@@ -1857,14 +1891,16 @@ emm_anova_E2_lFFA1 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_lFFA1}
 contrast(emmeans(emm_anova_E2_lFFA1, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_lFFA1}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_lFFA1}
 contr_anova_E2_lFFA1 <- contrast(emm_anova_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_lFFA1
@@ -1885,14 +1921,16 @@ emm_anova_E2_rFFA1 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_rFFA1 right}
 contrast(emmeans(emm_anova_E2_rFFA1, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_rFFA1 right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_rFFA1 right}
 contr_anova_E2_rFFA1 <- contrast(emm_anova_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_rFFA1
@@ -1925,6 +1963,7 @@ plot_uni_E2_FFA1 <- {
 
 plot_uni_E2_FFA1
 ```
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -1975,6 +2014,7 @@ plot_mvpa_E2_FFA1 <- {
 
 plot_mvpa_E2_FFA1
 ```
+The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -2025,6 +2065,7 @@ plot_simi_E2_FFA1 <- {
 
 plot_simi_E2_FFA1
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA2
 ```{r the label used for FFA2 E2}
@@ -2070,14 +2111,16 @@ emm_anova_E2_lFFA2 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_lFFA2}
 contrast(emmeans(emm_anova_E2_lFFA2, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_lFFA2}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_lFFA2}
 contr_anova_E2_lFFA2 <- contrast(emm_anova_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_lFFA2
@@ -2098,14 +2141,16 @@ emm_anova_E2_rFFA2 %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_rFFA2 right}
 contrast(emmeans(emm_anova_E2_rFFA2, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_rFFA2 right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_rFFA2 right}
 contr_anova_E2_rFFA2 <- contrast(emm_anova_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_rFFA2
@@ -2138,6 +2183,7 @@ plot_uni_E2_FFA2 <- {
 
 plot_uni_E2_FFA2
 ```
+The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -2188,6 +2234,7 @@ plot_mvpa_E2_FFA2 <- {
 
 plot_mvpa_E2_FFA2
 ```
+The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -2238,6 +2285,7 @@ plot_simi_E2_FFA2 <- {
 
 plot_simi_E2_FFA2
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E2}
@@ -2278,14 +2326,16 @@ emm_anova_E2_VWFA %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_VWFA}
 contrast(emmeans(emm_anova_E2_VWFA, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_VWFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_VWFA}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_VWFA}
 contr_anova_E2_VWFA <- contrast(emm_anova_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_VWFA
@@ -2311,6 +2361,7 @@ plot_uni_E2_VWFA <- {
 
 plot_uni_E2_VWFA
 ```
+The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -2361,6 +2412,7 @@ plot_mvpa_E2_VWFA <- {
 
 plot_mvpa_E2_VWFA
 ```
+The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -2411,6 +2463,7 @@ plot_simi_E2_VWFA <- {
 
 plot_simi_E2_VWFA
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:Lateral Occipital Cortex
 ```{r the label used for LOC E2}
@@ -2456,14 +2509,16 @@ emm_anova_E2_lLOC %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_lLOC}
 contrast(emmeans(emm_anova_E2_lLOC, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_lLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_lLOC}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_lLOC}
 contr_anova_E2_lLOC <- contrast(emm_anova_E2_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_lLOC
@@ -2484,14 +2539,16 @@ emm_anova_E2_rLOC %>%
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
-
+<br>
+Posthoc analysis for the main effects:
 ```{r post-hoc for emm_anova_E2_rLOC right}
 contrast(emmeans(emm_anova_E2_rLOC, ~ FaceWord), "pairwise")
 
 contrast(emmeans(emm_anova_E2_rLOC, ~ Layout), "pairwise") # , adjust = "none"
 ```
-
-```{r simple effect analyses for emm_anova_E2_rLOC right}
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_anova_E2_rLOC right}
 contr_anova_E2_rLOC <- contrast(emm_anova_E2_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
 contr_anova_E2_rLOC
@@ -2524,6 +2581,7 @@ plot_uni_E2_LOC <- {
 
 plot_uni_E2_LOC
 ```
+The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivarate analyses (MVPA)
 ##### One-sample t-test
@@ -2574,6 +2632,7 @@ plot_mvpa_E2_LOC <- {
 
 plot_mvpa_E2_LOC
 ```
+The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -2624,6 +2683,7 @@ plot_simi_E2_LOC <- {
 
 plot_simi_E2_LOC
 ```
+The above figure shows the probability of top+bottom being decoded as misconfigued conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 # Versions of packages used
 ```{r versions}
