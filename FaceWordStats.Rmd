@@ -879,6 +879,8 @@ plot_mvpa_E1_FFA1 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E1_FFA1.png', plot_mvpa_E1_FFA1, width = 12, height = 5)
+
 plot_mvpa_E1_FFA1
 ```
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -1099,6 +1101,8 @@ plot_mvpa_E1_FFA2 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E1_FFA2.png', plot_mvpa_E1_FFA2, width = 12, height = 5)
+
 plot_mvpa_E1_FFA2
 ```
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -1279,6 +1283,8 @@ plot_mvpa_E1_VWFA <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_mvpa_E1_VWFA.png', plot_mvpa_E1_VWFA, width = 9, height = 5)
 
 plot_mvpa_E1_VWFA
 ```
