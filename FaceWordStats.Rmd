@@ -17,7 +17,7 @@ output:
 
 # Introduction
 ## Usage of this file
-This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypothses, which are not included in the corresponding slides. [Please refers to the slides for the hypotheses of this project.] 
+This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypotheses, which are not included in the corresponding slides. [Please refers to the slides for the research questions of this project.] 
 
 ## Experiment designs
 This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (Layout: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (Layout: intact, misconfigured, top and bottom) and completed an additional localizer (Caucasian faces, English words, top [left two letters] and bottom [right four letters]).
