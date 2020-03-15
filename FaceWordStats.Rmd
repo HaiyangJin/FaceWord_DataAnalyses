@@ -218,17 +218,6 @@ df_mvpa_acc <- {
 }
 ```
 
-```{r descriptive analyses for mvpa, include=showAll}
-desc_mvpa_acc <- {
-  df_mvpa_acc %>%
-    group_by(ExpCode, Hemisphere, Label, ClassifyPair) %>%
-    summarize(emmean = mean(Accuracy), Count = n(), SE = sd(Accuracy)/sqrt(Count)) %>%
-    mutate(lower.CL = lower_ci(emmean, SE, Count),
-           upper.CL = upper_ci(emmean, SE, Count)) %>%
-    ungroup()
-  }
-```
-
 ```{r vertex information, include=showAll}
 # obtain from MVPA dataset
 roi_info <- {
@@ -366,27 +355,25 @@ label_ROI
 roi_info %>% 
   select(-nVertices) %>% 
   spread(Label, LabelSize) 
-
 ```
+The above table displays the size (in mm2) of each label for each participant. (NA denotes there is no this label for that particiapnt.)
 
 ## Number of vertices for each label
 ```{r}
 roi_info %>% 
   select(-LabelSize) %>% 
   spread(Label, nVertices) 
-
 ```
 
 ## Number of subjects 
-```{r number of subjects in for each label}
-# desc_mvpa_acc %>% 
-#   select(ExpCode, Label, Count) %>% 
-#   distinct() %>%
-#   spread(Label, Count) 
+```{r number of subjects for each label}
 
-desc_mvpa_acc %>%
-  select(ExpCode, Label, Count) %>% 
+df_univar_agg %>% 
+  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
   distinct() %>% 
+  group_by(ExpCode, Hemisphere, Label) %>% 
+  summarize(Count = n()) %>% 
+  ungroup() %>% 
   filter(Label %in% c(left_E1, right_E1, left_E2, right_E2)) %>% 
   mutate(Hemi = substr(Label, 5,6),
          Hemisphere = if_else(Hemi == "lh", "left", if_else(Hemi == "rh", "right", "NA")),
