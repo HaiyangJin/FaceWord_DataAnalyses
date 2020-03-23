@@ -17,10 +17,10 @@ output:
 
 # Introduction
 ## Usage of this file
-This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypotheses, which are not included in the corresponding slides. [Please refers to the slides for the research questions of this project.] 
+This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypotheses, which are not included in the corresponding slides. 
 
 ## Experiment designs
-This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (Layout: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (Layout: intact, misconfigured, top and bottom) and completed an additional localizer (Caucasian faces, English words, top [left two letters] and bottom [right four letters]).
+This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, misconfigured, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, objects, scrambled objects).
 
 ## Introduction to the analyses included in this file
 For the **localizer**, results of univariate analysis in the right FFA is displayed.  
@@ -32,7 +32,7 @@ For each ROI, three analyses are performed:
     + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, misconfigured, top vs. bottom); 
     + E2: 2(Chinese characters vs. English words) * 4 (intact, misconfigured, top vs. bottom).
   
-2. Multivariate pattern analysis (MVPA) with libsvm is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [accuracy is significantly larger than the chancel level (0.5)].
+2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests].
     + Pairs in E1: 
         + face_intact vs. word_intact;
         + face_intact vs. face_miscon;
@@ -47,15 +47,15 @@ For each ROI, three analyses are performed:
         + English_top vs. English_bottom.
     
 3. Similarity of top+bottom to intact vs. misconfigured: The dependent variable is the probability of top+bottom was decoded as misconfigured conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to misconfigured relative to intact.
-    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be significantly larger than the chance level (0.5).
-    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be significantly smaller than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be significantly **larger** than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be significantly **smaller** than the chance level (0.5).
 
 ## How is the probability of top+bottom being decoded as misconfigued calculated?
-The probability was calculated individually:
+The probability was estimated for each particiapnt separately:
 
 1. The patterns of top and bottom are combined with three different weights (0.5/0.5, 0.25/0.75, 0.75/0.25).
-2. Supported Vector Machine (libsvm) is trained with the patterns of intact vs. misconfigued (10 runs).
-3. The trained model is used to predict the probability of the combined pattern being misconfigured [for each run separately]. 
+2. Supported Vector Machine (`libsvm`) is trained with the patterns of intact vs. misconfigued (10 runs).
+3. The trained model is used to predict the probability of the combined patterns being decoded as misconfigured [for each run separately]. 
 4. The probability of top+bottom being decoded as misconfigued for each participant is calculated by averaging the probability for each run.
     
 # Preparations
@@ -68,7 +68,7 @@ options(width = 450)
 showAll = FALSE  # if show steps for cleaning 
 ```
 
-```{r preparation}
+```{r preparation, include=FALSE}
 # load library
 library(tidyverse)
 library(afex)
@@ -82,7 +82,6 @@ library(emmeans)
 mvpaColors <- c("#e67639","#000097","#552eff","#02b762","#59ea91")
 simiColors <- c("#000064","#0000ff","#6565ce","#003500","#009900","#08f74d")
 ```
-
 
 # Load and clean data 
 ```{r assign filenames, include=showAll}
@@ -113,7 +112,6 @@ pairOrder_E2 <- c("Chinese_intact-English_intact",
 
 # criterion of vertex number
 nVtx_min <- 50
-
 ```
 
 ```{r setting for plots, include=showAll}
@@ -132,7 +130,6 @@ sig_size <- 5 # font size of p-values in plots
 #   # sig_vector <- as.character(sig_vector)
 #   return(sig_vector)
 # }
-
 ```
 
 ## Data from localizer scans
@@ -188,7 +185,6 @@ df_univar_agg <- {
 str(df_univar_agg)
 ```
 
-
 ## Data from CoSMoMVPA
 ```{r load data file from cosmoMVPA, include=showAll}
 df_mvpa <- read_csv(fn_cosmo)
@@ -228,7 +224,6 @@ roi_info <- {
 }
 ```
 
-
 ## Data for the Similarity of top + bottom
 ```{r Data for the Similarity of top + bottom, include=showAll}
 df_simi <- read_csv(fn_simi)
@@ -267,7 +262,6 @@ df_rate_simi <- {
 str(df_rate_simi)
 ```
 
-
 # ROI information
 ```{r roi information, include=showAll}
 # # obtain from MVPA dataset
@@ -305,7 +299,6 @@ label_rLOC <- label_list[isRight & isLOC] # the labels for the right LOC
 # all the labels available in this analysis
 # label_list
 ```
-
 
 ## Label used for each ROI
 ```{r}
@@ -609,6 +602,8 @@ plot_uni_E1_FFA <- {
     general_theme
 }
 
+# ggsave('plot_uni_E1_FFA.png', plot_uni_E1_FFA, width = 8, height = 5.5)
+
 plot_uni_E1_FFA
 ```
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -660,6 +655,8 @@ plot_mvpa_E1_FFA <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 12, height = 5)
+
 plot_mvpa_E1_FFA
 ```
 The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -701,7 +698,7 @@ plot_simi_E1_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA$p), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -710,6 +707,8 @@ plot_simi_E1_FFA <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E1_FFA.png', plot_simi_E1_FFA, width = 14, height = 5)
 
 plot_simi_E1_FFA
 ```
@@ -829,6 +828,8 @@ plot_uni_E1_FFA1 <- {
     general_theme
 }
 
+# ggsave('plot_uni_E1_FFA1.png', plot_uni_E1_FFA1, width = 8, height = 5.5)
+
 plot_uni_E1_FFA1
 ```
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -922,7 +923,7 @@ plot_simi_E1_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA1", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA1$p,4), color = sig_colors(one_simi_E1_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -932,6 +933,8 @@ plot_simi_E1_FFA1 <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E1_FFA1.png', plot_simi_E1_FFA1, width = 14, height = 5)
 
 plot_simi_E1_FFA
 ```
@@ -1051,6 +1054,8 @@ plot_uni_E1_FFA2 <- {
     general_theme
 }
 
+# ggsave('plot_uni_E1_FFA2.png', plot_uni_E1_FFA2, width = 8, height = 5.5)
+
 plot_uni_E1_FFA2
 ```
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -1144,7 +1149,7 @@ plot_simi_E1_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA2", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA2$p), color = sig_colors(one_simi_E1_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E1_FFA2$p, 4), color = sig_colors(one_simi_E1_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1153,6 +1158,8 @@ plot_simi_E1_FFA2 <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E1_FFA2.png', plot_simi_E1_FFA2, width = 14, height = 5)
 
 plot_simi_E1_FFA2
 ```
@@ -1221,14 +1228,17 @@ color_uni_E1_VWFA <- sig_colors(sig_uni_E1_VWFA)
 plot_uni_E1_VWFA <- {
   ggplot(data = as.data.frame(emm_anova_E1_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    # facet_grid(FaceWord ~ .) +
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in VWFA (Univariate)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises 
+    labs(title = "Mean neural responses in (left) VWFA (Univariate)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises 
     geom_text(label = sig_uni_E1_VWFA, color = color_uni_E1_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
     general_theme
 }
+
+# ggsave('plot_uni_E1_VWFA.png', plot_uni_E1_VWFA, width = 8, height = 4)
 
 plot_uni_E1_VWFA
 ```
@@ -1327,7 +1337,7 @@ plot_simi_E1_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in VWFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_VWFA$p), color = sig_colors(one_simi_E1_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E1_VWFA$p, 4), color = sig_colors(one_simi_E1_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1336,6 +1346,8 @@ plot_simi_E1_VWFA <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E1_VWFA.png', plot_simi_E1_VWFA, width = 10, height = 5)
 
 plot_simi_E1_VWFA
 ```
@@ -1455,6 +1467,8 @@ plot_uni_E1_LOC <- {
     general_theme
 }
 
+# ggsave('plot_uni_E1_LOC.png', plot_uni_E1_LOC, width = 8, height = 5.5)
+
 plot_uni_E1_LOC
 ```
 The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -1506,6 +1520,8 @@ plot_mvpa_E1_LOC <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E1_LOC.png', plot_mvpa_E1_LOC, width = 12, height = 5)
+
 plot_mvpa_E1_LOC
 ```
 The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -1547,7 +1563,7 @@ plot_simi_E1_LOC <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in LOC", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_LOC$p), color = sig_colors(one_simi_E1_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E1_LOC$p, 4), color = sig_colors(one_simi_E1_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1556,6 +1572,8 @@ plot_simi_E1_LOC <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E1_LOC.png', plot_simi_E1_LOC, width = 14, height = 5)
 
 plot_simi_E1_LOC
 ```
@@ -1747,6 +1765,8 @@ plot_uni_E2_FFA <- {
     general_theme
 }
 
+# ggsave('plot_uni_E2_FFA.png', plot_uni_E2_FFA, width = 8, height = 5.5)
+
 plot_uni_E2_FFA
 ```
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -1798,6 +1818,8 @@ plot_mvpa_E2_FFA <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E2_FFA.png', plot_mvpa_E2_FFA, width = 12, height = 5)
+
 plot_mvpa_E2_FFA
 ```
 The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -1839,7 +1861,7 @@ plot_simi_E2_FFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA$p), color = sig_colors(one_simi_E2_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E2_FFA$p, 4), color = sig_colors(one_simi_E2_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -1848,6 +1870,8 @@ plot_simi_E2_FFA <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E2_FFA.png', plot_simi_E2_FFA, width = 14, height = 5)
 
 plot_simi_E2_FFA
 ```
@@ -1967,6 +1991,8 @@ plot_uni_E2_FFA1 <- {
     general_theme
 }
 
+# ggsave('plot_uni_E2_FFA1.png', plot_uni_E2_FFA1, width = 8, height = 5.5)
+
 plot_uni_E2_FFA1
 ```
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -2018,6 +2044,8 @@ plot_mvpa_E2_FFA1 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E2_FFA1.png', plot_mvpa_E2_FFA1, width = 12, height = 5)
+
 plot_mvpa_E2_FFA1
 ```
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -2059,7 +2087,7 @@ plot_simi_E2_FFA1 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA1", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA1$p), color = sig_colors(one_simi_E2_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E2_FFA1$p, 4), color = sig_colors(one_simi_E2_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2068,6 +2096,8 @@ plot_simi_E2_FFA1 <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E2_FFA1.png', plot_simi_E2_FFA1, width = 14, height = 5)
 
 plot_simi_E2_FFA1
 ```
@@ -2187,6 +2217,8 @@ plot_uni_E2_FFA2 <- {
     general_theme
 }
 
+# ggsave('plot_uni_E2_FFA2.png', plot_uni_E2_FFA2, width = 8, height = 5.5)
+
 plot_uni_E2_FFA2
 ```
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -2238,6 +2270,8 @@ plot_mvpa_E2_FFA2 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E2_FFA2.png', plot_mvpa_E2_FFA2, width = 12, height = 5)
+
 plot_mvpa_E2_FFA2
 ```
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -2279,7 +2313,7 @@ plot_simi_E2_FFA2 <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA2", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA2$p), color = sig_colors(one_simi_E2_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E2_FFA2$p, 4), color = sig_colors(one_simi_E2_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2288,6 +2322,8 @@ plot_simi_E2_FFA2 <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E2_FFA2.png', plot_simi_E2_FFA2, width = 14, height = 5)
 
 plot_simi_E2_FFA2
 ```
@@ -2365,6 +2401,8 @@ plot_uni_E2_VWFA <- {
     general_theme
 }
 
+# ggsave('plot_uni_E2_VWFA.png', plot_uni_E2_VWFA, width = 8, height = 4)
+
 plot_uni_E2_VWFA
 ```
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -2416,6 +2454,8 @@ plot_mvpa_E2_VWFA <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E2_VWFA.png', plot_mvpa_E2_VWFA, width = 9, height = 5)
+
 plot_mvpa_E2_VWFA
 ```
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -2457,7 +2497,7 @@ plot_simi_E2_VWFA <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in VWFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_VWFA$p), color = sig_colors(one_simi_E2_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E2_VWFA$p, 4), color = sig_colors(one_simi_E2_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2466,6 +2506,8 @@ plot_simi_E2_VWFA <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E2_VWFA.png', plot_simi_E2_VWFA, width = 10, height = 5)
 
 plot_simi_E2_VWFA
 ```
@@ -2585,6 +2627,8 @@ plot_uni_E2_LOC <- {
     general_theme
 }
 
+# ggsave('plot_uni_E2_LOC.png', plot_uni_E2_LOC, width = 8, height = 5.5)
+
 plot_uni_E2_LOC
 ```
 The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
@@ -2636,6 +2680,8 @@ plot_mvpa_E2_LOC <- {
     #       axis.line = element_line(size = 3)) 
 }
 
+# ggsave('plot_mvpa_E2_LOC.png', plot_mvpa_E2_LOC, width = 12, height = 5)
+
 plot_mvpa_E2_LOC
 ```
 The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
@@ -2677,7 +2723,7 @@ plot_simi_E2_LOC <- {
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
     labs(title = "Similarity of top+bottom to intact vs. misconfigured in LOC", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_LOC$p), color = sig_colors(one_simi_E2_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    geom_text(label = signif(one_simi_E2_LOC$p, 4), color = sig_colors(one_simi_E2_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
@@ -2686,6 +2732,8 @@ plot_simi_E2_LOC <- {
     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
     #       axis.line = element_line(size = 3)) 
 }
+
+# ggsave('plot_simi_E2_LOC.png', plot_simi_E2_LOC, width = 14, height = 5)
 
 plot_simi_E2_LOC
 ```
