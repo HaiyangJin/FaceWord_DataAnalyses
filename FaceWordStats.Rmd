@@ -17,10 +17,10 @@ output:
 
 # Introduction
 ## Usage of this file
-This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new hypotheses, which are not included in the corresponding slides. 
+This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new questions that are not included in the corresponding slides. 
 
 ## Experiment designs
-This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, misconfigured, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, objects, scrambled objects).
+This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, misconfigured, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
 
 ## Introduction to the analyses included in this file
 For the **localizer**, results of univariate analysis in the right FFA is displayed.  
@@ -47,8 +47,8 @@ For each ROI, three analyses are performed:
         + English_top vs. English_bottom.
     
 3. Similarity of top+bottom to intact vs. misconfigured: The dependent variable is the probability of top+bottom was decoded as misconfigured conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to misconfigured relative to intact.
-    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be significantly **larger** than the chance level (0.5).
-    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be significantly **smaller** than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be *significantly larger* than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be *significantly smaller* than the chance level (0.5).
 
 ## How is the probability of top+bottom being decoded as misconfigued calculated?
 The probability was estimated for each particiapnt separately:
@@ -301,6 +301,7 @@ label_rLOC <- label_list[isRight & isLOC] # the labels for the right LOC
 ```
 
 ## Label used for each ROI
+The comments (texts after the dash sign) display all the available labels for each ROI.
 ```{r}
 # Experiment 1
 label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
@@ -342,7 +343,7 @@ label_ROI <- tibble("ROI" = ROI, "left_E1" = left_E1, "right_E1"= right_E1, "lef
 
 label_ROI
 ```
-The above table displays the label used for each ROI and each Experiment. (VWFA is only found on the left hemisphere.)
+The above table displays the label used for each ROI and each Experiment in this analysis. (VWFA is only found on the left hemisphere.)
 
 ## Size of labels
 ```{r size (mm2) of labels for each subject}
@@ -350,7 +351,7 @@ roi_info %>%
   select(-nVertices) %>% 
   spread(Label, LabelSize) 
 ```
-The above table displays the size (in mm2) of each label for each participant. (NA denotes there is no this label for that particiapnt.)
+The above table displays the size (in mm2) of each label for each participant. NA denotes there is no that label for that particiapnt.
 
 ## Number of vertices for each label
 ```{r}
@@ -412,7 +413,7 @@ df_mvpa %>%
 ```
 The number of participants excluded from following analysis due to the vertex number being smaller than `r nVtx_min`. (NA denotes no participants were excluded or VWFA was not found on the right hemisphere.)
 
-# Experiment 1: Chinese faces and Chinese characters
+# Experiment 1: Chinese faces and Chinese characters for Chinese participants
 ## Localizer
 ```{r only keep the univariate data for E1 loc}
 df_loc_E1 <- {
@@ -422,7 +423,7 @@ df_loc_E1 <- {
 }
 # nlevels(df_loc_E1$SubjCode) # number of subjects
 ```
-The ROI (label) used for this analysis is `r unique(df_loc_E1$Label)`.
+The label used for FFA in this analysis is `r unique(df_loc_E1$Label)`.
 
 ### rm-ANOVA
 ```{r}
@@ -1579,7 +1580,7 @@ plot_simi_E1_LOC
 ```
 The above figure shows the probability of top+bottom being decoded as misconfigued conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-# Experiment 2: Chinese and English
+# Experiment 2: Chinese characters and English words for English speakers
 ## localizer
 ```{r only keep the univariate data for E2 loc}
 df_loc_E2 <- {
@@ -1589,7 +1590,7 @@ df_loc_E2 <- {
 }
 # nlevels(df_loc_E2$SubjCode) # number of subjects
 ```
-The ROI (label) used for this analysis is `r unique(df_loc_E2$Label)`.
+The label used for FFA in this analysis is `r unique(df_loc_E2$Label)`.
 
 ### rm-ANOVA
 ```{r}
