@@ -62,6 +62,7 @@ The probability was estimated for each particiapnt separately:
 ```{r general setting for this document, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
 knitr::opts_chunk$set(message = FALSE)  # hide all messages
+knitr::opts_chunk$set(echo = FALSE)  # hide all codes and only show output
 # knitr::opts_chunk$set(fig.width = 11)  
 
 options(width = 450)
@@ -609,7 +610,7 @@ plot_uni_E1_FFA
 ```
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA}
 
@@ -835,7 +836,7 @@ plot_uni_E1_FFA1
 ```
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA1}
 # one-sample for results of mvpa E1 FFA1
@@ -1061,7 +1062,7 @@ plot_uni_E1_FFA2
 ```
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA2}
 # one-sample for results of mvpa E1 FFA2
@@ -1245,7 +1246,7 @@ plot_uni_E1_VWFA
 ```
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 VWFA}
 # one-sample for results of mvpa E1 VWFA
@@ -1474,7 +1475,7 @@ plot_uni_E1_LOC
 ```
 The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 LOC}
 # one-sample for results of mvpa E1 LOC
@@ -1772,7 +1773,7 @@ plot_uni_E2_FFA
 ```
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA}
 # one-sample for results of mvpa E2 FFA
@@ -1998,7 +1999,7 @@ plot_uni_E2_FFA1
 ```
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA1}
 # one-sample for results of mvpa E2 FFA1
@@ -2224,7 +2225,7 @@ plot_uni_E2_FFA2
 ```
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 FFA2}
 # one-sample for results of mvpa E2 FFA2
@@ -2408,7 +2409,7 @@ plot_uni_E2_VWFA
 ```
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 VWFA}
 # one-sample for results of mvpa E2 VWFA
@@ -2634,7 +2635,7 @@ plot_uni_E2_LOC
 ```
 The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
-#### Multivarate analyses (MVPA)
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E2 LOC}
 # one-sample for results of mvpa E2 LOC
