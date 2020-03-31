@@ -611,6 +611,100 @@ plot_uni_E1_FFA
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
 
 
+```{r plots for functional scans E1 (anova) FFA (test example), fig.asp = .75, fig.width = 8}
+
+sig_uni_E1_FFA <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
+                     signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
+color_uni_E1_FFA <- sig_colors(sig_uni_E1_FFA)
+
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
+
+plot_uni_E1_FFA.gray1 <- {
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, width = 0.5, show.legend = FALSE) +  # position of columns and countour of columns
+    scale_fill_grey(4) +
+    facet_grid(FaceWord ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
+    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    general_theme
+}
+
+ggsave('plot_uni_E1_FFA_1.png', plot_uni_E1_FFA.gray1, width = 10, height = 10)
+
+```
+
+
+```{r}
+plot_uni_E1_FFA.gray2 <- {
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, fill = "grey", width = 0.5, show.legend = FALSE) +  # position of columns and countour of columns
+    facet_grid(FaceWord ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
+    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    general_theme
+}
+
+ggsave('plot_uni_E1_FFA_2.png', plot_uni_E1_FFA.gray2, width = 10, height = 10)
+
+```
+
+
+```{r}
+plot_uni_E1_FFA.gray3 <- {
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, width = 1, show.legend = FALSE) +  # position of columns and countour of columns
+    scale_fill_grey() +
+    facet_grid(FaceWord ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
+    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
+}
+
+ggsave('plot_uni_E1_FFA_3.png', plot_uni_E1_FFA.gray3, width = 7, height = 10)
+
+```
+
+
+```{r}
+plot_uni_E1_FFA.gray4 <- {
+  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
+    geom_col(position = position_dodge(width = 0.1), color = "black", fill = "gray", alpha = .7, width = 1, show.legend = FALSE) +  # position of columns and countour of columns
+    facet_grid(FaceWord ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
+    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+    general_theme +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
+}
+
+ggsave('plot_uni_E1_FFA_4.png', plot_uni_E1_FFA.gray4, width = 7, height = 10)
+
+```
+
+#### Multivariate analyses (MVPA)
 ##### One-sample t-test
 ```{r one-sample for results of mvpa E1 FFA}
 
@@ -662,6 +756,90 @@ plot_mvpa_E1_FFA <- {
 plot_mvpa_E1_FFA
 ```
 The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+
+```{r}
+plot_mvpa_E1_FFA_1 <- {
+  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    scale_fill_grey() + 
+    facet_grid(. ~ Hemisphere) +
+    # scale_fill_manual(values = mvpaColors) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    general_theme +
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 3))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
+}
+
+ggsave('plot_mvpa_E1_FFA_1.png', plot_mvpa_E1_FFA_1, width = 12, height = 5)
+```
+
+```{r}
+plot_mvpa_E1_FFA_2 <- {
+  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
+    scale_fill_grey() +
+    facet_grid(. ~ Hemisphere) +
+    # scale_fill_manual(values = mvpaColors) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    general_theme +
+    # theme(#axis.title.x=element_blank(),
+    #     axis.text.x=element_text(angle = 90, vjust = 0.5, hjust = 0.5),
+    #     #axis.ticks.x=element_blank(),
+    #     axis.line = element_line(size = 3))
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
+          axis.line = element_line(size = 3))
+}
+
+ggsave('plot_mvpa_E1_FFA_2.png', plot_mvpa_E1_FFA_2, width = 9, height = 8)
+```
+
+
+```{r}
+plot_mvpa_E1_FFA_3 <- {
+  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7, fill = "gray", show.legend = FALSE) +  # position of columns and countour of columns
+    # scale_fill_grey() +
+    facet_grid(. ~ Hemisphere) +
+    # scale_fill_manual(values = mvpaColors) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+    general_theme +
+    # theme(#axis.title.x=element_blank(),
+    #     axis.text.x=element_text(angle = 90, vjust = 0.5, hjust = 0.5),
+    #     #axis.ticks.x=element_blank(),
+    #     axis.line = element_line(size = 3))
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
+          axis.line = element_line(size = 3))
+}
+
+ggsave('plot_mvpa_E1_FFA_3.png', plot_mvpa_E1_FFA_3, width = 9, height = 8)
+```
+
 
 #### Similarity of top + bottom to intact vs. misconfigured
 ##### One-sample t-test
@@ -715,6 +893,94 @@ plot_simi_E1_FFA <- {
 plot_simi_E1_FFA
 ```
 The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+
+```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA, fig.asp=.5, fig.width = 13}
+
+plot_simi_E1_FFA_1 <- {
+  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+    scale_fill_grey() +
+    facet_grid(. ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    # scale_fill_manual(values = simiColors) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    general_theme +
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.line = element_line(size = 4))
+    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+    #       axis.line = element_line(size = 3)) 
+}
+
+ggsave('plot_simi_E1_FFA_1.png', plot_simi_E1_FFA_1, width = 14, height = 5)
+
+```
+
+
+```{r}
+plot_simi_E1_FFA_2 <- {
+  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
+    scale_fill_grey() +
+    facet_grid(. ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    # scale_fill_manual(values = simiColors) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    general_theme +
+    # theme(axis.title.x=element_blank(),
+    #     axis.text.x=element_blank(),
+    #     axis.ticks.x=element_blank(),
+    #     axis.line = element_line(size = 4))
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
+          axis.line = element_line(size = 3))
+}
+
+ggsave('plot_simi_E1_FFA_2.png', plot_simi_E1_FFA_2, width = 10, height = 8)
+
+```
+
+
+```{r}
+plot_simi_E1_FFA_3 <- {
+  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
+    geom_col(position = "dodge", color = "black", fill = "gray", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
+    # scale_fill_grey() +
+    facet_grid(. ~ Hemisphere) +
+    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                  show.legend = FALSE, width = 0.25, alpha = .5,
+                  position = position_dodge(width=0.9)) +
+    # scale_fill_manual(values = simiColors) +
+    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
+    general_theme +
+    # theme(axis.title.x=element_blank(),
+    #     axis.text.x=element_blank(),
+    #     axis.ticks.x=element_blank(),
+    #     axis.line = element_line(size = 4))
+    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
+          axis.line = element_line(size = 3))
+}
+
+ggsave('plot_simi_E1_FFA_3.png', plot_simi_E1_FFA_3, width = 10, height = 8)
+
+```
 
 ### Label:FFA1
 ```{r the label used for FFA1 E1}
