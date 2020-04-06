@@ -636,7 +636,7 @@ plot_uni_E1_FFA.gray1 <- {
     general_theme
 }
 
-ggsave('plot_uni_E1_FFA_1.png', plot_uni_E1_FFA.gray1, width = 10, height = 10)
+ggsave('plot_uni_E1_FFA_1.pdf', plot_uni_E1_FFA.gray1, width = 10, height = 10)
 
 ```
 
@@ -655,7 +655,7 @@ plot_uni_E1_FFA.gray2 <- {
     general_theme
 }
 
-ggsave('plot_uni_E1_FFA_2.png', plot_uni_E1_FFA.gray2, width = 10, height = 10)
+ggsave('plot_uni_E1_FFA_2.pdf', plot_uni_E1_FFA.gray2, width = 10, height = 10)
 
 ```
 
@@ -678,7 +678,7 @@ plot_uni_E1_FFA.gray3 <- {
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
 }
 
-ggsave('plot_uni_E1_FFA_3.png', plot_uni_E1_FFA.gray3, width = 7, height = 10)
+ggsave('plot_uni_E1_FFA_3.pdf', plot_uni_E1_FFA.gray3, width = 7, height = 10)
 
 ```
 
@@ -700,7 +700,7 @@ plot_uni_E1_FFA.gray4 <- {
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
 }
 
-ggsave('plot_uni_E1_FFA_4.png', plot_uni_E1_FFA.gray4, width = 7, height = 10)
+ggsave('plot_uni_E1_FFA_4.pdf', plot_uni_E1_FFA.gray4, width = 7, height = 10)
 
 ```
 
@@ -782,7 +782,7 @@ plot_mvpa_E1_FFA_1 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
-ggsave('plot_mvpa_E1_FFA_1.png', plot_mvpa_E1_FFA_1, width = 12, height = 5)
+ggsave('plot_mvpa_E1_FFA_1.pdf', plot_mvpa_E1_FFA_1, width = 12, height = 5)
 ```
 
 ```{r}
@@ -809,7 +809,7 @@ plot_mvpa_E1_FFA_2 <- {
           axis.line = element_line(size = 3))
 }
 
-ggsave('plot_mvpa_E1_FFA_2.png', plot_mvpa_E1_FFA_2, width = 9, height = 8)
+ggsave('plot_mvpa_E1_FFA_2.pdf', plot_mvpa_E1_FFA_2, width = 9, height = 8)
 ```
 
 
@@ -837,7 +837,7 @@ plot_mvpa_E1_FFA_3 <- {
           axis.line = element_line(size = 3))
 }
 
-ggsave('plot_mvpa_E1_FFA_3.png', plot_mvpa_E1_FFA_3, width = 9, height = 8)
+ggsave('plot_mvpa_E1_FFA_3.pdf', plot_mvpa_E1_FFA_3, width = 9, height = 8)
 ```
 
 
@@ -920,7 +920,7 @@ plot_simi_E1_FFA_1 <- {
     #       axis.line = element_line(size = 3)) 
 }
 
-ggsave('plot_simi_E1_FFA_1.png', plot_simi_E1_FFA_1, width = 14, height = 5)
+ggsave('plot_simi_E1_FFA_1.pdf', plot_simi_E1_FFA_1, width = 14, height = 5)
 
 ```
 
@@ -949,7 +949,7 @@ plot_simi_E1_FFA_2 <- {
           axis.line = element_line(size = 3))
 }
 
-ggsave('plot_simi_E1_FFA_2.png', plot_simi_E1_FFA_2, width = 10, height = 8)
+ggsave('plot_simi_E1_FFA_2.pdf', plot_simi_E1_FFA_2, width = 10, height = 8)
 
 ```
 
@@ -978,7 +978,7 @@ plot_simi_E1_FFA_3 <- {
           axis.line = element_line(size = 3))
 }
 
-ggsave('plot_simi_E1_FFA_3.png', plot_simi_E1_FFA_3, width = 10, height = 8)
+ggsave('plot_simi_E1_FFA_3.pdf', plot_simi_E1_FFA_3, width = 10, height = 8)
 
 ```
 
