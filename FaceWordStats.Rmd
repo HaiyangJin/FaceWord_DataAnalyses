@@ -35,28 +35,28 @@ For each ROI, three analyses are performed:
 2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests].
     + Pairs in E1: 
         + face_intact vs. word_intact;
-        + face_intact vs. face_miscon;
+        + face_intact vs. face_exchange;
         + face_top vs. face_bottom;
-        + word_intact vs. word_miscon;
+        + word_intact vs. word_exchange;
         + word_top vs. word_bottom.
     + Pairs in E2:
         + Chinese_intact vs. English_intact;
-        + Chinese_intact vs. Chinese_miscon;
+        + Chinese_intact vs. Chinese_exchange;
         + Chinese_top vs. Chinese_bottom;
-        + English_intact vs. English_miscon;
+        + English_intact vs. English_exchange;
         + English_top vs. English_bottom.
     
 3. Similarity of top+bottom to intact vs. exchange: The dependent variable is the probability of top+bottom was decoded as Exchange conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to exchange relative to intact.
-    + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be *significantly larger* than the chance level (0.5).
-    + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be *significantly smaller* than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of exchange relative to intact, the probability (of being decoded as exchange) should be *significantly larger* than the chance level (0.5).
+    + If the pattern of top+bottom is more similar to that of intact relative to exchange, the probability (of being decoded as exchange) should be *significantly smaller* than the chance level (0.5).
 
 ## How is the probability of top+bottom being decoded as exchange calculated?
 The probability was estimated for each particiapnt separately:
 
 1. The patterns of top and bottom are combined with three different weights (0.5/0.5, 0.25/0.75, 0.75/0.25).
-2. Supported Vector Machine (`libsvm`) is trained with the patterns of intact vs. misconfigued (10 runs).
+2. Supported Vector Machine (`libsvm`) is trained with the patterns of intact vs. exchange (10 runs).
 3. The trained model is used to predict the probability of the combined patterns being decoded as exchange [for each run separately]. 
-4. The probability of top+bottom being decoded as misconfigued for each participant is calculated by averaging the probability for each run.
+4. The probability of top+bottom being decoded as exchange for each participant is calculated by averaging the probability for each run.
     
 # Preparations
 ```{r general setting for this document, include=FALSE}
@@ -101,14 +101,14 @@ layoutOrder <- c("intact", "exchange", "top", "bottom")
 ROIOrder <- c("FFA", "FFA1", "FFA2", "VWFA", "LOC")
 
 pairOrder_E1 <- c("face_intact-word_intact",
-                  "face_intact-face_miscon",
+                  "face_intact-face_exchange",
                   "face_top-face_bottom",
-                  "word_intact-word_miscon",
+                  "word_intact-word_exchange",
                   "word_top-word_bottom")
 pairOrder_E2 <- c("Chinese_intact-English_intact",
-                  "Chinese_intact-Chinese_miscon",
+                  "Chinese_intact-Chinese_exchange",
                   "Chinese_top-Chinese_bottom",
-                  "English_intact-English_miscon",
+                  "English_intact-English_exchange",
                   "English_top-English_bottom")
 
 # criterion of vertex number
@@ -237,8 +237,8 @@ str(df_simi)
 df_clean_simi <- {
   df_simi %>% 
     mutate(
-      asMiscon = if_else(grepl("exchange", PredictCond), 1, 0),
-      pMiscon = Probability_2,
+      asExchange = if_else(grepl("exchange", PredictCond), 1, 0),
+      pExchange = Probability_2,
       ExpCode = if_else(grepl("facewordN", SubjCode), 2, 1)) %>% 
     left_join(roi_info, by = c("ExpCode", "Label", "SubjCode")) 
 }
@@ -252,9 +252,9 @@ df_rate_simi <- {
   df_clean_simi %>% 
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     group_by(ExpCode, SubjCode, Label, ClassPair_1, Combination) %>% 
-    summarize(RateAsMiscon = mean(asMiscon),
-              pAsMiscon = mean(pMiscon),
-              RateAsMiscon = pAsMiscon) %>%  # use the probability instead of the categorical prediction
+    summarize(RateAsExchange = mean(asExchange),
+              pAsExchange = mean(pExchange),
+              RateAsExchange = pAsExchange) %>%  # use the probability instead of the categorical prediction
     ungroup() %>% 
     mutate(Hemisphere = if_else(grepl("lh", Label), 'left', if_else(grepl("rh", Label), "right", "NA")))
 }
@@ -847,15 +847,15 @@ ggsave('plot_mvpa_E1_FFA_3.pdf', plot_mvpa_E1_FFA_3, width = 9, height = 8)
 one_simi_E1_FFA <- {
   df_simi_rate_E1_FFA %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -891,7 +891,7 @@ plot_simi_E1_FFA <- {
 
 plot_simi_E1_FFA
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 
 ```{r plot Similarity of top+bottom to intact vs. exchange in FFA, fig.asp=.5, fig.width = 13}
@@ -1099,7 +1099,7 @@ plot_uni_E1_FFA1 <- {
 
 plot_uni_E1_FFA1
 ```
-The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -1160,15 +1160,15 @@ The above figure shows the decoding accuracy in FFA1 for each pair. The numbers 
 one_simi_E1_FFA1 <- {
   df_simi_rate_E1_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -1205,7 +1205,7 @@ plot_simi_E1_FFA1 <- {
 
 plot_simi_E1_FFA
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA2
 ```{r the label used for FFA2 E1}
@@ -1325,7 +1325,7 @@ plot_uni_E1_FFA2 <- {
 
 plot_uni_E1_FFA2
 ```
-The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -1386,15 +1386,15 @@ The above figure shows the decoding accuracy in FFA2 for each pair. The numbers 
 one_simi_E1_FFA2 <- {
   df_simi_rate_E1_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -1430,7 +1430,7 @@ plot_simi_E1_FFA2 <- {
 
 plot_simi_E1_FFA2
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E1}
@@ -1509,7 +1509,7 @@ plot_uni_E1_VWFA <- {
 
 plot_uni_E1_VWFA
 ```
-The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -1574,15 +1574,15 @@ The above figure shows the decoding accuracy in VWFA for each pair. The numbers 
 one_simi_E1_VWFA <- {
   df_simi_rate_E1_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -1618,7 +1618,7 @@ plot_simi_E1_VWFA <- {
 
 plot_simi_E1_VWFA
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:Lateral Occipital Cortex
 ```{r the label used for LOC E1}
@@ -1738,7 +1738,7 @@ plot_uni_E1_LOC <- {
 
 plot_uni_E1_LOC
 ```
-The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -1800,15 +1800,15 @@ The above figure shows the decoding accuracy in LOC for each pair. The numbers a
 one_simi_E1_LOC <- {
   df_simi_rate_E1_LOC %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -1844,7 +1844,7 @@ plot_simi_E1_LOC <- {
 
 plot_simi_E1_LOC
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 # Experiment 2: Chinese characters and English words for English speakers
 ## localizer
@@ -2036,7 +2036,7 @@ plot_uni_E2_FFA <- {
 
 plot_uni_E2_FFA
 ```
-The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -2098,15 +2098,15 @@ The above figure shows the decoding accuracy in FFA for each pair. The numbers a
 one_simi_E2_FFA <- {
   df_simi_rate_E2_FFA %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -2142,7 +2142,7 @@ plot_simi_E2_FFA <- {
 
 plot_simi_E2_FFA
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA1
 ```{r the label used for FFA1 E2}
@@ -2262,7 +2262,7 @@ plot_uni_E2_FFA1 <- {
 
 plot_uni_E2_FFA1
 ```
-The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -2324,15 +2324,15 @@ The above figure shows the decoding accuracy in FFA1 for each pair. The numbers 
 one_simi_E2_FFA1 <- {
   df_simi_rate_E2_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -2368,7 +2368,7 @@ plot_simi_E2_FFA1 <- {
 
 plot_simi_E2_FFA1
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:FFA2
 ```{r the label used for FFA2 E2}
@@ -2488,7 +2488,7 @@ plot_uni_E2_FFA2 <- {
 
 plot_uni_E2_FFA2
 ```
-The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -2550,15 +2550,15 @@ The above figure shows the decoding accuracy in FFA2 for each pair. The numbers 
 one_simi_E2_FFA2 <- {
   df_simi_rate_E2_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -2594,7 +2594,7 @@ plot_simi_E2_FFA2 <- {
 
 plot_simi_E2_FFA2
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label: left Visual Word Form Area (VWFA)
 ```{r the label used for VWFA E2}
@@ -2672,7 +2672,7 @@ plot_uni_E2_VWFA <- {
 
 plot_uni_E2_VWFA
 ```
-The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -2734,15 +2734,15 @@ The above figure shows the decoding accuracy in VWFA for each pair. The numbers 
 one_simi_E2_VWFA <- {
   df_simi_rate_E2_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -2778,7 +2778,7 @@ plot_simi_E2_VWFA <- {
 
 plot_simi_E2_VWFA
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 ### Label:Lateral Occipital Cortex
 ```{r the label used for LOC E2}
@@ -2898,7 +2898,7 @@ plot_uni_E2_LOC <- {
 
 plot_uni_E2_LOC
 ```
-The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 #### Multivariate analyses (MVPA)
 ##### One-sample t-test
@@ -2960,15 +2960,15 @@ The above figure shows the decoding accuracy in LOC for each pair. The numbers a
 one_simi_E2_LOC <- {
   df_simi_rate_E2_LOC %>% 
     group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsMiscon, mu = 0.5)[[5]],
-              SD = t.test(RateAsMiscon, mu = 0.5)[[7]],
-              t = t.test(RateAsMiscon, mu = 0.5)[[1]],
-              df = t.test(RateAsMiscon, mu = 0.5)[[2]],
-              p = round(t.test(RateAsMiscon, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsMiscon, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsMiscon, mu = 0.5)[[6]],
-              alternative = t.test(RateAsMiscon, mu = 0.5)[[8]]
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
     )
 }
 
@@ -3004,7 +3004,7 @@ plot_simi_E2_LOC <- {
 
 plot_simi_E2_LOC
 ```
-The above figure shows the probability of top+bottom being decoded as misconfigued conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the probability of top+bottom being decoded as exchange conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 # Versions of packages used
 ```{r versions}
