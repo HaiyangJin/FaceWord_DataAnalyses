@@ -20,7 +20,7 @@ output:
 This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new questions that are not included in the corresponding slides. 
 
 ## Experiment designs
-This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, misconfigured [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, misconfigured, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
+This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, exchange [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, exchange, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
 
 ## Introduction to the analyses included in this file
 For the **localizer**, results of univariate analysis in the right FFA is displayed.  
@@ -29,8 +29,8 @@ For the **main runs**, analysis is conducted for each ROI separately (FFA, FFA1,
 For each ROI, three analyses are performed: 
 
 1. Univariate analysis (Repeated-measures ANOVA) is performed to compare the neural responses (beta values) of different conditions.
-    + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, misconfigured, top vs. bottom); 
-    + E2: 2(Chinese characters vs. English words) * 4 (intact, misconfigured, top vs. bottom).
+    + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, exchange, top vs. bottom); 
+    + E2: 2(Chinese characters vs. English words) * 4 (intact, exchange, top vs. bottom).
   
 2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests].
     + Pairs in E1: 
@@ -46,16 +46,16 @@ For each ROI, three analyses are performed:
         + English_intact vs. English_miscon;
         + English_top vs. English_bottom.
     
-3. Similarity of top+bottom to intact vs. misconfigured: The dependent variable is the probability of top+bottom was decoded as misconfigured conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to misconfigured relative to intact.
+3. Similarity of top+bottom to intact vs. exchange: The dependent variable is the probability of top+bottom was decoded as Exchange conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to exchange relative to intact.
     + If the pattern of top+bottom is more similar to that of misconfigued relative to intact, the probability (of being decoded as misconfigued) should be *significantly larger* than the chance level (0.5).
     + If the pattern of top+bottom is more similar to that of intact relative to misconfigued, the probability (of being decoded as misconfigued) should be *significantly smaller* than the chance level (0.5).
 
-## How is the probability of top+bottom being decoded as misconfigued calculated?
+## How is the probability of top+bottom being decoded as exchange calculated?
 The probability was estimated for each particiapnt separately:
 
 1. The patterns of top and bottom are combined with three different weights (0.5/0.5, 0.25/0.75, 0.75/0.25).
 2. Supported Vector Machine (`libsvm`) is trained with the patterns of intact vs. misconfigued (10 runs).
-3. The trained model is used to predict the probability of the combined patterns being decoded as misconfigured [for each run separately]. 
+3. The trained model is used to predict the probability of the combined patterns being decoded as exchange [for each run separately]. 
 4. The probability of top+bottom being decoded as misconfigued for each participant is calculated by averaging the probability for each run.
     
 # Preparations
@@ -90,14 +90,14 @@ simiColors <- c("#000064","#0000ff","#6565ce","#003500","#009900","#08f74d")
 fn_loc <- "FaceWord_Loc_Univariate.csv"  # univarite analysis Localizer
 fn_univar <- "FaceWord_Univariate.csv"  # univariate analysis main runs
 fn_cosmo <- "FaceWord_CosmoMVPA.csv"  # decoding MVPA main runs
-fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. misconfigured. 
+fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. exchange. 
 
 # set the order of levels in factors
 locOrder <- c("face", "object", "word", "scrambled")
 
-facewordOrder <- c("face", "word")
+facewordOrder <- c("faces", "words")
 wordsOrder <- c("Chinese", "English")
-layoutOrder <- c("intact", "misconfigured", "top", "bottom")
+layoutOrder <- c("intact", "exchange", "top", "bottom")
 ROIOrder <- c("FFA", "FFA1", "FFA2", "VWFA", "LOC")
 
 pairOrder_E1 <- c("face_intact-word_intact",
@@ -165,8 +165,8 @@ df_clean_univar <- {
   df_univar %>% 
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
-    mutate(# FaceWord = as.factor(FaceWord),
-           Layout = gsub("exchange", "misconfigured", Layout),  # replace exchange with misconfigured
+    mutate(FaceWord = gsub("face", "faces", FaceWord),
+           FaceWord = gsub("word", "words", FaceWord),  
            Layout = factor(Layout, levels = layoutOrder), # convert the two IVs to factors
            Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
     select(ExpCode, Hemisphere, Label, SubjCode, FaceWord, Layout, Resp) 
@@ -236,18 +236,17 @@ str(df_simi)
 
 df_clean_simi <- {
   df_simi %>% 
-    mutate(ClassPair_2 = gsub("exchange", "misconfigured", ClassPair_2),
-           PredictCond = gsub("exchange", "misconfigured", PredictCond),
-           asMiscon = if_else(grepl("misconfigured", PredictCond), 1, 0),
-           pMiscon = Probability_2,
-           ExpCode = if_else(grepl("facewordN", SubjCode), 2, 1)) %>% 
+    mutate(
+      asMiscon = if_else(grepl("exchange", PredictCond), 1, 0),
+      pMiscon = Probability_2,
+      ExpCode = if_else(grepl("facewordN", SubjCode), 2, 1)) %>% 
     left_join(roi_info, by = c("ExpCode", "Label", "SubjCode")) 
 }
 
 str(df_clean_simi)
 ```
 
-```{r rate of decoding as misconfigured, include=showAll}
+```{r rate of decoding as exchange, include=showAll}
 
 df_rate_simi <- {
   df_clean_simi %>% 
@@ -841,10 +840,10 @@ ggsave('plot_mvpa_E1_FFA_3.pdf', plot_mvpa_E1_FFA_3, width = 9, height = 8)
 ```
 
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA E1}
-# Similarity of top + bottom to intact vs. misconfigured in FFA
+```{r Similarity of top + bottom to intact vs. exchange in FFA E1}
+# Similarity of top + bottom to intact vs. exchange in FFA
 one_simi_E1_FFA <- {
   df_simi_rate_E1_FFA %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -864,7 +863,7 @@ one_simi_E1_FFA
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA, fig.asp=.5, fig.width = 13}
 
 plot_simi_E1_FFA <- {
   ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -877,7 +876,7 @@ plot_simi_E1_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -895,7 +894,7 @@ plot_simi_E1_FFA
 The above figure shows the probability of top+bottom being decoded as misconfigued conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA, fig.asp=.5, fig.width = 13}
 
 plot_simi_E1_FFA_1 <- {
   ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -909,7 +908,7 @@ plot_simi_E1_FFA_1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -938,7 +937,7 @@ plot_simi_E1_FFA_2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     # theme(axis.title.x=element_blank(),
@@ -967,7 +966,7 @@ plot_simi_E1_FFA_3 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     # theme(axis.title.x=element_blank(),
@@ -1154,9 +1153,9 @@ plot_mvpa_E1_FFA1
 ```
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA1}
+```{r Similarity of top + bottom to intact vs. exchange in FFA1}
 
 one_simi_E1_FFA1 <- {
   df_simi_rate_E1_FFA1 %>% 
@@ -1178,7 +1177,7 @@ one_simi_E1_FFA1
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA1, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA1, fig.asp=.5, fig.width = 13}
 
 plot_simi_E1_FFA1 <- {
   ggplot(data = one_simi_E1_FFA1, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -1191,7 +1190,7 @@ plot_simi_E1_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA1", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA1", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA1$p,4), color = sig_colors(one_simi_E1_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -1380,10 +1379,10 @@ plot_mvpa_E1_FFA2
 ```
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA2 E1}
-# Similarity of top + bottom to intact vs. misconfigured in FFA
+```{r Similarity of top + bottom to intact vs. exchange in FFA2 E1}
+# Similarity of top + bottom to intact vs. exchange in FFA
 one_simi_E1_FFA2 <- {
   df_simi_rate_E1_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -1403,7 +1402,7 @@ one_simi_E1_FFA2
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA2, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA2, fig.asp=.5, fig.width = 13}
 
 plot_simi_E1_FFA2 <- {
   ggplot(data = one_simi_E1_FFA2, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -1416,7 +1415,7 @@ plot_simi_E1_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA2", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA2", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_FFA2$p, 4), color = sig_colors(one_simi_E1_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -1568,10 +1567,10 @@ plot_mvpa_E1_VWFA
 ```
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in VWFA E1}
-# Similarity of top + bottom to intact vs. misconfigured in VWFA
+```{r Similarity of top + bottom to intact vs. exchange in VWFA E1}
+# Similarity of top + bottom to intact vs. exchange in VWFA
 one_simi_E1_VWFA <- {
   df_simi_rate_E1_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -1591,7 +1590,7 @@ one_simi_E1_VWFA
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in VWFA, fig.asp=.5, fig.width = 11}
+```{r plot Similarity of top+bottom to intact vs. exchange in VWFA, fig.asp=.5, fig.width = 11}
 
 plot_simi_E1_VWFA <- {
   ggplot(data = one_simi_E1_VWFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -1604,7 +1603,7 @@ plot_simi_E1_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in VWFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in VWFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_VWFA$p, 4), color = sig_colors(one_simi_E1_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -1794,10 +1793,10 @@ plot_mvpa_E1_LOC
 ```
 The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in LOC E1}
-# Similarity of top + bottom to intact vs. misconfigured in LOC
+```{r Similarity of top + bottom to intact vs. exchange in LOC E1}
+# Similarity of top + bottom to intact vs. exchange in LOC
 one_simi_E1_LOC <- {
   df_simi_rate_E1_LOC %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -1817,7 +1816,7 @@ one_simi_E1_LOC
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in LOC, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in LOC, fig.asp=.5, fig.width = 13}
 
 plot_simi_E1_LOC <- {
   ggplot(data = one_simi_E1_LOC, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -1830,7 +1829,7 @@ plot_simi_E1_LOC <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in LOC", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in LOC", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E1_LOC$p, 4), color = sig_colors(one_simi_E1_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -2092,10 +2091,10 @@ plot_mvpa_E2_FFA
 ```
 The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA E2}
-# Similarity of top + bottom to intact vs. misconfigured in FFA
+```{r Similarity of top + bottom to intact vs. exchange in FFA E2}
+# Similarity of top + bottom to intact vs. exchange in FFA
 one_simi_E2_FFA <- {
   df_simi_rate_E2_FFA %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -2115,7 +2114,7 @@ one_simi_E2_FFA
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA E2, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA E2, fig.asp=.5, fig.width = 13}
 
 plot_simi_E2_FFA <- {
   ggplot(data = one_simi_E2_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -2128,7 +2127,7 @@ plot_simi_E2_FFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E2_FFA$p, 4), color = sig_colors(one_simi_E2_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -2318,10 +2317,10 @@ plot_mvpa_E2_FFA1
 ```
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA1 E2}
-# Similarity of top + bottom to intact vs. misconfigured in FFA1
+```{r Similarity of top + bottom to intact vs. exchange in FFA1 E2}
+# Similarity of top + bottom to intact vs. exchange in FFA1
 one_simi_E2_FFA1 <- {
   df_simi_rate_E2_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -2341,7 +2340,7 @@ one_simi_E2_FFA1
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA1 E2, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA1 E2, fig.asp=.5, fig.width = 13}
 
 plot_simi_E2_FFA1 <- {
   ggplot(data = one_simi_E2_FFA1, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -2354,7 +2353,7 @@ plot_simi_E2_FFA1 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA1", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA1", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E2_FFA1$p, 4), color = sig_colors(one_simi_E2_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -2544,10 +2543,10 @@ plot_mvpa_E2_FFA2
 ```
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in FFA2 E2}
-# Similarity of top + bottom to intact vs. misconfigured in FFA2
+```{r Similarity of top + bottom to intact vs. exchange in FFA2 E2}
+# Similarity of top + bottom to intact vs. exchange in FFA2
 one_simi_E2_FFA2 <- {
   df_simi_rate_E2_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -2567,7 +2566,7 @@ one_simi_E2_FFA2
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in FFA2 E2, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA2 E2, fig.asp=.5, fig.width = 13}
 
 plot_simi_E2_FFA2 <- {
   ggplot(data = one_simi_E2_FFA2, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -2580,7 +2579,7 @@ plot_simi_E2_FFA2 <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in FFA2", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA2", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E2_FFA2$p, 4), color = sig_colors(one_simi_E2_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -2728,10 +2727,10 @@ plot_mvpa_E2_VWFA
 ```
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in VWFA E2}
-# Similarity of top + bottom to intact vs. misconfigured in VWFA
+```{r Similarity of top + bottom to intact vs. exchange in VWFA E2}
+# Similarity of top + bottom to intact vs. exchange in VWFA
 one_simi_E2_VWFA <- {
   df_simi_rate_E2_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -2751,7 +2750,7 @@ one_simi_E2_VWFA
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in VWFA E2, fig.asp=.5, fig.width = 11}
+```{r plot Similarity of top+bottom to intact vs. exchange in VWFA E2, fig.asp=.5, fig.width = 11}
 
 plot_simi_E2_VWFA <- {
   ggplot(data = one_simi_E2_VWFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -2764,7 +2763,7 @@ plot_simi_E2_VWFA <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in VWFA", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in VWFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E2_VWFA$p, 4), color = sig_colors(one_simi_E2_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
@@ -2954,10 +2953,10 @@ plot_mvpa_E2_LOC
 ```
 The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-#### Similarity of top + bottom to intact vs. misconfigured
+#### Similarity of top + bottom to intact vs. exchange
 ##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. misconfigured in LOC E2}
-# Similarity of top + bottom to intact vs. misconfigured in LOC
+```{r Similarity of top + bottom to intact vs. exchange in LOC E2}
+# Similarity of top + bottom to intact vs. exchange in LOC
 one_simi_E2_LOC <- {
   df_simi_rate_E2_LOC %>% 
     group_by(Hemisphere, Combination) %>% 
@@ -2977,7 +2976,7 @@ one_simi_E2_LOC
 ```
 
 ##### Plot
-```{r plot Similarity of top+bottom to intact vs. misconfigured in LOC E2, fig.asp=.5, fig.width = 13}
+```{r plot Similarity of top+bottom to intact vs. exchange in LOC E2, fig.asp=.5, fig.width = 13}
 
 plot_simi_E2_LOC <- {
   ggplot(data = one_simi_E2_LOC, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
@@ -2990,7 +2989,7 @@ plot_simi_E2_LOC <- {
     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. misconfigured in LOC", x = "Combinations", y = "Rate of Decoding as Misconfigured") +  # set the names for main, x and y axises
+    labs(title = "Similarity of top+bottom to intact vs. exchange in LOC", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
     geom_text(label = signif(one_simi_E2_LOC$p, 4), color = sig_colors(one_simi_E2_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
     general_theme +
     theme(axis.title.x=element_blank(),
