@@ -40,6 +40,7 @@ plot_uni <- function(df, contrL, contrR, roi){
       theme_bw() +
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
+        plot.margin = margin(5, 5, 15, 8, unit = "pt"),
         axis.text.x = element_text(face = "bold", size = 16),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
@@ -54,7 +55,7 @@ plot_uni <- function(df, contrL, contrR, roi){
         strip.text = element_blank(),
         strip.background = element_blank(),
         strip.placement = "outside",
-        plot.margin = margin(5, 5, 15, 8, unit = "pt")
+        panel.spacing = unit(2, "lines")
       )
   }
   
@@ -122,6 +123,7 @@ plot_mvpa <- function(df, roi) {
       theme_bw() +
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
+        plot.margin = margin(5, 5, -20, 40, unit = "pt"),
         axis.text.x = element_text(face = "bold", size = 16),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
@@ -136,7 +138,7 @@ plot_mvpa <- function(df, roi) {
         strip.text = element_blank(),
         strip.background = element_blank(),
         strip.placement = "outside",
-        plot.margin = margin(5, 5, -20, 8, unit = "pt")
+        panel.spacing = unit(2, "lines")
       )
   }
   
@@ -153,7 +155,7 @@ plot_mvpa <- function(df, roi) {
     theme(
       axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
       axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-      plot.margin = margin(5, 5, 15, 8, unit = "pt")
+      plot.margin = margin(5, 5, 15, 40, unit = "pt")
     )
   
   # plot intact 1 vs 2
@@ -170,10 +172,11 @@ plot_mvpa <- function(df, roi) {
     coord_cartesian(ylim = c(0, 1.1)) +
     labs(title = "Intact stimuli", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
     geom_text(label = sig_ast(df_0$p), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-    geom_text(data = dat_text, mapping = aes(x = c(.8, 1.2), y = y, label = label), size = 6.5, fontface = "bold") +
+    geom_text(data = dat_text, mapping = aes(x = c(.7, 1.3), y = y, label = label), size = 6.5, fontface = "bold") +
     theme_bw() +
     theme(
-      plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
+      plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+      plot.margin = margin(5, 5, 15, 15, unit = "pt"),
       axis.text.x = element_text(face = "bold", size = 16),
       axis.text.y = element_text(size = 13),
       axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
@@ -188,12 +191,14 @@ plot_mvpa <- function(df, roi) {
       strip.text = element_blank(),
       strip.background = element_blank(),
       strip.placement = "outside",
-      plot.margin = margin(5, 5, 15, 8, unit = "pt")
+      panel.spacing = unit(2, "lines")
     )
   
   # combine the two plots
-  ggarrange(plot_1, '', plot_2, plot_0, nrow = 2, ncol = 2, 
-            heights = c(0.86, 1), widths = c(2, 1.3))
+  ggarrange('', plot_1, plot_0, plot_2, nrow = 2, ncol = 2, 
+            heights = c(0.86, 1), widths = c(1.3, 2),
+            labels = c("", "B", "A", ""), 
+            font.label = list(size = 24, face = "bold"))
 }
 
 plot_simi <- function(df, roi) {
@@ -245,6 +250,7 @@ plot_simi <- function(df, roi) {
       theme_bw() +
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
+        plot.margin = margin(5, 5, -20, 8, unit = "pt"),
         axis.text.x = element_text(face = "bold", size = 12),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
@@ -259,7 +265,7 @@ plot_simi <- function(df, roi) {
         strip.text = element_blank(),
         strip.background = element_blank(),
         strip.placement = "outside",
-        plot.margin = margin(5, 5, -20, 8, unit = "pt")
+        panel.spacing = unit(2, "lines")
       )
   }
   
@@ -283,3 +289,4 @@ plot_simi <- function(df, roi) {
   ggarrange(plot_1, plot_2, nrow = 2,
             heights = c(0.86, 1))
 }
+
