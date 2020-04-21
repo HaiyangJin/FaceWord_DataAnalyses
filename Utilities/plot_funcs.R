@@ -41,29 +41,30 @@ plot_uni <- function(df, contrL, contrR, roi){
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
         plot.margin = margin(5, 5, 15, 8, unit = "pt"),
+        text = element_text(colour="black"),
+        axis.text = element_text(colour="black"),
         axis.text.x = element_text(face = "bold", size = 16),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
         axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-        # axis.text.x = element_text(angle = 45, vjust = 0.5),
+        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
         panel.border = element_blank(),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
-        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+        panel.spacing = unit(2, "lines"),
         # remove the facet background color
         strip.text = element_blank(),
         strip.background = element_blank(),
-        strip.placement = "outside",
-        panel.spacing = unit(2, "lines")
+        strip.placement = "outside"
       )
   }
   
   # the first plot (face or English)
   plot_1 <- uni(df, ast[c(1:4, 9:12)], 1) + 
     theme(axis.title.x = element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank(),
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
           axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
     ) 
@@ -124,29 +125,31 @@ plot_mvpa <- function(df, roi) {
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
         plot.margin = margin(5, 5, -20, 40, unit = "pt"),
+        text = element_text(colour="black"),
+        axis.text = element_text(colour="black"),
         axis.text.x = element_text(face = "bold", size = 16),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
         axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
         # axis.text.x = element_text(angle = 45, vjust = 0.5),
         panel.border = element_blank(),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
-        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+        panel.spacing = unit(2, "lines"),
         # remove the facet background color
         strip.text = element_blank(),
         strip.background = element_blank(),
-        strip.placement = "outside",
-        panel.spacing = unit(2, "lines")
+        strip.placement = "outside"
       )
   }
   
   # the first plot (face or English)
   plot_1 <- mvpa(thisdf, 1) + 
     theme(axis.title.x = element_blank(),
-          axis.text.x =element_text(color = "white"),
-          axis.ticks.x=element_blank(),
+          axis.text.x = element_text(color = "white"),
+          axis.ticks.x = element_blank(),
           axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')
     ) 
@@ -177,21 +180,23 @@ plot_mvpa <- function(df, roi) {
     theme(
       plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
       plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+      text = element_text(colour="black"),
+      axis.text = element_text(colour="black"),
       axis.text.x = element_text(face = "bold", size = 16),
       axis.text.y = element_text(size = 13),
       axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
       axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+      axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+      axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
       # axis.text.x = element_text(angle = 45, vjust = 0.5),
       panel.border = element_blank(),
       panel.grid.minor = element_blank(),
       panel.grid.major = element_blank(),
-      axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-      axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+      panel.spacing = unit(2, "lines"),
       # remove the facet background color
       strip.text = element_blank(),
       strip.background = element_blank(),
       strip.placement = "outside",
-      panel.spacing = unit(2, "lines")
     )
   
   # combine the two plots
@@ -251,29 +256,31 @@ plot_simi <- function(df, roi) {
       theme(
         plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1.5),
         plot.margin = margin(5, 5, -20, 8, unit = "pt"),
+        text = element_text(colour="black"),
+        axis.text = element_text(colour="black"),
         axis.text.x = element_text(face = "bold", size = 12),
         axis.text.y = element_text(size = 13),
         axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
         axis.title.y = element_text(size = 15, vjust = 2.5), # the size of the texts in plot
+        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
         # axis.text.x = element_text(angle = 45, vjust = 0.5),
         panel.border = element_blank(),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
-        axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-        axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+        panel.spacing = unit(2, "lines"),
         # remove the facet background color
         strip.text = element_blank(),
         strip.background = element_blank(),
-        strip.placement = "outside",
-        panel.spacing = unit(2, "lines")
+        strip.placement = "outside"
       )
   }
   
   # the first plot (face or English)
   plot_1 <- simi(thisdf, 1) + 
     theme(axis.title.x = element_blank(),
-          axis.text.x =element_text(color = "white"),
-          axis.ticks.x=element_blank(),
+          axis.text.x = element_text(color = "white"),
+          axis.ticks.x = element_blank(),
           axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
           axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')
     ) 
