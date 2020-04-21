@@ -114,7 +114,7 @@ plot_mvpa <- function(df, roi) {
       geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                     show.legend = FALSE, width = 0.25, alpha = .5,
                     position = position_dodge(width=0.9)) +
-      geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+      geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
       scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
       coord_cartesian(ylim = c(0, 1.1)) +
       labs(title = toTitleCase(xaxislabel[half]), x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
@@ -166,17 +166,17 @@ plot_mvpa <- function(df, roi) {
     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                   show.legend = FALSE, width = 0.25, alpha = .5,
                   position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+    geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
     scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
     coord_cartesian(ylim = c(0, 1.1)) +
     labs(title = "Intact stimuli", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
     geom_text(label = sig_ast(df_0$p), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-    geom_text(data = dat_text, mapping = aes(x = c(.7, 1.3), y = y, label = label), size = 6.5, fontface = "bold") +
+    geom_text(data = dat_text, mapping = aes(x = c(.75, 1.25), y = y, label = label), size = 6.5, fontface = "bold") +
     theme_bw() +
     theme(
       plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-      plot.margin = margin(5, 5, 15, 15, unit = "pt"),
+      plot.margin = margin(5, 170, 60, 40, unit = "pt"),
       axis.text.x = element_text(face = "bold", size = 16),
       axis.text.y = element_text(size = 13),
       axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
@@ -195,9 +195,9 @@ plot_mvpa <- function(df, roi) {
     )
   
   # combine the two plots
-  ggarrange('', plot_1, plot_0, plot_2, nrow = 2, ncol = 2, 
-            heights = c(0.86, 1), widths = c(1.3, 2),
-            labels = c("", "B", "A", ""), 
+  ggarrange(plot_0, plot_1, plot_2, nrow = 3, ncol = 1, 
+            heights = c(1.12, 0.86, 1),
+            labels = c("A", "B", ""), 
             font.label = list(size = 24, face = "bold"))
 }
 
@@ -241,10 +241,10 @@ plot_simi <- function(df, roi) {
       geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                     show.legend = FALSE, width = 0.25, alpha = .5,
                     position = position_dodge(width=0.9)) +
-      geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+      geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
       scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
       coord_cartesian(ylim = c(0, 1.1)) +
-      labs(title = toTitleCase(xaxislabel[half]), x = "Combinations", y = "Rate of decoding as echange") +  # set the names for main, x and y axises
+      labs(title = toTitleCase(xaxislabel[half]), x = "Combinations", y = "Rate of decoding as exchange") +  # set the names for main, x and y axises
       geom_text(label = sig_ast(thisdf$p), size = 7, nudge_y = 0.15) + # add starts to the significant columns
       geom_text(data = dat_text, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
       theme_bw() +
