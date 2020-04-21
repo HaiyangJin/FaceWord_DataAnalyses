@@ -96,7 +96,7 @@ fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. excha
 locOrder <- c("face", "object", "word", "scrambled")
 
 facewordOrder <- c("faces", "words")
-wordsOrder <- c("Chinese", "English")
+wordsOrder <- c("English", "Chinese")
 layoutOrder <- c("intact", "exchange", "top", "bottom")
 ROIOrder <- c("FFA", "FFA1", "FFA2", "VWFA", "LOC")
 
