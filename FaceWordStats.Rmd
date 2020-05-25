@@ -76,6 +76,8 @@ library(afex)
 library(lme4)
 library(lmerTest)
 library(emmeans)
+library(ggpubr)
+library(tools)
 
 ```
 
@@ -123,7 +125,6 @@ tmp <- sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE
 activationUL <- 2.75
 onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
 nDigitals <- 3 # number of digitials of p-values in plots
-sig_size <- 5 # font size of p-values in plots
 
 # function to obtain the p values for one-sample t-test
 # one_sig <- function(one_results, nDigitals = 4) {
@@ -198,8 +199,8 @@ df_clean_mvpa <- {
   df_mvpa %>% 
     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
     select(ExpCode, Label, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
-    mutate(Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")),
-           ClassifyPair = gsub("exchange", "miscon", ClassifyPair))  # replace exchanged with miscon
+    mutate(Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")))
+           # ClassifyPair = gsub("exchange", "miscon", ClassifyPair))  # replace exchanged with miscon
 }
 
 str(df_clean_mvpa)
@@ -579,35 +580,43 @@ contr_anova_E1_rFFA
 ```
 
 ##### Plot
-```{r plots for functional scans E1 (anova) FFA, fig.asp = .75, fig.width = 8}
+```{r plots for functional scans E1 (anova) FFA, fig.asp = 0.75, fig.width = 8}
 
-sig_uni_E1_FFA <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_FFA <- sig_colors(sig_uni_E1_FFA)
+# sig_uni_E1_FFA <- rep(1, 1, 16)
+# sig_uni_E1_FFA[seq(1, 16, 4)] <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals),
+#                      signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals))
+# ast_uni_E1_FFA <- sig_ast(sig_uni_E1_FFA)
 
 # add the column of Hemisphere
 nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
-
-plot_uni_E1_FFA <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
+# 
+# plot_uni_E1_FFA <- {
+#   ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, group = Hemisphere)) + # set the data, varialbes for x and y axises
+#     geom_col(position = "dodge", width = 0.4, fill = "#CDCDC8") +  # position of columns and countour of columns
+#     facet_grid(FaceWord ~ Hemisphere) +
+#     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+#                   show.legend = FALSE, width = 0.2, alpha = .5,
+#                   position = position_dodge(width=0.9)) +
+#     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
+#     labs(title = "Mean neural responses in FFA (Univariate)", x = "Configuration", y = "Beta values") +  # set the names for main, x and y axises
+#     geom_text(label = ast_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
+#     general_theme
+# }
 
 # ggsave('plot_uni_E1_FFA.png', plot_uni_E1_FFA, width = 8, height = 5.5)
 
+# plot_uni_E1_FFA
+
+plot_uni_E1_FFA <- plot_uni(desp_uni_E1_FFA, contr_anova_E1_lFFA, contr_anova_E1_rFFA, "FFA")
+
+ggsave('plot_uni_E1_FFA.pdf', plot_uni_E1_FFA, width = 10, height = 10)
+
 plot_uni_E1_FFA
+
 ```
-The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. misconfigued in that condition. Error bars represent 95% confidence intervals.
+The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
 
 ```{r plots for functional scans E1 (anova) FFA (test example), fig.asp = .75, fig.width = 8}
@@ -711,48 +720,58 @@ one_mvpa_agg_E1_FFA <- {
   df_mvpa_acc_E1_FFA %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]],
+              sigast = sig_ast(p)
     )
 }
 
 one_mvpa_agg_E1_FFA
+
 ```
 
 ##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA, fig.asp=0.5, fig.width = 11}
+```{r plots for functional scans mvpa E1 (anova) FFA, fig.asp=1, fig.width = 9}
 
-plot_mvpa_E1_FFA <- {
-  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
+# plot_mvpa_E1_FFA <- {
+#   ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
+#     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
+#     facet_grid(. ~ Hemisphere) +
+#     scale_fill_manual(values = mvpaColors) +
+#     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+#                   show.legend = FALSE, width = 0.25, alpha = .5,
+#                   position = position_dodge(width=0.9)) +
+#     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+#     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+#     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
+#     labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
+#     geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
+#     general_theme +
+#     theme(axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank(),
+#         axis.line = element_line(size = 3))
+#     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
+#     #       axis.line = element_line(size = 3)) 
+# }
+# 
+# 
+# # ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 12, height = 5)
+# 
+# plot_mvpa_E1_FFA
 
-# ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 12, height = 5)
+plot_mvpa_E1_FFA <- plot_mvpa(one_mvpa_agg_E1_FFA, "FFA")
 
-plot_mvpa_E1_FFA
+# ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 6, height = 10, units = "in")
+
+ggsave('plot_mvpa_E1_FFA.pdf', plot_mvpa_E1_FFA, width = 6.5, height = 16, units = "in")
+
 ```
 The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
@@ -890,6 +909,10 @@ plot_simi_E1_FFA <- {
 # ggsave('plot_simi_E1_FFA.png', plot_simi_E1_FFA, width = 14, height = 5)
 
 plot_simi_E1_FFA
+
+plot_simi_E1_FFA <- plot_simi(one_simi_E1_FFA, "FFA")
+ggsave('plot_simi_E1_FFA.pdf', plot_simi_E1_FFA, width = 8, height = 10, units = "in")
+
 ```
 The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
@@ -2017,7 +2040,8 @@ color_uni_E2_FFA <- sig_colors(sig_uni_E2_FFA)
 # add the column of Hemisphere
 nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
-desp_uni_E2_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA), as.data.frame(emm_anova_E2_rFFA)))
+desp_uni_E2_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA), as.data.frame(emm_anova_E2_rFFA))) 
+
 
 plot_uni_E2_FFA <- {
   ggplot(data = desp_uni_E2_FFA, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
@@ -2035,6 +2059,8 @@ plot_uni_E2_FFA <- {
 # ggsave('plot_uni_E2_FFA.png', plot_uni_E2_FFA, width = 8, height = 5.5)
 
 plot_uni_E2_FFA
+
+plot_uni(desp_uni_E2_FFA, contr_anova_E2_lFFA, contr_anova_E2_rFFA, "FFA")
 ```
 The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 
