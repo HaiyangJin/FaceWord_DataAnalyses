@@ -23,15 +23,12 @@ This file serves to be a supplementary document that describes all the statistic
 This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, exchange [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, exchange, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
 
 ## Introduction to the analyses included in this file
-For the **localizer**, results of univariate analysis in the right FFA is displayed.  
-
-For the **main runs**, analysis is conducted for each ROI separately (FFA, FFA1, FFA2, VWFA, LOC).   
+For the **main runs**, analysis is conducted for each ROI separately (FFA1, FFA2, VWFA, LOC).   
 For each ROI, three analyses are performed: 
 
 1. Univariate analysis (Repeated-measures ANOVA) is performed to compare the neural responses (beta values) of different conditions.
     + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, exchange, top vs. bottom); 
     + E2: 2(Chinese characters vs. English words) * 4 (intact, exchange, top vs. bottom).
-  
 2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests].
     + Pairs in E1: 
         + face_intact vs. word_intact;
@@ -45,10 +42,13 @@ For each ROI, three analyses are performed:
         + Chinese_top vs. Chinese_bottom;
         + English_intact vs. English_exchange;
         + English_top vs. English_bottom.
-    
 3. Similarity of top+bottom to intact vs. exchange: The dependent variable is the probability of top+bottom was decoded as Exchange conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to exchange relative to intact.
     + If the pattern of top+bottom is more similar to that of exchange relative to intact, the probability (of being decoded as exchange) should be *significantly larger* than the chance level (0.5).
     + If the pattern of top+bottom is more similar to that of intact relative to exchange, the probability (of being decoded as exchange) should be *significantly smaller* than the chance level (0.5).
+  
+## How the labels are created/defined for each ROI?
+1. Identify the global maxima for each ROI based on the coordinates in the literature.
+2. Dilate the region centering at the global maxima until it reaches the pre-defined size (100mm^2), during which the vertices are masked by a pre-defined lable at f13 (i.e., p < .05). In other words, the p-values for all vertices in the labels are smaller than .05 (uncorrected).
 
 ## How is the probability of top+bottom being decoded as exchange calculated?
 The probability was estimated for each particiapnt separately:
@@ -57,7 +57,7 @@ The probability was estimated for each particiapnt separately:
 2. Supported Vector Machine (`libsvm`) is trained with the patterns of intact vs. exchange (10 runs).
 3. The trained model is used to predict the probability of the combined patterns being decoded as exchange [for each run separately]. 
 4. The probability of top+bottom being decoded as exchange for each participant is calculated by averaging the probability for each run.
-    
+
 # Preparations
 ```{r general setting for this document, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
@@ -81,40 +81,23 @@ library(tools)
 
 ```
 
-```{r colors, include=showAll}
-mvpaColors <- c("#e67639","#000097","#552eff","#02b762","#59ea91")
-simiColors <- c("#000064","#0000ff","#6565ce","#003500","#009900","#08f74d")
-```
-
-# Load and clean data 
-```{r assign filenames, include=showAll}
-# assign filenames
-fn_loc <- "FaceWord_Loc_Univariate.csv"  # univarite analysis Localizer
-fn_univar <- "FaceWord_Univariate.csv"  # univariate analysis main runs
-fn_cosmo <- "FaceWord_CosmoMVPA.csv"  # decoding MVPA main runs
-fn_simi <- "Main_Similarity.csv"  # similarity of top+bottom to intact vs. exchange. 
-
+```{r include=showAll}
 # set the order of levels in factors
-locOrder <- c("face", "object", "word", "scrambled")
+loc_order <- c("face", "object", "word", "scrambled")
 
-facewordOrder <- c("faces", "words")
-wordsOrder <- c("English", "Chinese")
-layoutOrder <- c("intact", "exchange", "top", "bottom")
-ROIOrder <- c("FFA", "FFA1", "FFA2", "VWFA", "LOC")
+faceword_order <- c("faces", "words")
+words_order <- c("English", "Chinese")
+layout_order <- c("intact", "exchange", "top", "bottom")
+roi_order <- c("FFA1", "FFA2", "VWFA", "LO")
 
-pairOrder_E1 <- c("face_intact-word_intact",
-                  "face_intact-face_exchange",
-                  "face_top-face_bottom",
-                  "word_intact-word_exchange",
-                  "word_top-word_bottom")
-pairOrder_E2 <- c("Chinese_intact-English_intact",
-                  "Chinese_intact-Chinese_exchange",
-                  "Chinese_top-Chinese_bottom",
-                  "English_intact-English_exchange",
-                  "English_top-English_bottom")
+label_FFA1 <- c("roi.lh.f-vs-o.ffa1.label", "roi.rh.f-vs-o.ffa1.label")
+label_FFA2 <- c("roi.lh.f-vs-o.ffa2.label", "roi.rh.f-vs-o.ffa2.label")
+label_VWFA <- "roi.lh.w-vs-o.label"
+label_LO <- c("roi.lh.o-vs-scr.label", "roi.rh.o-vs-scr.label")
 
 # criterion of vertex number
-nVtx_min <- 50
+nVtx_size_min <- 20  # mm^2
+
 ```
 
 ```{r setting for plots, include=showAll}
@@ -126,598 +109,257 @@ activationUL <- 2.75
 onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
 nDigitals <- 3 # number of digitials of p-values in plots
 
-# function to obtain the p values for one-sample t-test
-# one_sig <- function(one_results, nDigitals = 4) {
-#   sig_vector <- signif(unlist(one_results["p.value",], use.names = FALSE), nDigitals)
-#   # sig_vector <- as.character(sig_vector)
-#   return(sig_vector)
-# }
 ```
 
-## Data from localizer scans
-```{r load data file from localizer scans for univerate analysis, include=showAll}
-# load data file from localizer scans for univerate analysis
-df_loc <- read_csv(fn_loc)
-
-str(df_loc)
+```{r E2}
+pair_order_E2 <- c("Chinese_intact-English_intact",
+                   "Chinese_intact-Chinese_exchange",
+                   "Chinese_part1-Chinese_part2",
+                   "English_intact-English_exchange",
+                   "English_part1-English_part2")
 ```
 
-```{r clean the loc data, include=showAll}
-df_clean_loc <- {
-  df_loc %>% 
-    rename(Label = ROI) %>% 
-    mutate(Conditions = factor(Conditions, levels = locOrder)) %>% # convert Conditions to factors
-    select(ExpCode, Label, SubjCode, Conditions, Resp) 
-}
+# Experiment 1: Chinese faces and Chinese characters for Chinese participants
+## Load and clean data 
+```{r assign filenames E1, include=showAll}
+pair_order_E1 <- c("face_intact-word_intact",
+                   "face_intact-face_exchange",
+                   "face_top-face_bottom",
+                   "word_intact-word_exchange",
+                   "word_top-word_bottom")
 
-str(df_clean_loc)
 ```
 
-## Data for univariate analyses
-```{r load data file for univariate analysis, include=showAll}
-# load data file from functional scans for univerate analysis
-df_univar <- read_csv(fn_univar)
+### Label (ROI) information
+```{r label information E1, message=FALSE}
+df_label <- read_csv(file.path("data", "faceword_E1_Label_HJ.csv")) %>% 
+  rename(Label = LabelName) %>% 
+  mutate(roi = str_remove(Label, "roi."),
+         roi = str_remove(roi, ".label")) %>% 
+  mutate(Subject = str_replace(SubjCode, "\\_.*", ""))
 
-str(df_univar)
+# df_label %>% head()
 ```
 
-```{r clean the univariate data, include=showAll}
-df_clean_univar <- {
-  df_univar %>% 
-    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-    separate(Conditions, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
-    mutate(FaceWord = gsub("face", "faces", FaceWord),
-           FaceWord = gsub("word", "words", FaceWord),  
-           Layout = factor(Layout, levels = layoutOrder), # convert the two IVs to factors
-           Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
-    select(ExpCode, Hemisphere, Label, SubjCode, FaceWord, Layout, Resp) 
-}
+#### Size of labels
+```{r size (mm2) of labels for each subject E1}
+df_label %>% 
+  select(SubjCode, roi, Size) %>% 
+  pivot_wider(names_from = roi, values_from = Size) %>% 
+  arrange(SubjCode)
+```
+The above table displays the size (in mm2) of each label for each participant. (NA denotes that this label is not available for that particiapnt.)
 
-str(df_clean_univar)
+#### Number of vertices for each label
+```{r Number of vertices for each label E1}
+df_label %>% 
+  select(SubjCode, roi, NVtxs) %>% 
+  pivot_wider(names_from = roi, values_from = NVtxs) %>% 
+  arrange(SubjCode)
+```
+The above table displays the number of vertices for each label and each participant. (NA denotes that this label is not available for that particiapnt.)
+
+
+#### Number of participants for each ROI
+```{r Number of available labels for each ROI E1}
+df_label %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
 ```
 
-```{r aggregate data for running anova, include=showAll}
-df_univar_agg <- {
-  df_clean_univar %>% 
-    group_by(ExpCode, Hemisphere, Label, SubjCode, FaceWord, Layout) %>% 
-    summarize(meanResp = mean(Resp), Count = n()) %>% 
-    ungroup()
-}
+#### Number of remaining participants
+```{r Number of remaining participants E1}
 
-str(df_univar_agg)
-```
+df_nlabel <- df_label %>% 
+  filter(Size > nVtx_size_min) %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
 
-## Data from CoSMoMVPA
-```{r load data file from cosmoMVPA, include=showAll}
-df_mvpa <- read_csv(fn_cosmo)
-
-str(df_mvpa)
-```
-
-```{r clean the cosmomvpa data, include=showAll}
-df_clean_mvpa <- {
-  df_mvpa %>% 
-    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-    select(ExpCode, Label, SubjCode, ClassifyPair, Predicted, Targets, ACC) %>% 
-    mutate(Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")))
-           # ClassifyPair = gsub("exchange", "miscon", ClassifyPair))  # replace exchanged with miscon
-}
-
-str(df_clean_mvpa)
-```
-
-```{r calculate accuracy for each condition, include=showAll}
-df_mvpa_acc <- {
-  df_clean_mvpa %>% 
-    select(-c(Predicted, Targets)) %>% # remove these two columns
-    group_by(ExpCode, Hemisphere, Label, SubjCode, ClassifyPair) %>% # divide the data into groups by these columns 
-    summarize(Accuracy = mean(ACC), Count = n()) %>% 
-    ungroup()
-}
-```
-
-```{r vertex information, include=showAll}
-# obtain from MVPA dataset
-roi_info <- {
-  df_mvpa %>% 
-    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-    select(ExpCode, Label, SubjCode, nVertices, LabelSize) %>% 
-    distinct()
-}
-```
-
-## Data for the Similarity of top + bottom
-```{r Data for the Similarity of top + bottom, include=showAll}
-df_simi <- read_csv(fn_simi)
-
-str(df_simi)
-```
-
-```{r clean the similarity data, include=showAll}
-
-df_clean_simi <- {
-  df_simi %>% 
-    mutate(
-      asExchange = if_else(grepl("exchange", PredictCond), 1, 0),
-      pExchange = Probability_2,
-      ExpCode = if_else(grepl("facewordN", SubjCode), 2, 1)) %>% 
-    left_join(roi_info, by = c("ExpCode", "Label", "SubjCode")) 
-}
-
-str(df_clean_simi)
-```
-
-```{r rate of decoding as exchange, include=showAll}
-
-df_rate_simi <- {
-  df_clean_simi %>% 
-    filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-    group_by(ExpCode, SubjCode, Label, ClassPair_1, Combination) %>% 
-    summarize(RateAsExchange = mean(asExchange),
-              pAsExchange = mean(pExchange),
-              RateAsExchange = pAsExchange) %>%  # use the probability instead of the categorical prediction
-    ungroup() %>% 
-    mutate(Hemisphere = if_else(grepl("lh", Label), 'left', if_else(grepl("rh", Label), "right", "NA")))
-}
-
-str(df_rate_simi)
-```
-
-# ROI information
-```{r roi information, include=showAll}
-# # obtain from MVPA dataset
-# roi_info <- {
-#   df_mvpa %>% 
-#     filter(nVertices >= nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-#     select(ExpCode, Label, SubjCode, nVertices, LabelSize) %>% 
-#     distinct()
-# }
-
-# labels used in the analyses
-label_list <- unique(roi_info$Label)
-
-# logical (which condition these labels are)
-isLeft <- grepl("lh", label_list) # is left hemisphere label
-isRight <- grepl("rh", label_list) # is right hemisphere label
-
-isFFA1 <- grepl("ffa1", label_list) # is FFA1
-isFFA2 <- grepl("ffa2", label_list) # is FFA2
-isVWFA <- grepl("w-vs-o", label_list) # is visual word form area
-isLOC <- grepl("o-vs-scr", label_list) # is Lateral occipital cortex
-isFFA <- !isFFA1 & !isFFA2 & !isVWFA & !isLOC
-
-# labels for each ROI
-label_lFFA <- label_list[isLeft & isFFA] # the labels for left FFA
-label_rFFA <- label_list[isRight & isFFA] # the labels for right FFA
-label_lFFA1 <- label_list[isLeft & isFFA1] # the labels for left FFA1
-label_rFFA1 <- label_list[isRight & isFFA1] # the labels for left FFA1
-label_lFFA2 <- label_list[isLeft & isFFA2] # the labels for left FFA2
-label_rFFA2 <- label_list[isRight & isFFA2] # the labels for left FFA1
-label_lVWFA <- label_list[isVWFA] # the labels for visual word form area
-label_lLOC <- label_list[isLeft & isLOC] # the labels for left LOC
-label_rLOC <- label_list[isRight & isLOC] # the labels for the right LOC
-
-# all the labels available in this analysis
-# label_list
-```
-
-## Label used for each ROI
-The comments (texts after the dash sign) display all the available labels for each ROI.
-```{r}
-# Experiment 1
-label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
-
-label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
-
-label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
-
-label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
-
-label_lLOC_E1 <- label_lLOC[1] # "roi.lh.f13.o-vs-scr.label"
-label_rLOC_E1 <- label_rLOC[1] # "roi.rh.f13.o-vs-scr.label"
-
-# Experiment 2
-label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
-
-label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
-
-label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
-
-label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
-
-label_lLOC_E2 <- label_lLOC[1] # "roi.lh.f13.o-vs-scr.label"
-label_rLOC_E2 <- label_rLOC[1] # "roi.rh.f13.o-vs-scr.label"
-
-ROI <- factor(c("FFA", "FFA1", "FFA2", "VWFA", "LOC"), levels = ROIOrder)
-left_E1 <- c(label_lFFA_E1, label_lFFA1_E1, label_lFFA2_E1, label_VWFA_E1, label_lLOC_E1)
-right_E1 <- c(label_rFFA_E1, label_rFFA1_E1, label_rFFA2_E1, 'NA', label_rLOC_E1)
-left_E2 <- c(label_lFFA_E2, label_lFFA1_E2, label_lFFA2_E2, label_VWFA_E2, label_lLOC_E2)
-right_E2 <- c(label_rFFA_E2, label_rFFA1_E2, label_rFFA2_E2, 'NA', label_rLOC_E2)
-
-label_ROI <- tibble("ROI" = ROI, "left_E1" = left_E1, "right_E1"= right_E1, "left_E2" = left_E2, "right_E2" = right_E2)
-
-label_ROI
-```
-The above table displays the label used for each ROI and each Experiment in this analysis. (VWFA is only found on the left hemisphere.)
-
-## Size of labels
-```{r size (mm2) of labels for each subject}
-roi_info %>% 
-  select(-nVertices) %>% 
-  spread(Label, LabelSize) 
-```
-The above table displays the size (in mm2) of each label for each participant. NA denotes there is no that label for that particiapnt.
-
-## Number of vertices for each label
-```{r}
-roi_info %>% 
-  select(-LabelSize) %>% 
-  spread(Label, nVertices) 
-```
-The above table displays the number of vertices for each label and each participant. (NA denotes there is no this label for that particiapnt.)
-
-## Number of subjects 
-```{r number of subjects for each label}
-
-df_univar_agg %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) %>% 
-  ungroup() %>% 
-  filter(Label %in% c(left_E1, right_E1, left_E2, right_E2)) %>% 
-  mutate(Hemi = substr(Label, 5,6),
-         Hemisphere = if_else(Hemi == "lh", "left", if_else(Hemi == "rh", "right", "NA")),
-         Col_name = paste(Hemisphere, paste0("E", ExpCode), sep = "_"),
-         ROI = if_else(grepl("ffa1", Label), "FFA1", 
-                       if_else(grepl("ffa2", Label), "FFA2", 
-                               if_else(grepl("w-vs-o", Label), "VWFA", 
-                                       if_else(grepl("o-vs-scr", Label), "LOC",
-                                               "FFA")))), 
-         ROI = factor(ROI, levels = ROIOrder)) %>% 
-  select(ROI, Col_name, Count) %>% 
-  spread(Col_name, Count) %>% 
-  select(ROI, left_E1, right_E1, everything()) 
-  
+df_nlabel
 ```
 The above table dispalys the number of participants included in the following analyses for each ROI. (VWFA is only found on the left hemisphere.)
 
-## Number of subjects excluded
-```{r Number of subjects excluded}
+### Data for univariate analyses
+```{r load data file for univariate analysis E1, message=FALSE, include=showAll}
+# load data file from functional scans for univerate analysis
+df_uni_E1 <- read_csv(file.path("data", "faceword_E1_Uni_HJ.csv"))
 
-df_mvpa %>%
-  filter(nVertices < nVtx_min) %>% # remove the label whose vertex number is smaller than nVtx_min
-  select(ExpCode, Label, SubjCode) %>%
-  distinct() %>%
-  group_by(ExpCode, Label) %>%
-  summarize(Count = n()) %>% 
+head(df_uni_E1)
+```
+
+```{r clean the univariate data E1, include=showAll}
+df_clean_uni_E1 <- {
+  df_uni_E1 %>% 
+    filter(Response != "NaN") %>% 
+    separate(Condition, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
+    mutate(FaceWord = gsub("face", "faces", FaceWord),
+           FaceWord = gsub("word", "words", FaceWord),  
+           Layout = factor(Layout, levels = layout_order), # convert the two IVs to factors
+           Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
+    select(Hemisphere, Label, SessCode, FaceWord, Layout, Response) %>% 
+    mutate(Subject = str_replace(SessCode, "\\_.*", "")) %>% 
+    left_join(df_label, by = c("Label", "Subject")) %>% 
+    filter(Size > nVtx_size_min)
+}
+
+head(df_clean_uni_E1)
+```
+
+### Data of decoding
+```{r load data file from cosmoMVPA E1, message=FALSE, include=showAll}
+df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_HJ.csv"))
+
+head(df_decode_E1)
+```
+
+```{r clean the cosmoMVPA data E1, include=showAll}
+df_clean_decode_E1 <- df_decode_E1 %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Subject = str_remove(SessCode, "\\_.*")) %>% 
+  left_join(df_label, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_decode_acc_E1 <- df_clean_decode_E1 %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_acc_E1
+```
+
+### Data for the Similarity of top + bottom
+```{r Data for the Similarity of top + bottom E1, message=FALSE, include=showAll}
+df_simi <- read_csv(file.path("data", "faceword_E1_Similarity_HJ.csv"))
+
+head(df_simi)
+```
+
+```{r clean the similarity data E1, include=showAll}
+
+df_clean_simi_E1 <- df_simi %>% 
+  mutate(asExchange = if_else(grepl("exchange", PredictCond), 1, 0),  # binary prediction
+         pExchange = Probability_2,  # probability prediction
+         Subject = str_remove(SessCode, "\\_.*")) %>% 
+  left_join(df_label, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_rate_simi_E1 <- df_clean_simi_E1 %>% 
+  group_by(SessCode, Label, ClassPair_1, Combination) %>% 
+  summarize(binaryAsExchange = mean(asExchange),
+            pAsExchange = mean(pExchange),
+            RateAsExchange = pAsExchange) %>%  # use the probability instead of the categorical prediction
   ungroup() %>% 
-  filter(Label %in% c(left_E1, right_E1, left_E2, right_E2)) %>% 
-  mutate(Hemi = substr(Label, 5,6),
-         Hemisphere = if_else(Hemi == "lh", "left", if_else(Hemi == "rh", "right", "NA")),
-         Col_name = paste(Hemisphere, paste0("E", ExpCode), sep = "_"),
-         ROI = if_else(grepl("ffa1", Label), "FFA1", 
-                       if_else(grepl("ffa2", Label), "FFA2", 
-                               if_else(grepl("w-vs-o", Label), "VWFA", 
-                                       if_else(grepl("o-vs-scr", Label), "LOC",
-                                               "FFA")))),
-         ROI = factor(ROI, levels = ROIOrder)) %>%  
-  select(ROI, Col_name, Count) %>% 
-  spread(Col_name, Count) %>% 
-  select(ROI, left_E1, right_E1, everything()) 
-```
-The number of participants excluded from following analysis due to the vertex number being smaller than `r nVtx_min`. (NA denotes no participants were excluded or VWFA was not found on the right hemisphere.)
+  mutate(Hemisphere = if_else(grepl("lh", Label), 'left', if_else(grepl("rh", Label), "right", "NA")))
 
-# Experiment 1: Chinese faces and Chinese characters for Chinese participants
-## Localizer
-```{r only keep the univariate data for E1 loc}
-df_loc_E1 <- {
-  df_clean_loc %>%  
-    filter(ExpCode == 1) %>% 
-    mutate(SubjCode = as.factor(SubjCode))
-}
-# nlevels(df_loc_E1$SubjCode) # number of subjects
-```
-The label used for FFA in this analysis is `r unique(df_loc_E1$Label)`.
-
-### rm-ANOVA
-```{r}
-anova_loc_E1 <- aov_4(Resp ~ Conditions + (Conditions | SubjCode), data = df_loc_E1)
-
-anova_loc_E1
-```
-The above table displays the repeated-measures ANOVA results for the localizer in E1.
-
-```{r estimated marginal means for loc E1}
-emm_loc_anova_E1 <- emmeans(anova_loc_E1, ~ Conditions)
-
-emm_loc_anova_E1
-```
-The above table displays the average respones for the localizer in E1.
-
-```{r Post-hoc analysis for anova loc E1}
-contrast(emm_loc_anova_E1, "pairwise")
-
-```
-The above table displays the Posthoc anlaysis results (corrected with Tukey for 4 estimates).
-
-### Plot
-```{r plots for loc E1 (anova), fig.asp=1.3, fig.width= 6}
-plot_loc_E1 <- {
-  ggplot(data = as.data.frame(emm_loc_anova_E1), aes(y = emmean, x = Conditions)) + # set the data, varialbes for x and y axises
-    geom_col(position = "identity", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Neural responses in right FFA (Localizer)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    general_theme
-}
-
-plot_loc_E1
-```
-
-## Main runs
-```{r only keep data of E1}
-# only keep the univariate data for E1
-df_univar_agg_E1 <- {
-  df_univar_agg %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(FaceWord = factor(FaceWord, levels = facewordOrder),
-           SubjCode = as.factor(SubjCode))
-}
-
-# only keep the multivariate (mvpa) data for E1
-df_mvpa_acc_E1 <- {
-  df_mvpa_acc %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E1),
-           SubjCode = as.factor(SubjCode))
-}
-
-# only keep the similarity for E1
-df_rate_simi_E1 <- {
-  df_rate_simi %>% 
-    filter(ExpCode == 1) %>% 
-    mutate(SubjCode = as.factor(SubjCode))
-}
+head(df_rate_simi_E1)
 
 ```
 
-### Label:FFA
-```{r the label used for FFA E1}
-# label_lFFA_E1 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-# label_rFFA_E1 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
-
-label_FFA_E1 <- c(label_lFFA_E1, label_rFFA_E1)
-
-```
-The label used for left FFA in Experiment 1 is *`r label_lFFA_E1`*. <br>
-The label used for right FFA in Experiment 1 is *`r label_rFFA_E1`*.
-
-```{r only keep data for FFA E1}
+## Label:FFA1
+```{r only keep data for FFA1 E1}
 # only keep data for these two labels
-df_univar_agg_E1_FFA <- filter(df_univar_agg_E1, Label %in% label_FFA_E1)
-df_mvpa_acc_E1_FFA <- filter(df_mvpa_acc_E1, Label %in% label_FFA_E1)
-df_simi_rate_E1_FFA <- filter(df_rate_simi_E1, Label %in% label_FFA_E1)
+df_uni_E1_FFA1 <- filter(df_clean_uni_E1, Label %in% label_FFA1)
+df_decode_E1_FFA1 <- filter(df_decode_acc_E1, Label %in% label_FFA1)
+df_simi_E1_FFA1 <- filter(df_rate_simi_E1, Label %in% label_FFA1)
 
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E1_FFA %>% filter(Label == label_rFFA_E1))$SubjCode))
-
-df_univar_agg_E1_FFA %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+df_uni_E1_FFA1 %>% 
+  select(Hemisphere, Label, SessCode) %>% 
   distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
+  group_by(Hemisphere, Label) %>% 
   summarize(Count = n()) 
 ```
 
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA
-```{r anova for univariate E1 FFA left}
-anova_E1_lFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA, Label == label_lFFA_E1))
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA1
+```{r anova for univariate E1 FFA1 left}
+anova_E1_lFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E1_FFA1, Label == label_FFA1[[1]]))
 
-anova_E1_lFFA
+anova_E1_lFFA1
 ```
 
-```{r estimated marginal means for univairate E1 lFFA}
-emm_anova_E1_lFFA <- emmeans(anova_E1_lFFA, ~ FaceWord * Layout)
+```{r estimated marginal means for univairate E1 lFFA1}
+emm_aov_E1_lFFA1 <- emmeans(anova_E1_lFFA1, ~ FaceWord * Layout)
 
-emm_anova_E1_lFFA %>% 
+emm_aov_E1_lFFA1 %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_lFFA}
-contrast(emmeans(emm_anova_E1_lFFA, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_lFFA1}
+contrast(emmeans(emm_aov_E1_lFFA1, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_lFFA, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_lFFA}
-contr_anova_E1_lFFA <- contrast(emm_anova_E1_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r simple effect analysis for emm_aov_E1_lFFA1}
+contr_aov_E1_lFFA1 <- contrast(emm_aov_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_lFFA
+contr_aov_E1_lFFA1
 ```
 
-###### Right FFA
-```{r anova for univariate E1 FFA right}
-anova_E1_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA, Label == label_rFFA_E1))
+##### Right FFA1
+```{r anova for univariate E1 FFA1 right}
+anova_E1_rFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E1_FFA1, Label == label_FFA1[[2]]))
 
-anova_E1_rFFA
+anova_E1_rFFA1
 ```
 
-```{r estimated marginal means for univairate E1 FFA right}
-emm_anova_E1_rFFA <- emmeans(anova_E1_rFFA, ~ FaceWord * Layout)
+```{r estimated marginal means for univairate E1 FFA1 right}
+emm_aov_E1_rFFA1 <- emmeans(anova_E1_rFFA1, ~ FaceWord * Layout)
 
-emm_anova_E1_rFFA %>% 
+emm_aov_E1_rFFA1 %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_rFFA right}
-contrast(emmeans(emm_anova_E1_rFFA, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_rFFA1 right}
+contrast(emmeans(emm_aov_E1_rFFA1, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_rFFA, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_rFFA right}
-contr_anova_E1_rFFA <- contrast(emm_anova_E1_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r simple effect analysis for emm_aov_E1_rFFA1 right}
+contr_aov_E1_rFFA1 <- contrast(emm_aov_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_rFFA
+contr_aov_E1_rFFA1
 ```
 
-##### Plot
-```{r plots for functional scans E1 (anova) FFA, fig.asp = 0.75, fig.width = 8}
-
-# sig_uni_E1_FFA <- rep(1, 1, 16)
-# sig_uni_E1_FFA[seq(1, 16, 4)] <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals),
-#                      signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals))
-# ast_uni_E1_FFA <- sig_ast(sig_uni_E1_FFA)
-
+#### Plot
+```{r plots for functional scans E1 (anova) FFA1, fig.asp = .8, fig.width = 8}
 # add the column of Hemisphere
-nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
+nRow_E1 <-nrow(as.data.frame(emm_aov_E1_lFFA1))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
-desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
-# 
-# plot_uni_E1_FFA <- {
-#   ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, group = Hemisphere)) + # set the data, varialbes for x and y axises
-#     geom_col(position = "dodge", width = 0.4, fill = "#CDCDC8") +  # position of columns and countour of columns
-#     facet_grid(FaceWord ~ Hemisphere) +
-#     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-#                   show.legend = FALSE, width = 0.2, alpha = .5,
-#                   position = position_dodge(width=0.9)) +
-#     scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-#     labs(title = "Mean neural responses in FFA (Univariate)", x = "Configuration", y = "Beta values") +  # set the names for main, x and y axises
-#     geom_text(label = ast_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
-#     general_theme
-# }
+desp_uni_E1_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E1_lFFA1), as.data.frame(emm_aov_E1_rFFA1)))
 
-# ggsave('plot_uni_E1_FFA.png', plot_uni_E1_FFA, width = 8, height = 5.5)
+plot_uni_E1_FFA1 <- plot_uni(desp_uni_E1_FFA1, contr_aov_E1_lFFA1, contr_aov_E1_rFFA1, "FFA1")
 
-# plot_uni_E1_FFA
+# ggsave('plot_uni_E1_FFA1.png', plot_uni_E1_FFA1, width = 10, height = 10)
 
-plot_uni_E1_FFA <- plot_uni(desp_uni_E1_FFA, contr_anova_E1_lFFA, contr_anova_E1_rFFA, "FFA")
-
-ggsave('plot_uni_E1_FFA.pdf', plot_uni_E1_FFA, width = 10, height = 10)
-
-plot_uni_E1_FFA
-
+plot_uni_E1_FFA1
 ```
-The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+<br/>
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
+Note: *, _p_ < .05; ***, _p_ <.001
 
-
-```{r plots for functional scans E1 (anova) FFA (test example), fig.asp = .75, fig.width = 8}
-
-sig_uni_E1_FFA <- c(signif(as.data.frame(contr_anova_E1_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E1_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_FFA <- sig_colors(sig_uni_E1_FFA)
-
-# add the column of Hemisphere
-nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA))
-Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
-desp_uni_E1_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA), as.data.frame(emm_anova_E1_rFFA)))
-
-plot_uni_E1_FFA.gray1 <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, width = 0.5, show.legend = FALSE) +  # position of columns and countour of columns
-    scale_fill_grey(4) +
-    facet_grid(FaceWord ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
-    general_theme
-}
-
-ggsave('plot_uni_E1_FFA_1.pdf', plot_uni_E1_FFA.gray1, width = 10, height = 10)
-
-```
-
-
-```{r}
-plot_uni_E1_FFA.gray2 <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, fill = "grey", width = 0.5, show.legend = FALSE) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
-    general_theme
-}
-
-ggsave('plot_uni_E1_FFA_2.pdf', plot_uni_E1_FFA.gray2, width = 10, height = 10)
-
-```
-
-
-```{r}
-plot_uni_E1_FFA.gray3 <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = position_dodge(width = 0.1), color = "black", alpha = .7, width = 1, show.legend = FALSE) +  # position of columns and countour of columns
-    scale_fill_grey() +
-    facet_grid(FaceWord ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
-    general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
-}
-
-ggsave('plot_uni_E1_FFA_3.pdf', plot_uni_E1_FFA.gray3, width = 7, height = 10)
-
-```
-
-
-```{r}
-plot_uni_E1_FFA.gray4 <- {
-  ggplot(data = desp_uni_E1_FFA, aes(y = emmean, x = Layout, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = position_dodge(width = 0.1), color = "black", fill = "gray", alpha = .7, width = 1, show.legend = FALSE) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Layout", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA, color = color_uni_E1_FFA, size = sig_size, nudge_y = 0.5, nudge_x = 0.5) + # add starts to the significant columns
-    general_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid')) # , arrow = arrow(length = unit(0.3, "cm"))
-}
-
-ggsave('plot_uni_E1_FFA_4.pdf', plot_uni_E1_FFA.gray4, width = 7, height = 10)
-
-```
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E1 FFA}
-
-one_mvpa_agg_E1_FFA <- {
-  df_mvpa_acc_E1_FFA %>% 
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E1 FFA1}
+# one-sample for results of decode E1 FFA1
+one_decode_agg_E1_FFA1 <- {
+  df_decode_E1_FFA1 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
@@ -727,461 +369,32 @@ one_mvpa_agg_E1_FFA <- {
               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]],
-              sigast = sig_ast(p)
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
     )
 }
 
-one_mvpa_agg_E1_FFA
-
+one_decode_agg_E1_FFA1
 ```
 
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA, fig.asp=1, fig.width = 9}
+#### Plot
+```{r plots for functional scans decode E1 (anova) FFA1, fig.asp=2, fig.width = 7}
 
-# plot_mvpa_E1_FFA <- {
-#   ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-#     geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-#     facet_grid(. ~ Hemisphere) +
-#     scale_fill_manual(values = mvpaColors) +
-#     geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-#                   show.legend = FALSE, width = 0.25, alpha = .5,
-#                   position = position_dodge(width=0.9)) +
-#     geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-#     scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-#     # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-#     labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-#     geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-#     general_theme +
-#     theme(axis.title.x=element_blank(),
-#         axis.text.x=element_blank(),
-#         axis.ticks.x=element_blank(),
-#         axis.line = element_line(size = 3))
-#     # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-#     #       axis.line = element_line(size = 3)) 
-# }
-# 
-# 
-# # ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 12, height = 5)
-# 
-# plot_mvpa_E1_FFA
+plot_decode_E1_FFA1 <- plot_decode(one_decode_agg_E1_FFA1, "FFA1")
 
-plot_mvpa_E1_FFA <- plot_mvpa(one_mvpa_agg_E1_FFA, "FFA")
+# ggsave('plot_decode_E1_FFA1.png', plot_decode_E1_FFA1, width = 6.5, height = 16)
 
-# ggsave('plot_mvpa_E1_FFA.png', plot_mvpa_E1_FFA, width = 6, height = 10, units = "in")
-
-ggsave('plot_mvpa_E1_FFA.pdf', plot_mvpa_E1_FFA, width = 6.5, height = 16, units = "in")
-
+plot_decode_E1_FFA1
 ```
-The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-
-```{r}
-plot_mvpa_E1_FFA_1 <- {
-  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    scale_fill_grey() + 
-    facet_grid(. ~ Hemisphere) +
-    # scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-ggsave('plot_mvpa_E1_FFA_1.pdf', plot_mvpa_E1_FFA_1, width = 12, height = 5)
-```
-
-```{r}
-plot_mvpa_E1_FFA_2 <- {
-  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
-    scale_fill_grey() +
-    facet_grid(. ~ Hemisphere) +
-    # scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    # theme(#axis.title.x=element_blank(),
-    #     axis.text.x=element_text(angle = 90, vjust = 0.5, hjust = 0.5),
-    #     #axis.ticks.x=element_blank(),
-    #     axis.line = element_line(size = 3))
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
-          axis.line = element_line(size = 3))
-}
-
-ggsave('plot_mvpa_E1_FFA_2.pdf', plot_mvpa_E1_FFA_2, width = 9, height = 8)
-```
-
-
-```{r}
-plot_mvpa_E1_FFA_3 <- {
-  ggplot(data = one_mvpa_agg_E1_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7, fill = "gray", show.legend = FALSE) +  # position of columns and countour of columns
-    # scale_fill_grey() +
-    facet_grid(. ~ Hemisphere) +
-    # scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_mvpa_agg_E1_FFA$p), color = sig_colors(one_mvpa_agg_E1_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    # theme(#axis.title.x=element_blank(),
-    #     axis.text.x=element_text(angle = 90, vjust = 0.5, hjust = 0.5),
-    #     #axis.ticks.x=element_blank(),
-    #     axis.line = element_line(size = 3))
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
-          axis.line = element_line(size = 3))
-}
-
-ggsave('plot_mvpa_E1_FFA_3.pdf', plot_mvpa_E1_FFA_3, width = 9, height = 8)
-```
-
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in FFA E1}
-# Similarity of top + bottom to intact vs. exchange in FFA
-one_simi_E1_FFA <- {
-  df_simi_rate_E1_FFA %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E1_FFA
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA, fig.asp=.5, fig.width = 13}
-
-plot_simi_E1_FFA <- {
-  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E1_FFA.png', plot_simi_E1_FFA, width = 14, height = 5)
-
-plot_simi_E1_FFA
-
-plot_simi_E1_FFA <- plot_simi(one_simi_E1_FFA, "FFA")
-ggsave('plot_simi_E1_FFA.pdf', plot_simi_E1_FFA, width = 8, height = 10, units = "in")
-
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA, fig.asp=.5, fig.width = 13}
-
-plot_simi_E1_FFA_1 <- {
-  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    scale_fill_grey() +
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    # scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-ggsave('plot_simi_E1_FFA_1.pdf', plot_simi_E1_FFA_1, width = 14, height = 5)
-
-```
-
-
-```{r}
-plot_simi_E1_FFA_2 <- {
-  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
-    scale_fill_grey() +
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    # scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    # theme(axis.title.x=element_blank(),
-    #     axis.text.x=element_blank(),
-    #     axis.ticks.x=element_blank(),
-    #     axis.line = element_line(size = 4))
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
-          axis.line = element_line(size = 3))
-}
-
-ggsave('plot_simi_E1_FFA_2.pdf', plot_simi_E1_FFA_2, width = 10, height = 8)
-
-```
-
-
-```{r}
-plot_simi_E1_FFA_3 <- {
-  ggplot(data = one_simi_E1_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", fill = "gray", alpha = .7, show.legend = FALSE) +  # position of columns and countour of columns
-    # scale_fill_grey() +
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    # scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA$p, 4), color = sig_colors(one_simi_E1_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    # theme(axis.title.x=element_blank(),
-    #     axis.text.x=element_blank(),
-    #     axis.ticks.x=element_blank(),
-    #     axis.line = element_line(size = 4))
-    theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), #
-          axis.line = element_line(size = 3))
-}
-
-ggsave('plot_simi_E1_FFA_3.pdf', plot_simi_E1_FFA_3, width = 10, height = 8)
-
-```
-
-### Label:FFA1
-```{r the label used for FFA1 E1}
-# label_lFFA1_E1 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-# label_rFFA1_E1 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
-
-label_FFA1_E1 <- c(label_lFFA1_E1, label_rFFA1_E1)
-
-```
-The label used for left FFA1 in Experiment 1 is *`r label_lFFA1_E1`*. <br>
-The label used for right FFA1 in Experiment 1 is *`r label_rFFA1_E1`*.
-
-```{r only keep data for FFA1 E1}
-# only keep data for these two labels
-df_univar_agg_E1_FFA1 <- filter(df_univar_agg_E1, Label %in% label_FFA1_E1)
-df_mvpa_acc_E1_FFA1 <- filter(df_mvpa_acc_E1, Label %in% label_FFA1_E1)
-df_simi_rate_E1_FFA1 <- filter(df_rate_simi_E1, Label %in% label_FFA1_E1)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E1_FFA1 %>% filter(Label == label_rFFA1_E1))$SubjCode))
-
-df_univar_agg_E1_FFA1 %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA1
-```{r anova for univariate E1 FFA1 left}
-anova_E1_lFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA1, Label == label_lFFA1_E1))
-
-anova_E1_lFFA1
-```
-
-```{r estimated marginal means for univairate E1 lFFA1}
-emm_anova_E1_lFFA1 <- emmeans(anova_E1_lFFA1, ~ FaceWord * Layout)
-
-emm_anova_E1_lFFA1 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_lFFA1}
-contrast(emmeans(emm_anova_E1_lFFA1, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E1_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_lFFA1}
-contr_anova_E1_lFFA1 <- contrast(emm_anova_E1_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_lFFA1
-```
-
-###### Right FFA1
-```{r anova for univariate E1 FFA1 right}
-anova_E1_rFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA1, Label == label_rFFA1_E1))
-
-anova_E1_rFFA1
-```
-
-```{r estimated marginal means for univairate E1 FFA1 right}
-emm_anova_E1_rFFA1 <- emmeans(anova_E1_rFFA1, ~ FaceWord * Layout)
-
-emm_anova_E1_rFFA1 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_rFFA1 right}
-contrast(emmeans(emm_anova_E1_rFFA1, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E1_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_rFFA1 right}
-contr_anova_E1_rFFA1 <- contrast(emm_anova_E1_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_rFFA1
-```
-
-##### Plot
-```{r plots for functional scans E1 (anova) FFA1, fig.asp = .75, fig.width = 8}
-
-sig_uni_E1_FFA1 <- c(signif(as.data.frame(contr_anova_E1_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E1_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_FFA1 <- sig_colors(sig_uni_E1_FFA1)
-
-# add the column of Hemisphere
-nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA1))
-Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
-desp_uni_E1_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA1), as.data.frame(emm_anova_E1_rFFA1)))
-
-plot_uni_E1_FFA1 <- {
-  ggplot(data = desp_uni_E1_FFA1, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA1 (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E1_FFA1, color = color_uni_E1_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E1_FFA1.png', plot_uni_E1_FFA1, width = 8, height = 5.5)
-
-plot_uni_E1_FFA1
-```
-The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E1 FFA1}
-# one-sample for results of mvpa E1 FFA1
-one_mvpa_agg_E1_FFA1 <- {
-  df_mvpa_acc_E1_FFA1 %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E1_FFA1
-```
-
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA1, fig.asp=0.5, fig.width = 11}
-
-plot_mvpa_E1_FFA1 <- {
-  ggplot(data = one_mvpa_agg_E1_FFA1, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    labs(title = "Decoding accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E1_FFA1$p), color = sig_colors(one_mvpa_agg_E1_FFA1$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E1_FFA1.png', plot_mvpa_E1_FFA1, width = 12, height = 5)
-
-plot_mvpa_E1_FFA1
-```
+<br/>
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05; **, _p_ < .01; ***, _p_ <.001
 
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
 ```{r Similarity of top + bottom to intact vs. exchange in FFA1}
 
 one_simi_E1_FFA1 <- {
-  df_simi_rate_E1_FFA1 %>% 
+  df_simi_E1_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
               SD = t.test(RateAsExchange, mu = 0.5)[[7]],
@@ -1199,215 +412,149 @@ one_simi_E1_FFA1
 
 ```
 
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA1, fig.asp=.5, fig.width = 13}
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA1, fig.asp=1, fig.width = 8}
 
-plot_simi_E1_FFA1 <- {
-  ggplot(data = one_simi_E1_FFA1, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA1", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA1$p,4), color = sig_colors(one_simi_E1_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
+plot_simi_E1_FFA1 <- plot_simi(one_simi_E1_FFA1, "FFA1")
+# ggsave('plot_simi_E1_FFA1.png', plot_simi_E1_FFA1, width = 8, height = 10)
 
-# ggsave('plot_simi_E1_FFA1.png', plot_simi_E1_FFA1, width = 14, height = 5)
-
-plot_simi_E1_FFA
+plot_simi_E1_FFA1
 ```
+<br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-### Label:FFA2
-```{r the label used for FFA2 E1}
-# label_lFFA2_E1 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-# label_rFFA2_E1 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
-
-label_FFA2_E1 <- c(label_lFFA2_E1, label_rFFA2_E1)
-
-```
-The label used for left FFA2 in Experiment 1 is *`r label_lFFA2_E1`*. <br>
-The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E1`*.
-
+## Label:FFA2
 ```{r only keep data for FFA2 E1}
 # only keep data for these two labels
-df_univar_agg_E1_FFA2 <- filter(df_univar_agg_E1, Label %in% label_FFA2_E1)
-df_mvpa_acc_E1_FFA2 <- filter(df_mvpa_acc_E1, Label %in% label_FFA2_E1)
-df_simi_rate_E1_FFA2 <- filter(df_rate_simi_E1, Label %in% label_FFA2_E1)
+df_uni_E1_FFA2 <- filter(df_clean_uni_E1, Label %in% label_FFA2)
+df_decode_E1_FFA2 <- filter(df_decode_acc_E1, Label %in% label_FFA2)
+df_simi_E1_FFA2 <- filter(df_rate_simi_E1, Label %in% label_FFA2)
 
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E1_FFA2 %>% filter(Label == label_lFFA2_E1))$SubjCode))
-
-df_univar_agg_E1_FFA2 %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+df_uni_E1_FFA2 %>% 
+  select(Hemisphere, Label, SessCode) %>% 
   distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
+  group_by(Hemisphere, Label) %>% 
   summarize(Count = n()) 
 ```
 
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA2
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA2
 ```{r anova for univariate E1 FFA2 left}
-anova_E1_lFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA2, Label == label_lFFA2_E1))
+anova_E1_lFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E1_FFA2, Label == label_FFA2[[1]]))
 
 anova_E1_lFFA2
 ```
 
 ```{r estimated marginal means for univairate E1 lFFA2}
-emm_anova_E1_lFFA2 <- emmeans(anova_E1_lFFA2, ~ FaceWord * Layout)
+emm_aov_E1_lFFA2 <- emmeans(anova_E1_lFFA2, ~ FaceWord * Layout)
 
-emm_anova_E1_lFFA2 %>% 
+emm_aov_E1_lFFA2 %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_lFFA2}
-contrast(emmeans(emm_anova_E1_lFFA2, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_lFFA2}
+contrast(emmeans(emm_aov_E1_lFFA2, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_lFFA2}
-contr_anova_E1_lFFA2 <- contrast(emm_anova_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r simple effect analysis for emm_aov_E1_lFFA2}
+contr_aov_E1_lFFA2 <- contrast(emm_aov_E1_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_lFFA2
+contr_aov_E1_lFFA2
 ```
 
-###### Right FFA2
+##### Right FFA2
 ```{r anova for univariate E1 FFA2 right}
-anova_E1_rFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_FFA2, Label == label_rFFA2_E1))
+anova_E1_rFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E1_FFA2, Label == label_FFA2[[2]]))
 
 anova_E1_rFFA2
 ```
 
 ```{r estimated marginal means for univairate E1 FFA2 right}
-emm_anova_E1_rFFA2 <- emmeans(anova_E1_rFFA2, ~ FaceWord * Layout)
+emm_aov_E1_rFFA2 <- emmeans(anova_E1_rFFA2, ~ FaceWord * Layout)
 
-emm_anova_E1_rFFA2 %>% 
+emm_aov_E1_rFFA2 %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_rFFA2 right}
-contrast(emmeans(emm_anova_E1_rFFA2, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_rFFA2 right}
+contrast(emmeans(emm_aov_E1_rFFA2, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_rFFA2 right}
-contr_anova_E1_rFFA2 <- contrast(emm_anova_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+```{r simple effect analysis for emm_aov_E1_rFFA2 right}
+contr_aov_E1_rFFA2 <- contrast(emm_aov_E1_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
 # contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_rFFA2
+contr_aov_E1_rFFA2
 ```
 
-##### Plot
-```{r plots for functional scans E1 (anova) FFA2, fig.asp = .75, fig.width = 8}
-
-sig_uni_E1_FFA2 <- c(signif(as.data.frame(contr_anova_E1_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E1_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_FFA2 <- sig_colors(sig_uni_E1_FFA2)
-
+#### Plot
+```{r plots for functional scans E1 (anova) FFA2, fig.asp = .8, fig.width = 8}
 # add the column of Hemisphere
-nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lFFA2))
+nRow_E1 <-nrow(as.data.frame(emm_aov_E1_lFFA2))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
-desp_uni_E1_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lFFA2), as.data.frame(emm_anova_E1_rFFA2)))
+desp_uni_E1_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E1_lFFA2), as.data.frame(emm_aov_E1_rFFA2)))
 
-plot_uni_E1_FFA2 <- {
-  ggplot(data = desp_uni_E1_FFA2, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA2 (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_FFA2, color = color_uni_E1_FFA2, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
+plot_uni_E1_FFA2 <- plot_uni(desp_uni_E1_FFA1, contr_aov_E1_lFFA1, contr_aov_E1_rFFA1, "FFA2")
 
-# ggsave('plot_uni_E1_FFA2.png', plot_uni_E1_FFA2, width = 8, height = 5.5)
+# ggsave('plot_uni_E1_FFA2.png', plot_uni_E1_FFA2, width = 10, height = 10)
 
 plot_uni_E1_FFA2
 ```
+<br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05; ***, _p_ <.001
 
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E1 FFA2}
-# one-sample for results of mvpa E1 FFA2
-one_mvpa_agg_E1_FFA2 <- {
-  df_mvpa_acc_E1_FFA2 %>% 
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E1 FFA2}
+# one-sample for results of decode E1 FFA2
+one_decode_agg_E1_FFA2 <- {
+  df_decode_E1_FFA2 %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
     )
 }
 
-one_mvpa_agg_E1_FFA2
+one_decode_agg_E1_FFA2
 ```
 
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) FFA2, fig.asp=0.5, fig.width = 11}
+#### Plot
+```{r plots for functional scans decode E1 (anova) FFA2, fig.asp=2, fig.width = 7}
+plot_decode_E1_FFA2 <- plot_decode(one_decode_agg_E1_FFA2, "FFA2")
 
-plot_mvpa_E1_FFA2 <- {
-  ggplot(data = one_mvpa_agg_E1_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    labs(title = "Decoding accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E1_FFA2$p), color = sig_colors(one_mvpa_agg_E1_FFA2$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E1_FFA2.png', plot_mvpa_E1_FFA2, width = 12, height = 5)
-
-plot_mvpa_E1_FFA2
+# ggsave('plot_decode_E1_FFA2.png', plot_decode_E1_FFA2, width = 6.5, height = 16)
+plot_decode_E1_FFA2
 ```
+<br/>
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05; ***, _p_ <.001
 
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
 ```{r Similarity of top + bottom to intact vs. exchange in FFA2 E1}
 # Similarity of top + bottom to intact vs. exchange in FFA
 one_simi_E1_FFA2 <- {
-  df_simi_rate_E1_FFA2 %>% 
+  df_simi_E1_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
               SD = t.test(RateAsExchange, mu = 0.5)[[7]],
@@ -1424,178 +571,127 @@ one_simi_E1_FFA2 <- {
 one_simi_E1_FFA2
 ```
 
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA2, fig.asp=.5, fig.width = 13}
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA2, fig.asp=1, fig.width = 8}
 
-plot_simi_E1_FFA2 <- {
-  ggplot(data = one_simi_E1_FFA2, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA2", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_FFA2$p, 4), color = sig_colors(one_simi_E1_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E1_FFA2.png', plot_simi_E1_FFA2, width = 14, height = 5)
+plot_simi_E1_FFA2 <- plot_simi(one_simi_E1_FFA2, "FFA2")
+# ggsave('plot_simi_E1_FFA2.png', plot_simi_E1_FFA2, width = 8, height = 10)
 
 plot_simi_E1_FFA2
 ```
+<br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-### Label: left Visual Word Form Area (VWFA)
-```{r the label used for VWFA E1}
-# label_VWFA_E1 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
 
-```
-The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E1`*.
-
+## Label: left Visual Word Form Area (VWFA)
 ```{r only keep data for VWFA E1}
 # only keep data for these two labels
-df_univar_agg_E1_VWFA <- filter(df_univar_agg_E1, Label %in% label_VWFA_E1)
-df_mvpa_acc_E1_VWFA <- filter(df_mvpa_acc_E1, Label %in% label_VWFA_E1)
-df_simi_rate_E1_VWFA <- filter(df_rate_simi_E1, Label %in% label_VWFA_E1)
+df_uni_E1_VWFA <- filter(df_clean_uni_E1, Label %in% label_VWFA)
+df_decode_E1_VWFA <- filter(df_decode_acc_E1, Label %in% label_VWFA)
+df_simi_E1_VWFA <- filter(df_rate_simi_E1, Label %in% label_VWFA)
 
 # subjects used for each hemisphere
 # unique(as.character((df_univar_agg_E1_VWFA %>% filter(Label == label_VWFA_E1))$SubjCode))
 
-df_univar_agg_E1_VWFA %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+df_uni_E1_VWFA %>% 
+  select(Hemisphere, Label, SessCode) %>% 
   distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
+  group_by(Hemisphere, Label) %>% 
   summarize(Count = n()) 
 ```
 
-#### Univariate analyses
-##### rm-ANOVA 
+### Univariate analyses
+#### rm-ANOVA 
 ```{r anova for univariate E1 VWFA left}
-anova_E1_VWFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_VWFA, Label == label_VWFA_E1))
+anova_E1_VWFA <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E1_VWFA, Label == label_VWFA))
 
 anova_E1_VWFA
 ```
 
 ```{r estimated marginal means for univairate E1 VWFA}
-emm_anova_E1_VWFA <- emmeans(anova_E1_VWFA, ~ FaceWord * Layout)
+emm_aov_E1_VWFA <- emmeans(anova_E1_VWFA, ~ FaceWord * Layout)
 
-emm_anova_E1_VWFA %>% 
+emm_aov_E1_VWFA %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_VWFA}
-contrast(emmeans(emm_anova_E1_VWFA, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_VWFA}
+contrast(emmeans(emm_aov_E1_VWFA, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_VWFA, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_VWFA, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_VWFA}
-contr_anova_E1_VWFA <- contrast(emm_anova_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_VWFA
+```{r simple effect analysis for emm_aov_E1_VWFA}
+contr_aov_E1_VWFA <- contrast(emm_aov_E1_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E1, interaction = "pairwise") # , adjust = "none"
+contr_aov_E1_VWFA
 ```
 
-##### Plot
-```{r plots for functional scans E1 (anova) VWFA, fig.asp = .45, fig.width = 11}
+#### Plot
+```{r plots for functional scans E1 (anova) VWFA, fig.asp = 1, fig.width = 6}
 
-sig_uni_E1_VWFA <- c(signif(as.data.frame(contr_anova_E1_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_VWFA <- sig_colors(sig_uni_E1_VWFA)
 
-plot_uni_E1_VWFA <- {
-  ggplot(data = as.data.frame(emm_anova_E1_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    # facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in (left) VWFA (Univariate)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises 
-    geom_text(label = sig_uni_E1_VWFA, color = color_uni_E1_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
+nRow_E1 <-nrow(as.data.frame(emm_aov_E1_VWFA))
+Hemisphere <- c(rep("left", nRow_E1))
+desp_uni_E1_FFA2 <- cbind(Hemisphere, as.data.frame(emm_aov_E1_lFFA2))
 
-# ggsave('plot_uni_E1_VWFA.png', plot_uni_E1_VWFA, width = 8, height = 4)
+
+plot_uni_E1_VWFA <- plot_uni_vwfa(desp_uni_E1_FFA2, contr_aov_E1_VWFA, "VWFA")
+
+# ggsave('plot_uni_E1_VWFA.png', plot_uni_E1_VWFA, width = 5.5, height = 10)
 
 plot_uni_E1_VWFA
 ```
+<br/>
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05
 
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E1 VWFA}
-# one-sample for results of mvpa E1 VWFA
-one_mvpa_agg_E1_VWFA <- {
-  df_mvpa_acc_E1_VWFA %>% 
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E1 VWFA}
+# one-sample for results of decode E1 VWFA
+one_decode_agg_E1_VWFA <- {
+  df_decode_E1_VWFA %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
     )
 }
 
-one_mvpa_agg_E1_VWFA
+one_decode_agg_E1_VWFA
 
 ```
 
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) VWFA, fig.asp=0.5, fig.width = 9}
+#### Plot
+```{r plots for functional scans decode E1 (anova) VWFA, fig.asp=4, fig.width = 4}
 
-color_uni_E1_VWFA <- 
+  
+plot_decode_E1_VWFA <- plot_decode_vwfa(one_decode_agg_E1_VWFA, "VWFA")
+# ggsave('plot_decode_E1_VWFA.png', plot_decode_E1_VWFA, width = 4, height = 16)
 
-plot_mvpa_E1_VWFA <- {
-  ggplot(data = one_mvpa_agg_E1_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E1_VWFA$p), color = sig_colors(one_mvpa_agg_E1_VWFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E1_VWFA.png', plot_mvpa_E1_VWFA, width = 9, height = 5)
-
-plot_mvpa_E1_VWFA
+plot_decode_E1_VWFA
 ```
+<br/>
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: ***, _p_ <.001
 
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
 ```{r Similarity of top + bottom to intact vs. exchange in VWFA E1}
 # Similarity of top + bottom to intact vs. exchange in VWFA
 one_simi_E1_VWFA <- {
-  df_simi_rate_E1_VWFA %>% 
+  df_simi_E1_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
               SD = t.test(RateAsExchange, mu = 0.5)[[7]],
@@ -1612,216 +708,153 @@ one_simi_E1_VWFA <- {
 one_simi_E1_VWFA
 ```
 
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in VWFA, fig.asp=.5, fig.width = 11}
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in VWFA, fig.asp=2, fig.width = 4}
 
-plot_simi_E1_VWFA <- {
-  ggplot(data = one_simi_E1_VWFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in VWFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_VWFA$p, 4), color = sig_colors(one_simi_E1_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
+plot_simi_E1_VWFA <- plot_simi_vwfa(one_simi_E1_VWFA, "VWFA")
 
-# ggsave('plot_simi_E1_VWFA.png', plot_simi_E1_VWFA, width = 10, height = 5)
-
+# ggsave('plot_simi_E1_VWFA.png', plot_simi_E1_VWFA, width = 4.25, height = 10)
 plot_simi_E1_VWFA
 ```
+<br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-### Label:Lateral Occipital Cortex
-```{r the label used for LOC E1}
-# label_lLOC_E1 <- label_lLOC[1] # 
-# label_rLOC_E1 <- label_rLOC[1] # 
-
-label_LOC_E1 <- c(label_lLOC_E1, label_rLOC_E1)
-
-```
-The label used for left LOC in Experiment 1 is *`r label_lLOC_E1`*. <br>
-The label used for right LOC in Experiment 1 is *`r label_rLOC_E1`*.
-
-```{r only keep data for LOC E1}
+## Label:Lateral Occipital Cortex
+```{r only keep data for LO E1}
 # only keep data for these two labels
-df_univar_agg_E1_LOC <- filter(df_univar_agg_E1, Label %in% label_LOC_E1)
-df_mvpa_acc_E1_LOC <- filter(df_mvpa_acc_E1, Label %in% label_LOC_E1)
-df_simi_rate_E1_LOC <- filter(df_rate_simi_E1, Label %in% label_LOC_E1)
+df_uni_E1_LO <- filter(df_clean_uni_E1, Label %in% label_LO)
+df_decode_E1_LO <- filter(df_decode_acc_E1, Label %in% label_LO)
+df_simi_E1_LO <- filter(df_rate_simi_E1, Label %in% label_LO)
 
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E1_LOC %>% filter(Label == label_lLOC_E1))$SubjCode))
-
-df_univar_agg_E1_LOC %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
+df_uni_E1_LO %>% 
+  select(Hemisphere, Label, SessCode) %>% 
   distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
+  group_by(Hemisphere, Label) %>% 
   summarize(Count = n()) 
 ```
 
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left LOC
-```{r anova for univariate E1 LOC left}
-anova_E1_lLOC <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_LOC, Label == label_lLOC_E1))
+### Univariate analyses
+#### rm-ANOVA 
+##### Left LO
+```{r anova for univariate E1 LO left}
+anova_E1_lLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E1_LO, Label == label_LO[[1]]))
 
-anova_E1_lLOC
+anova_E1_lLO
 ```
 
-```{r estimated marginal means for univairate E1 lLOC}
-emm_anova_E1_lLOC <- emmeans(anova_E1_lLOC, ~ FaceWord * Layout)
+```{r estimated marginal means for univairate E1 lLO}
+emm_aov_E1_lLO <- emmeans(anova_E1_lLO, ~ FaceWord * Layout)
 
-emm_anova_E1_lLOC %>% 
+emm_aov_E1_lLO %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_lLOC}
-contrast(emmeans(emm_anova_E1_lLOC, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_lLO}
+contrast(emmeans(emm_aov_E1_lLO, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_lLOC, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_lLO, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_lLOC}
-contr_anova_E1_lLOC <- contrast(emm_anova_E1_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_lLOC
+```{r simple effect analysis for emm_aov_E1_lLO}
+contr_aov_E1_lLO <- contrast(emm_aov_E1_lLO, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E1, interaction = "pairwise") # , adjust = "none"
+contr_aov_E1_lLO
 ```
 
-###### Right LOC
-```{r anova for univariate E1 LOC right}
-anova_E1_rLOC <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E1_LOC, Label == label_rLOC_E1))
+##### Right LO
+```{r aov for univariate E1 LO right}
+aov_E1_rLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E1_LO, Label == label_LO[[2]]))
 
-anova_E1_rLOC
+aov_E1_rLO
 ```
 
-```{r estimated marginal means for univairate E1 LOC right}
-emm_anova_E1_rLOC <- emmeans(anova_E1_rLOC, ~ FaceWord * Layout)
+```{r estimated marginal means for univairate E1 LO right}
+emm_aov_E1_rLO <- emmeans(aov_E1_rLO, ~ FaceWord * Layout)
 
-emm_anova_E1_rLOC %>% 
+emm_aov_E1_rLO %>% 
   as.data.frame() %>% 
   arrange(FaceWord)
 ```
 <br>
 Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E1_rLOC right}
-contrast(emmeans(emm_anova_E1_rLOC, ~ FaceWord), "pairwise")
+```{r post-hoc for emm_aov_E1_rLO right}
+contrast(emmeans(emm_aov_E1_rLO, ~ FaceWord), "pairwise")
 
-contrast(emmeans(emm_anova_E1_rLOC, ~ Layout), "pairwise") # , adjust = "none"
+contrast(emmeans(emm_aov_E1_rLO, ~ Layout), "pairwise") # , adjust = "none"
 ```
 <br>
 Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E1_rLOC right}
-contr_anova_E1_rLOC <- contrast(emm_anova_E1_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E1, interaction = "pairwise") # , adjust = "none"
-contr_anova_E1_rLOC
+```{r simple effect analysis for emm_aov_E1_rLO right}
+contr_aov_E1_rLO <- contrast(emm_aov_E1_rLO, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E1, interaction = "pairwise") # , adjust = "none"
+contr_aov_E1_rLO
 ```
 
-##### Plot
-```{r plots for functional scans E1 (anova) LOC, fig.asp = .75, fig.width = 8}
-
-sig_uni_E1_LOC <- c(signif(as.data.frame(contr_anova_E1_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E1_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E1_LOC <- sig_colors(sig_uni_E1_LOC)
+#### Plot
+```{r plots for functional scans E1 (aov) LO, fig.asp = .8, fig.width = 8}
 
 # add the column of Hemisphere
-nRow_E1 <-nrow(as.data.frame(emm_anova_E1_lLOC))
+nRow_E1 <-nrow(as.data.frame(emm_aov_E1_lLO))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
-desp_uni_E1_LOC <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E1_lLOC), as.data.frame(emm_anova_E1_rLOC)))
+desp_uni_E1_LO <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E1_lLO), as.data.frame(emm_aov_E1_rLO)))
 
-plot_uni_E1_LOC <- {
-  ggplot(data = desp_uni_E1_LOC, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in LOC (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E1_LOC, color = color_uni_E1_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
 
-# ggsave('plot_uni_E1_LOC.png', plot_uni_E1_LOC, width = 8, height = 5.5)
+plot_uni_E1_LO <- plot_uni(desp_uni_E1_LO, contr_aov_E1_lLO, contr_aov_E1_rLO, "LO")
 
-plot_uni_E1_LOC
+# ggsave('plot_uni_E1_LO.png', plot_uni_E1_LO, width = 10, height = 10)
+
+plot_uni_E1_LO
 ```
-The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+<br/>
+The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05
 
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E1 LOC}
-# one-sample for results of mvpa E1 LOC
-one_mvpa_agg_E1_LOC <- {
-  df_mvpa_acc_E1_LOC %>% 
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E1 LO}
+# one-sample for results of decode E1 LO
+one_decode_agg_E1_LO <- {
+  df_decode_E1_LO %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
     )
 }
 
-one_mvpa_agg_E1_LOC
+one_decode_agg_E1_LO
 ```
 
-##### Plot
-```{r plots for functional scans mvpa E1 (anova) LOC, fig.asp=0.5, fig.width = 11}
+#### Plot
+```{r plots for functional scans decode E1 (anova) LO, fig.asp=2, fig.width = 7}
 
-plot_mvpa_E1_LOC <- {
-  ggplot(data = one_mvpa_agg_E1_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E1_LOC$p), color = sig_colors(one_mvpa_agg_E1_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
+plot_decode_E1_LO <- plot_decode(one_decode_agg_E1_LO, "LO")
 
-# ggsave('plot_mvpa_E1_LOC.png', plot_mvpa_E1_LOC, width = 12, height = 5)
+# ggsave('plot_decode_E1_LO.png', plot_decode_E1_LO, width = 6.5, height = 16)
 
-plot_mvpa_E1_LOC
+plot_decode_E1_LO
 ```
-The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+<br/>
+The above figure shows the decoding accuracy in LO for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: **, _p_ < .01; ***, _p_ <.001
 
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in LOC E1}
-# Similarity of top + bottom to intact vs. exchange in LOC
-one_simi_E1_LOC <- {
-  df_simi_rate_E1_LOC %>% 
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
+```{r Similarity of top + bottom to intact vs. exchange in LO E1}
+# Similarity of top + bottom to intact vs. exchange in LO
+one_simi_E1_LO <- {
+  df_simi_E1_LO %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
               SD = t.test(RateAsExchange, mu = 0.5)[[7]],
@@ -1835,1202 +868,20 @@ one_simi_E1_LOC <- {
     )
 }
 
-one_simi_E1_LOC
+one_simi_E1_LO
 ```
 
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in LOC, fig.asp=.5, fig.width = 13}
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in LO, fig.asp=1, fig.width = 8}
 
-plot_simi_E1_LOC <- {
-  ggplot(data = one_simi_E1_LOC, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in LOC", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E1_LOC$p, 4), color = sig_colors(one_simi_E1_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
+plot_simi_E1_LO <- plot_simi(one_simi_E1_LO, "LO")
 
-# ggsave('plot_simi_E1_LOC.png', plot_simi_E1_LOC, width = 14, height = 5)
+# ggsave('plot_simi_E1_LO.png', plot_simi_E1_LO, width = 8, height = 10)
 
-plot_simi_E1_LOC
+plot_simi_E1_LO
 ```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-# Experiment 2: Chinese characters and English words for English speakers
-## localizer
-```{r only keep the univariate data for E2 loc}
-df_loc_E2 <- {
-  df_clean_loc %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(SubjCode = as.factor(SubjCode))
-}
-# nlevels(df_loc_E2$SubjCode) # number of subjects
-```
-The label used for FFA in this analysis is `r unique(df_loc_E2$Label)`.
-
-### rm-ANOVA
-```{r}
-anova_loc_E2 <- aov_4(Resp ~ Conditions + (Conditions | SubjCode), data = df_loc_E2)
-
-anova_loc_E2
-```
-
-```{r estimated marginal means for loc E2}
-emm_loc_anova_E2 <- emmeans(anova_loc_E2, ~ Conditions)
-
-emm_loc_anova_E2
-```
-
-```{r Post-hoc analysis for anova loc E2}
-contrast(emm_loc_anova_E2, "pairwise")
-```
-
-### Plot
-```{r plots for loc E2 (anova), fig.asp=1.3, fig.width= 6}
-plot_loc_E2 <- {
-  ggplot(data = as.data.frame(emm_loc_anova_E2), aes(y = emmean, x = Conditions)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Neural responses in right FFA (Localizer)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    general_theme
-}
-
-plot_loc_E2
-```
-
-## Main runs
-```{r only keep data of E2}
-# only keep the univariate data for E2
-df_univar_agg_E2 <- {
-  df_univar_agg %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(FaceWord = factor(FaceWord, levels = wordsOrder),
-           SubjCode = as.factor(SubjCode))
-}
-
-# only keep the multivariate (mvpa) data for E2
-df_mvpa_acc_E2 <- {
-  df_mvpa_acc %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(ClassifyPair = factor(ClassifyPair, levels = pairOrder_E2),
-           SubjCode = as.factor(SubjCode))
-}
-
-# only keep the similarity for E2
-df_rate_simi_E2 <- {
-  df_rate_simi %>% 
-    filter(ExpCode == 2) %>% 
-    mutate(SubjCode = as.factor(SubjCode))
-}
-
-```
-
-### Label:FFA
-```{r the label used for FFA E2}
-# label_lFFA_E2 <- label_lFFA[1] # "roi.lh.f20.f-vs-o.label" "roi.lh.f40.f-vs-o.label"
-# label_rFFA_E2 <- label_rFFA[1] # "roi.rh.f20.f-vs-o.label" "roi.rh.f40.f-vs-o.label"
-
-label_FFA_E2 <- c(label_lFFA_E2, label_rFFA_E2)
-
-```
-The label used for left FFA in Experiment 2 is *`r label_lFFA_E2`*. <br>
-The label used for right FFA in Experiment 2 is *`r label_rFFA_E2`*.
-
-```{r only keep data for FFA E2}
-# only keep data for these two labels
-df_univar_agg_E2_FFA <- filter(df_univar_agg_E2, Label %in% label_FFA_E2)
-df_mvpa_acc_E2_FFA <- filter(df_mvpa_acc_E2, Label %in% label_FFA_E2)
-df_simi_rate_E2_FFA <- filter(df_rate_simi_E2, Label %in% label_FFA_E2)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E2_FFA %>% filter(Label == label_lFFA_E2))$SubjCode))
-
-df_univar_agg_E2_FFA %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA
-```{r anova for univariate E2 FFA left}
-anova_E2_lFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA, Label == label_lFFA_E2))
-
-anova_E2_lFFA
-```
-
-```{r estimated marginal means for univairate E2 lFFA}
-emm_anova_E2_lFFA <- emmeans(anova_E2_lFFA, ~ FaceWord * Layout)
-
-emm_anova_E2_lFFA %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_lFFA}
-contrast(emmeans(emm_anova_E2_lFFA, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_lFFA, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_lFFA}
-contr_anova_E2_lFFA <- contrast(emm_anova_E2_lFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_lFFA
-```
-
-###### Right FFA
-```{r anova for univariate E2 FFA right}
-anova_E2_rFFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA, Label == label_rFFA_E2))
-
-anova_E2_rFFA
-```
-
-```{r estimated marginal means for univairate E2 FFA right}
-emm_anova_E2_rFFA <- emmeans(anova_E2_rFFA, ~ FaceWord * Layout)
-
-emm_anova_E2_rFFA %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_rFFA right}
-contrast(emmeans(emm_anova_E2_rFFA, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_rFFA, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_rFFA right}
-contr_anova_E2_rFFA <- contrast(emm_anova_E2_rFFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_rFFA
-```
-
-##### Plot
-```{r plots for functional scans E2 (anova) FFA, fig.asp = .75, fig.width = 8}
-
-sig_uni_E2_FFA <- c(signif(as.data.frame(contr_anova_E2_lFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E2_rFFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E2_FFA <- sig_colors(sig_uni_E2_FFA)
-
-# add the column of Hemisphere
-nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA))
-Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
-desp_uni_E2_FFA <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA), as.data.frame(emm_anova_E2_rFFA))) 
-
-
-plot_uni_E2_FFA <- {
-  ggplot(data = desp_uni_E2_FFA, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(-0.2, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-     geom_text(label = sig_uni_E2_FFA, color = color_uni_E2_FFA, size = 5, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E2_FFA.png', plot_uni_E2_FFA, width = 8, height = 5.5)
-
-plot_uni_E2_FFA
-
-plot_uni(desp_uni_E2_FFA, contr_anova_E2_lFFA, contr_anova_E2_rFFA, "FFA")
-```
-The above figure shows the neural respones (beta values) in FFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E2 FFA}
-# one-sample for results of mvpa E2 FFA
-one_mvpa_agg_E2_FFA <- {
-  df_mvpa_acc_E2_FFA %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E2_FFA
-```
-
-##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA, fig.asp=0.5, fig.width = 11}
-
-plot_mvpa_E2_FFA <- {
-  ggplot(data = one_mvpa_agg_E2_FFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding Accuracy in FFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E2_FFA$p), color = sig_colors(one_mvpa_agg_E2_FFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E2_FFA.png', plot_mvpa_E2_FFA, width = 12, height = 5)
-
-plot_mvpa_E2_FFA
-```
-The above figure shows the decoding accuracy in FFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in FFA E2}
-# Similarity of top + bottom to intact vs. exchange in FFA
-one_simi_E2_FFA <- {
-  df_simi_rate_E2_FFA %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E2_FFA
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA E2, fig.asp=.5, fig.width = 13}
-
-plot_simi_E2_FFA <- {
-  ggplot(data = one_simi_E2_FFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA$p, 4), color = sig_colors(one_simi_E2_FFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E2_FFA.png', plot_simi_E2_FFA, width = 14, height = 5)
-
-plot_simi_E2_FFA
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-### Label:FFA1
-```{r the label used for FFA1 E2}
-# label_lFFA1_E2 <- label_lFFA1[1] # "roi.lh.f13.f-vs-o.ffa1.label" "roi.lh.f20.f-vs-o.ffa1.label"
-# label_rFFA1_E2 <- label_rFFA1[1] # "roi.rh.f13.f-vs-o.ffa1.label"
-
-label_FFA1_E2 <- c(label_lFFA1_E2, label_rFFA1_E2)
-
-```
-The label used for left FFA1 in Experiment 2 is *`r label_lFFA1_E2`*. <br>
-The label used for right FFA1 in Experiment 2 is *`r label_rFFA1_E2`*.
-
-```{r only keep data for FFA1 E2}
-# only keep data for these two labels
-df_univar_agg_E2_FFA1 <- filter(df_univar_agg_E2, Label %in% label_FFA1_E2)
-df_mvpa_acc_E2_FFA1 <- filter(df_mvpa_acc_E2, Label %in% label_FFA1_E2)
-df_simi_rate_E2_FFA1 <- filter(df_rate_simi_E2, Label %in% label_FFA1_E2)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E2_FFA1 %>% filter(Label == label_rFFA1_E2))$SubjCode))
-
-df_univar_agg_E2_FFA1 %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA1
-```{r anova for univariate E2 FFA1 left}
-anova_E2_lFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA1, Label == label_lFFA1_E2))
-
-anova_E2_lFFA1
-```
-
-```{r estimated marginal means for univairate E2 lFFA1}
-emm_anova_E2_lFFA1 <- emmeans(anova_E2_lFFA1, ~ FaceWord * Layout)
-
-emm_anova_E2_lFFA1 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_lFFA1}
-contrast(emmeans(emm_anova_E2_lFFA1, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_lFFA1}
-contr_anova_E2_lFFA1 <- contrast(emm_anova_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_lFFA1
-```
-
-###### Right FFA1
-```{r anova for univariate E2 FFA1 right}
-anova_E2_rFFA1 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA1, Label == label_rFFA1_E2))
-
-anova_E2_rFFA1
-```
-
-```{r estimated marginal means for univairate E2 FFA1 right}
-emm_anova_E2_rFFA1 <- emmeans(anova_E2_rFFA1, ~ FaceWord * Layout)
-
-emm_anova_E2_rFFA1 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_rFFA1 right}
-contrast(emmeans(emm_anova_E2_rFFA1, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_rFFA1 right}
-contr_anova_E2_rFFA1 <- contrast(emm_anova_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_rFFA1
-```
-
-##### Plot
-```{r plots for functional scans E2 (anova) FFA1, fig.asp = .75, fig.width = 8}
-
-sig_uni_E2_FFA1 <- c(signif(as.data.frame(contr_anova_E2_lFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E2_rFFA1)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E2_FFA1 <- sig_colors(sig_uni_E2_FFA1)
-
-# add the column of Hemisphere
-nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA1))
-Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
-desp_uni_E2_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA1), as.data.frame(emm_anova_E2_rFFA1)))
-
-plot_uni_E2_FFA1 <- {
-  ggplot(data = desp_uni_E2_FFA1, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA1 (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E2_FFA1, color = color_uni_E2_FFA1, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E2_FFA1.png', plot_uni_E2_FFA1, width = 8, height = 5.5)
-
-plot_uni_E2_FFA1
-```
-The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E2 FFA1}
-# one-sample for results of mvpa E2 FFA1
-one_mvpa_agg_E2_FFA1 <- {
-  df_mvpa_acc_E2_FFA1 %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E2_FFA1
-```
-
-##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA1, fig.asp=0.5, fig.width = 11}
-
-plot_mvpa_E2_FFA1 <- {
-  ggplot(data = one_mvpa_agg_E2_FFA1, aes(y = mean, x = ClassifyPair, fill=ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding Accuracy in FFA1", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises 
-    geom_text(label = signif(one_mvpa_agg_E2_FFA1$p), color = sig_colors(one_mvpa_agg_E2_FFA1$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E2_FFA1.png', plot_mvpa_E2_FFA1, width = 12, height = 5)
-
-plot_mvpa_E2_FFA1
-```
-The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in FFA1 E2}
-# Similarity of top + bottom to intact vs. exchange in FFA1
-one_simi_E2_FFA1 <- {
-  df_simi_rate_E2_FFA1 %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E2_FFA1
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA1 E2, fig.asp=.5, fig.width = 13}
-
-plot_simi_E2_FFA1 <- {
-  ggplot(data = one_simi_E2_FFA1, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA1", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA1$p, 4), color = sig_colors(one_simi_E2_FFA1$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E2_FFA1.png', plot_simi_E2_FFA1, width = 14, height = 5)
-
-plot_simi_E2_FFA1
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-### Label:FFA2
-```{r the label used for FFA2 E2}
-# label_lFFA2_E2 <- label_lFFA2[1] # "roi.lh.f13.f-vs-o.ffa2.label"
-# label_rFFA2_E2 <- label_rFFA2[1] # "roi.rh.f20.f-vs-o.ffa2.label" "roi.rh.f40.f-vs-o.ffa2.label"
-
-label_FFA2_E2 <- c(label_lFFA2_E2, label_rFFA2_E2)
-
-```
-The label used for left FFA2 in Experiment 1 is *`r label_lFFA2_E2`*. <br>
-The label used for right FFA2 in Experiment 1 is *`r label_rFFA2_E2`*.
-
-```{r only keep data for FFA2 E2}
-# only keep data for these two labels
-df_univar_agg_E2_FFA2 <- filter(df_univar_agg_E2, Label %in% label_FFA2_E2)
-df_mvpa_acc_E2_FFA2 <- filter(df_mvpa_acc_E2, Label %in% label_FFA2_E2)
-df_simi_rate_E2_FFA2 <- filter(df_rate_simi_E2, Label %in% label_FFA2_E2)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E2_FFA2 %>% filter(Label == label_rFFA2_E2))$SubjCode))
-
-df_univar_agg_E2_FFA2 %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left FFA2
-```{r anova for univariate E2 FFA2 left}
-anova_E2_lFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA2, Label == label_lFFA2_E2))
-
-anova_E2_lFFA2
-```
-
-```{r estimated marginal means for univairate E2 lFFA2}
-emm_anova_E2_lFFA2 <- emmeans(anova_E2_lFFA2, ~ FaceWord * Layout)
-
-emm_anova_E2_lFFA2 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_lFFA2}
-contrast(emmeans(emm_anova_E2_lFFA2, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_lFFA2}
-contr_anova_E2_lFFA2 <- contrast(emm_anova_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_lFFA2
-```
-
-###### Right FFA2
-```{r anova for univariate E2 FFA2 right}
-anova_E2_rFFA2 <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_FFA2, Label == label_rFFA2_E2))
-
-anova_E2_rFFA2
-```
-
-```{r estimated marginal means for univairate E2 FFA2 right}
-emm_anova_E2_rFFA2 <- emmeans(anova_E2_rFFA2, ~ FaceWord * Layout)
-
-emm_anova_E2_rFFA2 %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_rFFA2 right}
-contrast(emmeans(emm_anova_E2_rFFA2, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_rFFA2 right}
-contr_anova_E2_rFFA2 <- contrast(emm_anova_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_rFFA2
-```
-
-##### Plot
-```{r plots for functional scans E2 (anova) FFA2, fig.asp = .75, fig.width = 8}
-
-sig_uni_E2_FFA2 <- c(signif(as.data.frame(contr_anova_E2_lFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E2_rFFA2)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E2_FFA2 <- sig_colors(sig_uni_E2_FFA2)
-
-# add the column of Hemisphere
-nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lFFA2))
-Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
-desp_uni_E2_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lFFA2), as.data.frame(emm_anova_E2_rFFA2)))
-
-plot_uni_E2_FFA2 <- {
-  ggplot(data = desp_uni_E2_FFA2, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(-0.1, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in FFA2 (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E2_FFA2, color = color_uni_E2_FFA2, size = sig_size, nudge_y = 0.3, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E2_FFA2.png', plot_uni_E2_FFA2, width = 8, height = 5.5)
-
-plot_uni_E2_FFA2
-```
-The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E2 FFA2}
-# one-sample for results of mvpa E2 FFA2
-one_mvpa_agg_E2_FFA2 <- {
-  df_mvpa_acc_E2_FFA2 %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E2_FFA2
-```
-
-##### Plot
-```{r plots for functional scans mvpa E2 (anova) FFA2, fig.asp=0.5, fig.width = 11}
-
-plot_mvpa_E2_FFA2 <- {
-  ggplot(data = one_mvpa_agg_E2_FFA2, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding Accuracy in FFA2", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_FFA2$p), color = sig_colors(one_mvpa_agg_E2_FFA2$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E2_FFA2.png', plot_mvpa_E2_FFA2, width = 12, height = 5)
-
-plot_mvpa_E2_FFA2
-```
-The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in FFA2 E2}
-# Similarity of top + bottom to intact vs. exchange in FFA2
-one_simi_E2_FFA2 <- {
-  df_simi_rate_E2_FFA2 %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E2_FFA2
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in FFA2 E2, fig.asp=.5, fig.width = 13}
-
-plot_simi_E2_FFA2 <- {
-  ggplot(data = one_simi_E2_FFA2, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in FFA2", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_FFA2$p, 4), color = sig_colors(one_simi_E2_FFA2$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E2_FFA2.png', plot_simi_E2_FFA2, width = 14, height = 5)
-
-plot_simi_E2_FFA2
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-### Label: left Visual Word Form Area (VWFA)
-```{r the label used for VWFA E2}
-# label_VWFA_E2 <- label_lVWFA[1] # "roi.lh.f13.w-vs-o.label"
-
-```
-The label used for (left) VWFA in Experiment 1 is *`r label_VWFA_E2`*.
-
-```{r only keep data for VWFA E2}
-# only keep data for these two labels
-df_univar_agg_E2_VWFA <- filter(df_univar_agg_E2, Label %in% label_VWFA_E2)
-df_mvpa_acc_E2_VWFA <- filter(df_mvpa_acc_E2, Label %in% label_VWFA_E2)
-df_simi_rate_E2_VWFA <- filter(df_rate_simi_E2, Label %in% label_VWFA_E2)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E2_VWFA %>% filter(Label == label_VWFA_E2))$SubjCode))
-
-df_univar_agg_E2_VWFA %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-```{r anova for univariate E2 VWFA left}
-anova_E2_VWFA <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_VWFA, Label == label_VWFA_E2))
-
-anova_E2_VWFA
-```
-
-```{r estimated marginal means for univairate E2 VWFA}
-emm_anova_E2_VWFA <- emmeans(anova_E2_VWFA, ~ FaceWord * Layout)
-
-emm_anova_E2_VWFA %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_VWFA}
-contrast(emmeans(emm_anova_E2_VWFA, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_VWFA, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_VWFA}
-contr_anova_E2_VWFA <- contrast(emm_anova_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_VWFA
-```
-
-##### Plot
-```{r plots for functional scans E2 (anova) VWFA, fig.asp = .45, fig.width = 11}
-
-sig_uni_E2_VWFA <- c(signif(as.data.frame(contr_anova_E2_VWFA)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E2_VWFA <- sig_colors(sig_uni_E2_VWFA)
-
-plot_uni_E2_VWFA <- {
-  ggplot(data = as.data.frame(emm_anova_E2_VWFA), aes(y = emmean, x = FaceWord, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(-0.3, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in VWFA (Univariate)", x = "Stimuli", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E2_VWFA, color = color_uni_E2_VWFA, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E2_VWFA.png', plot_uni_E2_VWFA, width = 8, height = 4)
-
-plot_uni_E2_VWFA
-```
-The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E2 VWFA}
-# one-sample for results of mvpa E2 VWFA
-one_mvpa_agg_E2_VWFA <- {
-  df_mvpa_acc_E2_VWFA %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E2_VWFA
-```
-
-##### Plot
-```{r plots for functional scans mvpa E2 (anova) VWFA, fig.asp=0.5, fig.width = 9}
-
-plot_mvpa_E2_VWFA <- {
-  ggplot(data = one_mvpa_agg_E2_VWFA, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(Hemisphere ~ .) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding Accuracy in VWFA", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_VWFA$p, 4), color = sig_colors(one_mvpa_agg_E2_VWFA$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E2_VWFA.png', plot_mvpa_E2_VWFA, width = 9, height = 5)
-
-plot_mvpa_E2_VWFA
-```
-The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in VWFA E2}
-# Similarity of top + bottom to intact vs. exchange in VWFA
-one_simi_E2_VWFA <- {
-  df_simi_rate_E2_VWFA %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E2_VWFA
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in VWFA E2, fig.asp=.5, fig.width = 11}
-
-plot_simi_E2_VWFA <- {
-  ggplot(data = one_simi_E2_VWFA, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in VWFA", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_VWFA$p, 4), color = sig_colors(one_simi_E2_VWFA$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E2_VWFA.png', plot_simi_E2_VWFA, width = 10, height = 5)
-
-plot_simi_E2_VWFA
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-### Label:Lateral Occipital Cortex
-```{r the label used for LOC E2}
-# label_lLOC_E2 <- label_lLOC[1] # 
-# label_rLOC_E2 <- label_rLOC[1] # 
-
-label_LOC_E2 <- c(label_lLOC_E2, label_rLOC_E2)
-
-```
-The label used for left LOC in Experiment 1 is *`r label_lLOC_E2`*. <br>
-The label used for right LOC in Experiment 1 is *`r label_rLOC_E2`*.
-
-```{r only keep data for LOC E2}
-# only keep data for these two labels
-df_univar_agg_E2_LOC <- filter(df_univar_agg_E2, Label %in% label_LOC_E2)
-df_mvpa_acc_E2_LOC <- filter(df_mvpa_acc_E2, Label %in% label_LOC_E2)
-df_simi_rate_E2_LOC <- filter(df_rate_simi_E2, Label %in% label_LOC_E2)
-
-# subjects used for each hemisphere
-# unique(as.character((df_univar_agg_E2_LOC %>% filter(Label == label_lLOC_E2))$SubjCode))
-
-df_univar_agg_E2_LOC %>% 
-  select(ExpCode, Hemisphere, Label, SubjCode) %>% 
-  distinct() %>% 
-  group_by(ExpCode, Hemisphere, Label) %>% 
-  summarize(Count = n()) 
-```
-
-#### Univariate analyses
-##### rm-ANOVA 
-###### Left LOC
-```{r anova for univariate E2 LOC left}
-anova_E2_lLOC <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_LOC, Label == label_lLOC_E2))
-
-anova_E2_lLOC
-```
-
-```{r estimated marginal means for univairate E2 lLOC}
-emm_anova_E2_lLOC <- emmeans(anova_E2_lLOC, ~ FaceWord * Layout)
-
-emm_anova_E2_lLOC %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_lLOC}
-contrast(emmeans(emm_anova_E2_lLOC, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_lLOC, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_lLOC}
-contr_anova_E2_lLOC <- contrast(emm_anova_E2_lLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_lLOC
-```
-
-###### Right LOC
-```{r anova for univariate E2 LOC right}
-anova_E2_rLOC <- aov_4(meanResp ~ FaceWord * Layout + (1 + FaceWord * Layout | SubjCode), 
-                      data = filter(df_univar_agg_E2_LOC, Label == label_rLOC_E2))
-
-anova_E2_rLOC
-```
-
-```{r estimated marginal means for univairate E2 LOC right}
-emm_anova_E2_rLOC <- emmeans(anova_E2_rLOC, ~ FaceWord * Layout)
-
-emm_anova_E2_rLOC %>% 
-  as.data.frame() %>% 
-  arrange(FaceWord)
-```
-<br>
-Posthoc analysis for the main effects:
-```{r post-hoc for emm_anova_E2_rLOC right}
-contrast(emmeans(emm_anova_E2_rLOC, ~ FaceWord), "pairwise")
-
-contrast(emmeans(emm_anova_E2_rLOC, ~ Layout), "pairwise") # , adjust = "none"
-```
-<br>
-Results of simple effect analysis (uncorrected):
-```{r simple effect analysis for emm_anova_E2_rLOC right}
-contr_anova_E2_rLOC <- contrast(emm_anova_E2_rLOC, "pairwise", simple = "each", combine = TRUE, adjust = "none")
-# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
-contr_anova_E2_rLOC
-```
-
-##### Plot
-```{r plots for functional scans E2 (anova) LOC, fig.asp = .75, fig.width = 8}
-
-sig_uni_E2_LOC <- c(signif(as.data.frame(contr_anova_E2_lLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6),
-                     signif(as.data.frame(contr_anova_E2_rLOC)[c(5, 11), "p.value"], nDigitals), rep("", 6))
-color_uni_E2_LOC <- sig_colors(sig_uni_E2_LOC)
-
-# add the column of Hemisphere
-nRow_E2 <-nrow(as.data.frame(emm_anova_E2_lLOC))
-Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
-desp_uni_E2_LOC <- cbind(Hemisphere, rbind(as.data.frame(emm_anova_E2_lLOC), as.data.frame(emm_anova_E2_rLOC)))
-
-plot_uni_E2_LOC <- {
-  ggplot(data = desp_uni_E2_LOC, aes(y = emmean, x = Hemisphere, fill = Layout)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(FaceWord ~ .) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_y_continuous(expand= c(0, 0), limits = c(0, activationUL), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis
-    labs(title = "Mean neural responses in LOC (Univariate)", x = "Hemisphere", y = "Beta values") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = sig_uni_E2_LOC, color = color_uni_E2_LOC, size = 5, nudge_y = 0.5, nudge_x = -0.25) + # add starts to the significant columns
-    general_theme
-}
-
-# ggsave('plot_uni_E2_LOC.png', plot_uni_E2_LOC, width = 8, height = 5.5)
-
-plot_uni_E2_LOC
-```
-The above figure shows the neural respones (beta values) in LOC for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-
-#### Multivariate analyses (MVPA)
-##### One-sample t-test
-```{r one-sample for results of mvpa E2 LOC}
-# one-sample for results of mvpa E2 LOC
-one_mvpa_agg_E2_LOC <- {
-  df_mvpa_acc_E2_LOC %>% 
-    group_by(Hemisphere, ClassifyPair) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
-               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-               lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
-               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-               nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-               alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
-    )
-}
-
-one_mvpa_agg_E2_LOC
-```
-
-##### Plot
-```{r plots for functional scans mvpa E2 (anova) LOC, fig.asp=0.5, fig.width = 11}
-
-plot_mvpa_E2_LOC <- {
-  ggplot(data = one_mvpa_agg_E2_LOC, aes(y = mean, x = ClassifyPair, fill = ClassifyPair)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    scale_fill_manual(values = mvpaColors) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Decoding Accuracy in LOC", x = "Classification Pairs", y = "Accuracy") +  # set the names for main, x and y axises Subjective Responses for E205
-    geom_text(label = signif(one_mvpa_agg_E2_LOC$p, 4), color = sig_colors(one_mvpa_agg_E2_LOC$p), size = sig_size, nudge_y = 0.15) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 3))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_mvpa_E2_LOC.png', plot_mvpa_E2_LOC, width = 12, height = 5)
-
-plot_mvpa_E2_LOC
-```
-The above figure shows the decoding accuracy in LOC for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-
-#### Similarity of top + bottom to intact vs. exchange
-##### One-sample t-test
-```{r Similarity of top + bottom to intact vs. exchange in LOC E2}
-# Similarity of top + bottom to intact vs. exchange in LOC
-one_simi_E2_LOC <- {
-  df_simi_rate_E2_LOC %>% 
-    group_by(Hemisphere, Combination) %>% 
-    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
-              t = t.test(RateAsExchange, mu = 0.5)[[1]],
-              df = t.test(RateAsExchange, mu = 0.5)[[2]],
-              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
-              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
-              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
-              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
-              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
-    )
-}
-
-one_simi_E2_LOC
-```
-
-##### Plot
-```{r plot Similarity of top+bottom to intact vs. exchange in LOC E2, fig.asp=.5, fig.width = 13}
-
-plot_simi_E2_LOC <- {
-  ggplot(data = one_simi_E2_LOC, aes(y = mean, x = Combination, fill = Combination)) + # set the data, varialbes for x and y axises
-    geom_col(position = "dodge", color = "black", alpha = .7) +  # position of columns and countour of columns
-    facet_grid(. ~ Hemisphere) +
-    geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                  show.legend = FALSE, width = 0.25, alpha = .5,
-                  position = position_dodge(width=0.9)) +
-    scale_fill_manual(values = simiColors) +
-    geom_hline(yintercept = c(0.5, 1), linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-    scale_y_continuous(expand= c(0, 0), limits = c(0, 1.1), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) + # show x labels in two rows
-    labs(title = "Similarity of top+bottom to intact vs. exchange in LOC", x = "Combinations", y = "Rate of Decoding as Exchange") +  # set the names for main, x and y axises
-    geom_text(label = signif(one_simi_E2_LOC$p, 4), color = sig_colors(one_simi_E2_LOC$p), size = sig_size, nudge_y = 0.25) + # add starts to the significant columns
-    general_theme +
-    theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.line = element_line(size = 4))
-    # theme(axis.text.x = element_text(angle = 90, vjust=.5, hjust = 1), # 
-    #       axis.line = element_line(size = 3)) 
-}
-
-# ggsave('plot_simi_E2_LOC.png', plot_simi_E2_LOC, width = 14, height = 5)
-
-plot_simi_E2_LOC
-```
-The above figure shows the probability of top+bottom being decoded as exchange conditions in LOC. Patterns of top and bottom were combined with different weights, i.e., "Chinese_top0.25-Chinese_bottom0.75" denotes the linear combinations of Chinese_top and Chinese_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+<br/>
+The above figure shows the probability of top+bottom being decoded as exchange conditions in LO. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
 # Versions of packages used
 ```{r versions}
