@@ -352,7 +352,7 @@ plot_uni_E1_FFA1
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
-Note: *, _p_ < .05; ***, _p_ <.001
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
 
 ### Decoding
 #### One-sample t-test
@@ -360,6 +360,7 @@ Note: *, _p_ < .05; ***, _p_ <.001
 # one-sample for results of decode E1 FFA1
 one_decode_agg_E1_FFA1 <- {
   df_decode_E1_FFA1 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
@@ -387,7 +388,7 @@ plot_decode_E1_FFA1
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05; **, _p_ < .01; ***, _p_ <.001
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
 
 ### Similarity of top + bottom to intact vs. exchange
 #### One-sample t-test
@@ -506,7 +507,7 @@ nRow_E1 <-nrow(as.data.frame(emm_aov_E1_lFFA2))
 Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
 desp_uni_E1_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E1_lFFA2), as.data.frame(emm_aov_E1_rFFA2)))
 
-plot_uni_E1_FFA2 <- plot_uni(desp_uni_E1_FFA1, contr_aov_E1_lFFA1, contr_aov_E1_rFFA1, "FFA2")
+plot_uni_E1_FFA2 <- plot_uni(desp_uni_E1_FFA2, contr_aov_E1_lFFA2, contr_aov_E1_rFFA2, "FFA2")
 
 # ggsave('plot_uni_E1_FFA2.png', plot_uni_E1_FFA2, width = 10, height = 10)
 
@@ -514,7 +515,7 @@ plot_uni_E1_FFA2
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05; ***, _p_ <.001
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
 
 ### Decoding
 #### One-sample t-test
@@ -522,6 +523,7 @@ Note: *, _p_ < .05; ***, _p_ <.001
 # one-sample for results of decode E1 FFA2
 one_decode_agg_E1_FFA2 <- {
   df_decode_E1_FFA2 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
@@ -547,7 +549,7 @@ plot_decode_E1_FFA2
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05; ***, _p_ <.001
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
 
 ### Similarity of top + bottom to intact vs. exchange
 #### One-sample t-test
@@ -637,10 +639,10 @@ contr_aov_E1_VWFA
 
 nRow_E1 <-nrow(as.data.frame(emm_aov_E1_VWFA))
 Hemisphere <- c(rep("left", nRow_E1))
-desp_uni_E1_FFA2 <- cbind(Hemisphere, as.data.frame(emm_aov_E1_lFFA2))
+desp_uni_E1_VWFA <- cbind(Hemisphere, as.data.frame(emm_aov_E1_VWFA))
 
 
-plot_uni_E1_VWFA <- plot_uni_vwfa(desp_uni_E1_FFA2, contr_aov_E1_VWFA, "VWFA")
+plot_uni_E1_VWFA <- plot_uni_vwfa(desp_uni_E1_VWFA, contr_aov_E1_VWFA, "VWFA")
 
 # ggsave('plot_uni_E1_VWFA.png', plot_uni_E1_VWFA, width = 5.5, height = 10)
 
@@ -656,6 +658,7 @@ Note: *, _p_ < .05
 # one-sample for results of decode E1 VWFA
 one_decode_agg_E1_VWFA <- {
   df_decode_E1_VWFA %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
@@ -820,6 +823,7 @@ Note: *, _p_ < .05
 # one-sample for results of decode E1 LO
 one_decode_agg_E1_LO <- {
   df_decode_E1_LO %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
               SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
