@@ -47,8 +47,8 @@ For each ROI, three analyses are performed:
     + If the pattern of top+bottom is more similar to that of intact relative to exchange, the probability (of being decoded as exchange) should be *significantly smaller* than the chance level (0.5).
   
 ## How the labels are created/defined for each ROI?
-1. Identify the global maxima for each ROI based on the coordinates in the literature.
-2. Dilate the region centering at the global maxima until it reaches the pre-defined size (100mm^2), during which the vertices are masked by a pre-defined lable at f13 (i.e., p < .05). In other words, the p-values for all vertices in the labels are smaller than .05 (uncorrected).
+1. Identify the vertex whose beta value is larger than the surrounding vertices (i.e., the global maxima) for each ROI based on the reference coordinates in previous literature.
+2. Dilate the region centering at the global maxima until it reaches the pre-defined size (100mm^2), during which the vertices are masked by a pre-defined label at the threshold of p < .05. In other words, the p-values for all vertices in the labels are smaller than .05 (uncorrected).
 
 ## How is the probability of top+bottom being decoded as exchange calculated?
 The probability was estimated for each particiapnt separately:
