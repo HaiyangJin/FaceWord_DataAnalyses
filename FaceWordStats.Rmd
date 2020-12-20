@@ -46,9 +46,9 @@ For each ROI, three analyses are performed:
     + If the pattern of top+bottom is more similar to that of exchange relative to intact, the probability (of being decoded as exchange) should be *significantly larger* than the chance level (0.5).
     + If the pattern of top+bottom is more similar to that of intact relative to exchange, the probability (of being decoded as exchange) should be *significantly smaller* than the chance level (0.5).
   
-## How the labels are created/defined for each ROI?
-1. Identify the vertex whose beta value is larger than the surrounding vertices (i.e., the global maxima) for each ROI based on the reference coordinates in previous literature.
-2. Dilate the region centering at the global maxima until it reaches the pre-defined size (100mm^2), during which the vertices are masked by a pre-defined label at the threshold of p < .05. In other words, the p-values for all vertices in the labels are smaller than .05 (uncorrected).
+## How the labels are defined for each ROI?
+1. Identify the vertex whose beta value is larger than the surrounding vertices (i.e., the local maxima) for each ROI based on the reference coordinates in previous literature.
+2. Dilate the region centering at the local maxima and only keep 50% of the "peripheral" vertices whose response were larger. This step is iterated until the size of the ROI reaches the pre-defined size (100mm^2), during which the vertices are masked by a pre-defined label at the threshold of p < .05. In other words, the p-values for all vertices in the labels are smaller than .05 (uncorrected).
 
 ## How is the probability of top+bottom being decoded as exchange calculated?
 The probability was estimated for each particiapnt separately:
@@ -109,14 +109,6 @@ activationUL <- 2.75
 onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
 nDigitals <- 3 # number of digitials of p-values in plots
 
-```
-
-```{r E2}
-pair_order_E2 <- c("Chinese_intact-English_intact",
-                   "Chinese_intact-Chinese_exchange",
-                   "Chinese_part1-Chinese_part2",
-                   "English_intact-English_exchange",
-                   "English_part1-English_part2")
 ```
 
 # Experiment 1: Chinese faces and Chinese characters for Chinese participants
@@ -885,6 +877,791 @@ plot_simi_E1_LO
 ```
 <br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in LO. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+
+# Experiment 2: English and Chinese characters for Caucasian participants
+## Load and clean data 
+
+### Label (ROI) information
+```{r label information E2, message=FALSE}
+df_label_E2 <- read_csv(file.path("data", "faceword_E2_Label_HJ.csv")) %>% 
+  mutate(roi = str_remove(Label, "roi."),
+         roi = str_remove(roi, ".label")) %>% 
+  mutate(Subject = str_replace(SubjCode, "\\_.*", ""))
+
+# df_label %>% head()
+```
+
+#### Size of labels
+```{r size (mm2) of labels for each subject E2}
+df_label_E2 %>% 
+  select(SubjCode, roi, Size) %>% 
+  pivot_wider(names_from = roi, values_from = Size) %>% 
+  arrange(SubjCode)
+```
+The above table displays the size (in mm2) of each label for each participant. (NA denotes that this label is not available for that particiapnt.)
+
+#### Number of vertices for each label
+```{r Number of vertices for each label E2}
+df_label_E2 %>% 
+  select(SubjCode, roi, NVtxs) %>% 
+  pivot_wider(names_from = roi, values_from = NVtxs) %>% 
+  arrange(SubjCode)
+```
+The above table displays the number of vertices for each label and each participant. (NA denotes that this label is not available for that particiapnt.)
+
+
+#### Number of participants for each ROI
+```{r Number of available labels for each ROI E2}
+df_label_E2 %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+```
+
+#### Number of remaining participants
+```{r Number of remaining participants E2}
+df_nlabel_E2 <- df_label_E2 %>% 
+  filter(Size > nVtx_size_min) %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+
+df_nlabel_E2
+```
+The above table dispalys the number of participants included in the following analyses for each ROI. (VWFA is only found on the left hemisphere.)
+
+### Data for univariate analyses
+```{r load data file for univariate analysis E2, message=FALSE, include=showAll}
+# load data file from functional scans for univerate analysis
+df_uni_E2 <- read_csv(file.path("data", "faceword_E2_Uni_HJ.csv"))
+
+head(df_uni_E2)
+```
+
+```{r clean the univariate data E2, include=showAll}
+df_clean_uni_E2 <- {
+  df_uni_E2 %>% 
+    filter(Response != "NaN") %>% 
+    separate(Condition, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
+    mutate(Layout_ = factor(Layout, levels = layout_order), # convert the two IVs to factors
+           Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")),
+           Layout = fct_recode(Layout_, part1 = "top", part2 = "bottom")) %>% # rename top and bottom as part1 and part2
+    select(Hemisphere, Label, SessCode, FaceWord, Layout, Response) %>% 
+    mutate(Subject = str_replace(SessCode, "\\_.*", "")) %>% 
+    left_join(df_label_E2, by = c("Label", "Subject")) %>% 
+    filter(Size > nVtx_size_min)
+}
+
+head(df_clean_uni_E2)
+```
+
+### Data of decoding
+```{r assign filenames E2, include=showAll}
+pair_order_E2 <- c("English_intact-Chinese_intact",
+                   "English_intact-English_exchange",
+                   "English_partA-English_partB", # English_top-English_bottom
+                   "Chinese_intact-Chinese_exchange",
+                   "Chinese_partA-Chinese_partB") # Chinese_top-Chinese_bottom
+
+```
+
+```{r load data file from cosmoMVPA E2, message=FALSE, include=showAll}
+df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_HJ.csv"))
+
+head(df_decode_E2)
+```
+
+```{r clean the cosmoMVPA data E2, include=showAll}
+df_clean_decode_E2 <- df_decode_E2 %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Subject = str_remove(SessCode, "\\_.*"),
+         ClassifyPair = fct_recode(ClassifyPair, 
+                                   `Chinese_partA-Chinese_partB` = "Chinese_top-Chinese_bottom",
+                                   `English_partA-English_partB` = "English_top-English_bottom"),
+         ClassifyPair = factor(ClassifyPair, levels = pair_order_E2)) %>% 
+  left_join(df_label_E2, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_decode_acc_E2 <- df_clean_decode_E2 %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_acc_E2
+```
+
+### Data for the Similarity of top + bottom
+```{r assign filenames simi E2, include=showAll}
+simi_order_E2 <- c("English_partA0.25-English_partB0.75",
+                   "English_partA0.50-English_partB0.50",
+                   "English_partA0.75-English_partB0.25",
+                   "Chinese_partA0.25-Chinese_partB0.75",
+                   "Chinese_partA0.50-Chinese_partB0.50",
+                   "Chinese_partA0.75-Chinese_partB0.25") 
+
+```
+
+
+```{r Data for the Similarity of top + bottom E2, message=FALSE, include=showAll}
+df_simi_E2 <- read_csv(file.path("data", "faceword_E2_Similarity_HJ.csv"))
+
+head(df_simi_E2)
+```
+
+```{r clean the similarity data E2, include=showAll}
+
+df_clean_simi_E2 <- df_simi_E2 %>% 
+  mutate(asExchange = if_else(grepl("exchange", PredictCond), 1, 0),  # binary prediction
+         pExchange = Probability_2,  # probability prediction
+         Subject = str_remove(SessCode, "\\_.*"),
+         Combination = gsub("top", "partA", Combination),
+         Combination = gsub("bottom", "partB", Combination),
+         Combination = factor(Combination, levels = simi_order_E2)) %>% 
+  left_join(df_label_E2, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_rate_simi_E2 <- df_clean_simi_E2 %>% 
+  group_by(SessCode, Label, ClassPair_1, Combination) %>% 
+  summarize(binaryAsExchange = mean(asExchange),
+            pAsExchange = mean(pExchange),
+            RateAsExchange = pAsExchange) %>%  # use the probability instead of the categorical prediction
+  ungroup() %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), 'left', if_else(grepl("rh", Label), "right", "NA")))
+
+head(df_rate_simi_E2)
+
+```
+
+## Label:FFA1
+```{r only keep data for FFA1 E2}
+# only keep data for these two labels
+df_uni_E2_FFA1 <- filter(df_clean_uni_E2, Label %in% label_FFA1)
+df_decode_E2_FFA1 <- filter(df_decode_acc_E2, Label %in% label_FFA1)
+df_simi_E2_FFA1 <- filter(df_rate_simi_E2, Label %in% label_FFA1)
+
+df_uni_E2_FFA1 %>% 
+  select(Hemisphere, Label, SessCode) %>% 
+  distinct() %>% 
+  group_by(Hemisphere, Label) %>% 
+  summarize(Count = n()) 
+```
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA1
+```{r anova for univariate E2 FFA1 left}
+anova_E2_lFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E2_FFA1, Label == label_FFA1[[1]]))
+
+anova_E2_lFFA1
+```
+
+```{r estimated marginal means for univairate E2 lFFA1}
+emm_aov_E2_lFFA1 <- emmeans(anova_E2_lFFA1, ~ FaceWord * Layout)
+
+emm_aov_E2_lFFA1 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_lFFA1}
+contrast(emmeans(emm_aov_E2_lFFA1, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_lFFA1, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_lFFA1}
+contr_aov_E2_lFFA1 <- contrast(emm_aov_E2_lFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_lFFA1
+```
+
+##### Right FFA1
+```{r anova for univariate E2 FFA1 right}
+anova_E2_rFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E2_FFA1, Label == label_FFA1[[2]]))
+
+anova_E2_rFFA1
+```
+
+```{r estimated marginal means for univairate E2 FFA1 right}
+emm_aov_E2_rFFA1 <- emmeans(anova_E2_rFFA1, ~ FaceWord * Layout)
+
+emm_aov_E2_rFFA1 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_rFFA1 right}
+contrast(emmeans(emm_aov_E2_rFFA1, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_rFFA1, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_rFFA1 right}
+contr_aov_E2_rFFA1 <- contrast(emm_aov_E2_rFFA1, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_rFFA1
+```
+
+#### Plot
+```{r plots for functional scans E2 (anova) FFA1, fig.asp = .8, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_aov_E2_lFFA1))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E2_lFFA1), as.data.frame(emm_aov_E2_rFFA1)))
+
+plot_uni_E2_FFA1 <- plot_uni(desp_uni_E2_FFA1, contr_aov_E2_lFFA1, contr_aov_E2_rFFA1, "FFA1")
+
+# ggsave('plot_uni_E2_FFA1.png', plot_uni_E2_FFA1, width = 10, height = 10)
+
+plot_uni_E2_FFA1
+```
+<br/>
+The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E2 FFA1}
+# one-sample for results of decode E2 FFA1
+one_decode_agg_E2_FFA1 <- {
+  df_decode_E2_FFA1 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E2_FFA1
+```
+
+#### Plot
+```{r plots for functional scans decode E2 (anova) FFA1, fig.asp=2, fig.width = 7}
+
+plot_decode_E2_FFA1 <- plot_decode(one_decode_agg_E2_FFA1, "FFA1")
+
+# ggsave('plot_decode_E2_FFA1.png', plot_decode_E2_FFA1, width = 6.5, height = 16)
+
+plot_decode_E2_FFA1
+```
+<br/>
+The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
+```{r Similarity of top + bottom to intact vs. exchange in FFA1 E2}
+
+one_simi_E2_FFA1 <- {
+  df_simi_E2_FFA1 %>% 
+    group_by(Hemisphere, Combination) %>% 
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
+    )
+}
+
+one_simi_E2_FFA1
+
+```
+
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA1 E2, fig.asp=1, fig.width = 8}
+
+plot_simi_E2_FFA1 <- plot_simi(one_simi_E2_FFA1, "FFA1")
+# ggsave('plot_simi_E2_FFA1.png', plot_simi_E2_FFA1, width = 8, height = 10)
+
+plot_simi_E2_FFA1
+```
+<br/>
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA1. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+## Label:FFA2
+```{r only keep data for FFA2 E2}
+# only keep data for these two labels
+df_uni_E2_FFA2 <- filter(df_clean_uni_E2, Label %in% label_FFA2)
+df_decode_E2_FFA2 <- filter(df_decode_acc_E2, Label %in% label_FFA2)
+df_simi_E2_FFA2 <- filter(df_rate_simi_E2, Label %in% label_FFA2)
+
+df_uni_E2_FFA2 %>% 
+  select(Hemisphere, Label, SessCode) %>% 
+  distinct() %>% 
+  group_by(Hemisphere, Label) %>% 
+  summarize(Count = n()) 
+```
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA2
+```{r anova for univariate E2 FFA2 left}
+anova_E2_lFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E2_FFA2, Label == label_FFA2[[1]]))
+
+anova_E2_lFFA2
+```
+
+```{r estimated marginal means for univairate E2 lFFA2}
+emm_aov_E2_lFFA2 <- emmeans(anova_E2_lFFA2, ~ FaceWord * Layout)
+
+emm_aov_E2_lFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_lFFA2}
+contrast(emmeans(emm_aov_E2_lFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_lFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_lFFA2}
+contr_aov_E2_lFFA2 <- contrast(emm_aov_E2_lFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_lFFA2
+```
+
+##### Right FFA2
+```{r anova for univariate E2 FFA2 right}
+anova_E2_rFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                        data = filter(df_uni_E2_FFA2, Label == label_FFA2[[2]]))
+
+anova_E2_rFFA2
+```
+
+```{r estimated marginal means for univairate E2 FFA2 right}
+emm_aov_E2_rFFA2 <- emmeans(anova_E2_rFFA2, ~ FaceWord * Layout)
+
+emm_aov_E2_rFFA2 %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_rFFA2 right}
+contrast(emmeans(emm_aov_E2_rFFA2, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_rFFA2, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_rFFA2 right}
+contr_aov_E2_rFFA2 <- contrast(emm_aov_E2_rFFA2, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_anova_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_rFFA2
+```
+
+#### Plot
+```{r plots for functional scans E2 (anova) FFA2, fig.asp = .8, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_aov_E2_lFFA2))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA2 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E2_lFFA2), as.data.frame(emm_aov_E2_rFFA2)))
+
+plot_uni_E2_FFA2 <- plot_uni(desp_uni_E2_FFA2, contr_aov_E2_lFFA2, contr_aov_E2_rFFA2, "FFA2")
+
+# ggsave('plot_uni_E2_FFA2.png', plot_uni_E2_FFA2, width = 10, height = 10)
+
+plot_uni_E2_FFA2
+```
+<br/>
+The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E2 FFA2}
+# one-sample for results of decode E2 FFA2
+one_decode_agg_E2_FFA2 <- {
+  df_decode_E2_FFA2 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E2_FFA2
+```
+
+#### Plot
+```{r plots for functional scans decode E2 (anova) FFA2, fig.asp=2, fig.width = 7}
+plot_decode_E2_FFA2 <- plot_decode(one_decode_agg_E2_FFA2, "FFA2")
+
+# ggsave('plot_decode_E2_FFA2.png', plot_decode_E2_FFA2, width = 6.5, height = 16)
+plot_decode_E2_FFA2
+```
+<br/>
+The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
+```{r Similarity of top + bottom to intact vs. exchange in FFA2 E2}
+# Similarity of top + bottom to intact vs. exchange in FFA
+one_simi_E2_FFA2 <- {
+  df_simi_E2_FFA2 %>% 
+    group_by(Hemisphere, Combination) %>% 
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
+    )
+}
+
+one_simi_E2_FFA2
+```
+
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in FFA2 E2, fig.asp=1, fig.width = 8}
+
+plot_simi_E2_FFA2 <- plot_simi(one_simi_E2_FFA2, "FFA2")
+# ggsave('plot_simi_E2_FFA2.png', plot_simi_E2_FFA2, width = 8, height = 10)
+
+plot_simi_E2_FFA2
+```
+<br/>
+The above figure shows the probability of top+bottom being decoded as exchange conditions in FFA2. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+
+## Label: left Visual Word Form Area (VWFA)
+```{r only keep data for VWFA E2}
+# only keep data for these two labels
+df_uni_E2_VWFA <- filter(df_clean_uni_E2, Label %in% label_VWFA)
+df_decode_E2_VWFA <- filter(df_decode_acc_E2, Label %in% label_VWFA)
+df_simi_E2_VWFA <- filter(df_rate_simi_E2, Label %in% label_VWFA)
+
+# subjects used for each hemisphere
+# unique(as.character((df_univar_agg_E2_VWFA %>% filter(Label == label_VWFA_E2))$SubjCode))
+
+df_uni_E2_VWFA %>% 
+  select(Hemisphere, Label, SessCode) %>% 
+  distinct() %>% 
+  group_by(Hemisphere, Label) %>% 
+  summarize(Count = n()) 
+```
+
+### Univariate analyses
+#### rm-ANOVA 
+```{r anova for univariate E2 VWFA left}
+anova_E2_VWFA <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E2_VWFA, Label == label_VWFA))
+
+anova_E2_VWFA
+```
+
+```{r estimated marginal means for univairate E2 VWFA}
+emm_aov_E2_VWFA <- emmeans(anova_E2_VWFA, ~ FaceWord * Layout)
+
+emm_aov_E2_VWFA %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_VWFA}
+contrast(emmeans(emm_aov_E2_VWFA, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_VWFA, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_VWFA}
+contr_aov_E2_VWFA <- contrast(emm_aov_E2_VWFA, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_VWFA
+```
+
+#### Plot
+```{r plots for functional scans E2 (anova) VWFA, fig.asp = 1, fig.width = 6}
+
+
+nRow_E2 <-nrow(as.data.frame(emm_aov_E2_VWFA))
+Hemisphere <- c(rep("left", nRow_E2))
+desp_uni_E2_VWFA <- cbind(Hemisphere, as.data.frame(emm_aov_E2_VWFA))
+
+
+plot_uni_E2_VWFA <- plot_uni_vwfa(desp_uni_E2_VWFA, contr_aov_E2_VWFA, "VWFA")
+
+# ggsave('plot_uni_E2_VWFA.png', plot_uni_E2_VWFA, width = 5.5, height = 10)
+
+plot_uni_E2_VWFA
+```
+<br/>
+The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05
+
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E2 VWFA}
+# one-sample for results of decode E2 VWFA
+one_decode_agg_E2_VWFA <- {
+  df_decode_E2_VWFA %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E2_VWFA
+
+```
+
+#### Plot
+```{r plots for functional scans decode E2 (anova) VWFA, fig.asp=4, fig.width = 4}
+plot_decode_E2_VWFA <- plot_decode_vwfa(one_decode_agg_E2_VWFA, "VWFA")
+# ggsave('plot_decode_E2_VWFA.png', plot_decode_E2_VWFA, width = 4, height = 16)
+
+plot_decode_E2_VWFA
+```
+<br/>
+The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: ***, _p_ <.001
+
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
+```{r Similarity of top + bottom to intact vs. exchange in VWFA E2}
+# Similarity of top + bottom to intact vs. exchange in VWFA
+one_simi_E2_VWFA <- {
+  df_simi_E2_VWFA %>% 
+    group_by(Hemisphere, Combination) %>% 
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
+    )
+}
+
+one_simi_E2_VWFA
+```
+
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in VWFA E2, fig.asp=2, fig.width = 4}
+
+plot_simi_E2_VWFA <- plot_simi_vwfa(one_simi_E2_VWFA, "VWFA")
+
+# ggsave('plot_simi_E2_VWFA.png', plot_simi_E2_VWFA, width = 4.25, height = 10)
+plot_simi_E2_VWFA
+```
+<br/>
+The above figure shows the probability of top+bottom being decoded as exchange conditions in VWFA. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+## Label:Lateral Occipital Cortex
+```{r only keep data for LO E2}
+# only keep data for these two labels
+df_uni_E2_LO <- filter(df_clean_uni_E2, Label %in% label_LO)
+df_decode_E2_LO <- filter(df_decode_acc_E2, Label %in% label_LO)
+df_simi_E2_LO <- filter(df_rate_simi_E2, Label %in% label_LO)
+
+df_uni_E2_LO %>% 
+  select(Hemisphere, Label, SessCode) %>% 
+  distinct() %>% 
+  group_by(Hemisphere, Label) %>% 
+  summarize(Count = n()) 
+```
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left LO
+```{r anova for univariate E2 LO left}
+anova_E2_lLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E2_LO, Label == label_LO[[1]]))
+
+anova_E2_lLO
+```
+
+```{r estimated marginal means for univairate E2 lLO}
+emm_aov_E2_lLO <- emmeans(anova_E2_lLO, ~ FaceWord * Layout)
+
+emm_aov_E2_lLO %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_lLO}
+contrast(emmeans(emm_aov_E2_lLO, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_lLO, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_lLO}
+contr_aov_E2_lLO <- contrast(emm_aov_E2_lLO, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_lLO
+```
+
+##### Right LO
+```{r aov for univariate E2 LO right}
+aov_E2_rLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                       data = filter(df_uni_E2_LO, Label == label_LO[[2]]))
+
+aov_E2_rLO
+```
+
+```{r estimated marginal means for univairate E2 LO right}
+emm_aov_E2_rLO <- emmeans(aov_E2_rLO, ~ FaceWord * Layout)
+
+emm_aov_E2_rLO %>% 
+  as.data.frame() %>% 
+  arrange(FaceWord)
+```
+<br>
+Posthoc analysis for the main effects:
+```{r post-hoc for emm_aov_E2_rLO right}
+contrast(emmeans(emm_aov_E2_rLO, ~ FaceWord), "pairwise")
+
+contrast(emmeans(emm_aov_E2_rLO, ~ Layout), "pairwise") # , adjust = "none"
+```
+<br>
+Results of simple effect analysis (uncorrected):
+```{r simple effect analysis for emm_aov_E2_rLO right}
+contr_aov_E2_rLO <- contrast(emm_aov_E2_rLO, "pairwise", simple = "each", combine = TRUE, adjust = "none")
+# contrast(emm_uni_aov_E2, interaction = "pairwise") # , adjust = "none"
+contr_aov_E2_rLO
+```
+
+#### Plot
+```{r plots for functional scans E2 (aov) LO, fig.asp = .8, fig.width = 8}
+
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_aov_E2_lLO))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_LO <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E2_lLO), as.data.frame(emm_aov_E2_rLO)))
+
+
+plot_uni_E2_LO <- plot_uni(desp_uni_E2_LO, contr_aov_E2_lLO, contr_aov_E2_rLO, "LO")
+
+# ggsave('plot_uni_E2_LO.png', plot_uni_E2_LO, width = 10, height = 10)
+
+plot_uni_E2_LO
+```
+<br/>
+The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
+Note: *, _p_ < .05
+
+### Decoding
+#### One-sample t-test
+```{r one-sample for results of decode E2 LO}
+# one-sample for results of decode E2 LO
+one_decode_agg_E2_LO <- {
+  df_decode_E2_LO %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
+    group_by(Hemisphere, ClassifyPair) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E2_LO
+```
+
+#### Plot
+```{r plots for functional scans decode E2 (anova) LO, fig.asp=2, fig.width = 7}
+
+plot_decode_E2_LO <- plot_decode(one_decode_agg_E2_LO, "LO")
+
+# ggsave('plot_decode_E2_LO.png', plot_decode_E2_LO, width = 6.5, height = 16)
+
+plot_decode_E2_LO
+```
+<br/>
+The above figure shows the decoding accuracy in LO for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+Note: **, _p_ < .01; ***, _p_ <.001
+
+### Similarity of top + bottom to intact vs. exchange
+#### One-sample t-test
+```{r Similarity of top + bottom to intact vs. exchange in LO E2}
+# Similarity of top + bottom to intact vs. exchange in LO
+one_simi_E2_LO <- {
+  df_simi_E2_LO %>% 
+    group_by(Hemisphere, Combination) %>% 
+    summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
+              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              t = t.test(RateAsExchange, mu = 0.5)[[1]],
+              df = t.test(RateAsExchange, mu = 0.5)[[2]],
+              p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
+              lower.CL = t.test(RateAsExchange, mu = 0.5)[[4]][1],
+              upper.CL = t.test(RateAsExchange, mu = 0.5)[[4]][2],
+              nullValue = t.test(RateAsExchange, mu = 0.5)[[6]],
+              alternative = t.test(RateAsExchange, mu = 0.5)[[8]]
+    )
+}
+
+one_simi_E2_LO
+```
+
+#### Plot
+```{r plot Similarity of top+bottom to intact vs. exchange in LO E2, fig.asp=1, fig.width = 8}
+
+plot_simi_E2_LO <- plot_simi(one_simi_E2_LO, "LO")
+
+# ggsave('plot_simi_E2_LO.png', plot_simi_E2_LO, width = 8, height = 10)
+
+plot_simi_E2_LO
+```
+<br/>
+The above figure shows the probability of top+bottom being decoded as exchange conditions in LO. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
+
+
 
 # Versions of packages used
 ```{r versions}
