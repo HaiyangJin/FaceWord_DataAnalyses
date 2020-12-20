@@ -92,11 +92,11 @@ roi_order <- c("FFA1", "FFA2", "VWFA", "LO")
 
 label_FFA1 <- c("roi.lh.f-vs-o.ffa1.label", "roi.rh.f-vs-o.ffa1.label")
 label_FFA2 <- c("roi.lh.f-vs-o.ffa2.label", "roi.rh.f-vs-o.ffa2.label")
-label_VWFA <- "roi.lh.w-vs-o.label"
+label_VWFA <- "roi.lh.word-vs-face-object-scrambled.label"
 label_LO <- c("roi.lh.o-vs-scr.label", "roi.rh.o-vs-scr.label")
 
 # criterion of vertex number
-nVtx_size_min <- 20  # mm^2
+nVtx_size_min <- 30  # mm^2
 
 ```
 
@@ -133,7 +133,6 @@ pair_order_E1 <- c("face_intact-word_intact",
 ### Label (ROI) information
 ```{r label information E1, message=FALSE}
 df_label <- read_csv(file.path("data", "faceword_E1_Label_HJ.csv")) %>% 
-  rename(Label = LabelName) %>% 
   mutate(roi = str_remove(Label, "roi."),
          roi = str_remove(roi, ".label")) %>% 
   mutate(Subject = str_replace(SubjCode, "\\_.*", ""))
