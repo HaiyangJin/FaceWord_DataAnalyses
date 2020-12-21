@@ -948,7 +948,7 @@ df_clean_uni_E2 <- {
     separate(Condition, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
     mutate(Layout_ = factor(Layout, levels = layout_order), # convert the two IVs to factors
            Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA")),
-           Layout = fct_recode(Layout_, part1 = "top", part2 = "bottom")) %>% # rename top and bottom as part1 and part2
+           Layout = fct_recode(Layout_, partA = "top", partB = "bottom")) %>% # rename top and bottom as part1 and part2
     select(Hemisphere, Label, SessCode, FaceWord, Layout, Response) %>% 
     mutate(Subject = str_replace(SessCode, "\\_.*", "")) %>% 
     left_join(df_label_E2, by = c("Label", "Subject")) %>% 
