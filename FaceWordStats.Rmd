@@ -29,7 +29,7 @@ For each ROI, three analyses are performed:
 1. Univariate analysis (Repeated-measures ANOVA) is performed to compare the neural responses (beta values) of different conditions.
     + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, exchange, top vs. bottom); 
     + E2: 2(Chinese characters vs. English words) * 4 (intact, exchange, top vs. bottom).
-2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests].
+2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests]. Leave-one(-run)-out cross-validation is applied. No normalized or demean were used.
     + Pairs in E1: 
         + face_intact vs. word_intact;
         + face_intact vs. face_exchange;
@@ -37,11 +37,11 @@ For each ROI, three analyses are performed:
         + word_intact vs. word_exchange;
         + word_top vs. word_bottom.
     + Pairs in E2:
-        + Chinese_intact vs. English_intact;
-        + Chinese_intact vs. Chinese_exchange;
-        + Chinese_top vs. Chinese_bottom;
+        + English_intact vs. Chinese_intact;
         + English_intact vs. English_exchange;
-        + English_top vs. English_bottom.
+        + English_left vs. English_right;
+        + Chinese_intact vs. Chinese_exchange;
+        + Chinese_top vs. Chinese_bottom.
 3. Similarity of top+bottom to intact vs. exchange: The dependent variable is the probability of top+bottom was decoded as Exchange conditions. Two-tail one-sample t-tests is used to test if top+bottom is more similar to exchange relative to intact.
     + If the pattern of top+bottom is more similar to that of exchange relative to intact, the probability (of being decoded as exchange) should be *significantly larger* than the chance level (0.5).
     + If the pattern of top+bottom is more similar to that of intact relative to exchange, the probability (of being decoded as exchange) should be *significantly smaller* than the chance level (0.5).
