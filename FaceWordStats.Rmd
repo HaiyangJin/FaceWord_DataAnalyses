@@ -1818,61 +1818,58 @@ df_decoding <- rbind(mutate(one_decode_agg_E1_FFA1, Exp = "E1", ROI = "FFA1"),
 
 df_decoding$ROI <- fct_relevel(df_decoding$ROI, "LO", after = Inf)
 
-
-
   # xaxislabel <- strsplit(unique(df_0$Stimuli), "\nvs.\n")[[1]]
-
-
-
 
 ```
 
+
 ### All intact stimuli
-```{r fig.asp=.75, fig.width=4}
+```{r fig.asp=.8, fig.width=6}
 # save the df for intact English vs. intact Chinese
 df_intact <- filter(df_decoding, Layout == "intact") %>% 
   mutate(Stimuli = fct_rev(Stimuli))
 
 # intact
-plot_intact_all <- ggplot(df_intact, aes(y = mean, x = Hemisphere)) +
+plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
   geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ ROI) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
   geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, 1.1)) +
-  labs(title = "Intact stimuli", x = "Hemipshere", y = "Accuracy") +  # set the names for main, x and y axises
+  labs(title = "Intact stimuli", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   # geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
   # geom_text(data = dat_text, mapping = aes(x = c(.8, 1.2), y = y, label = label), size = 6.5, fontface = "bold") +
   theme_bw() +
-  # theme(
-  #   plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-  #   plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-  #   text = element_text(colour="black"),
-  #   axis.text = element_text(colour="black"),
-  #   axis.text.x = element_text(face = "bold", size = 16),
-  #   axis.text.y = element_text(size = 13),
-  #   axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
-  #   axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-  #   axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-  #   axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-#   # axis.text.x = element_text(angle = 45, vjust = 0.5),
-#   panel.border = element_blank(),
-#   panel.grid.minor = element_blank(),
-#   panel.grid.major = element_blank(),
-#   panel.spacing = unit(2, "lines")
-# remove the facet background color
-# strip.text = element_blank(),
-# strip.background = element_blank(),
-# strip.placement = "outside",
-# ) +
-NULL
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text = element_text(size = 15), # element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+  NULL
 
-# ggsave('plot_decode_all_intact.png', plot_intact_all, width = 8, height = 5)
+# ggsave('plot_decode_all_intact.png', plot_intact_all, width = 9, height = 7)
 
+plot_intact_all
 ```
 
 ### Intact vs. exchange
@@ -1883,9 +1880,9 @@ df_inex <- df_decoding %>%
          Layout == "Intact\nvs.\nExchange")
 df_inex$Stimuli <- fct_relevel(df_inex$Stimuli, "Chinese", after = Inf)
 
-plot_inex_all <- ggplot(df_inex, aes(y = mean, x = Hemisphere)) +
+plot_inex_all <- ggplot(df_inex, aes(y = mean, x = ROI)) +
   geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Exp + Stimuli ~ ROI) +
+  facet_grid(Exp + Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -1893,36 +1890,36 @@ plot_inex_all <- ggplot(df_inex, aes(y = mean, x = Hemisphere)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, 1.1)) +
-  labs(title = "Intact vs. Exchange", x = "Hemipshere", y = "Accuracy") +  # set the names for main, x and y axises
+  labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   # geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
   # geom_text(data = dat_text, mapping = aes(x = c(.8, 1.2), y = y, label = label), size = 6.5, fontface = "bold") +
   theme_bw() +
-  # theme(
-  #   plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-  #   plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-  #   text = element_text(colour="black"),
-  #   axis.text = element_text(colour="black"),
-  #   axis.text.x = element_text(face = "bold", size = 16),
-  #   axis.text.y = element_text(size = 13),
-  #   axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
-  #   axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-  #   axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-  #   axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-#   # axis.text.x = element_text(angle = 45, vjust = 0.5),
-#   panel.border = element_blank(),
-#   panel.grid.minor = element_blank(),
-#   panel.grid.major = element_blank(),
-#   panel.spacing = unit(2, "lines")
-# remove the facet background color
-# strip.text = element_blank(),
-# strip.background = element_blank(),
-# strip.placement = "outside",
-# ) +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text = element_text(size = 15), # element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
 NULL
 
-# ggsave('plot_decode_all_inex.png', plot_inex_all, width = 6, height = 5)
-
+# ggsave('plot_decode_all_inex.png', plot_inex_all, width = 8, height = 7)
+plot_inex_all
 ```
 
 
@@ -1935,9 +1932,9 @@ df_parts <- df_decoding %>%
          Layout != "Intact\nvs.\nExchange")
 df_parts$Stimuli <- fct_relevel(df_parts$Stimuli, "Chinese", after = Inf)
 
-plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = Hemisphere)) +
+plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = ROI)) +
   geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Exp + Stimuli ~ ROI) +
+  facet_grid(Exp + Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -1945,36 +1942,36 @@ plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = Hemisphere)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, 1.1)) +
-  labs(title = "Top vs. bottom; left vs. right", x = "Hemipshere", y = "Accuracy") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  labs(title = "Top vs. bottom; left vs. right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  # geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
   # geom_text(data = dat_text, mapping = aes(x = c(.8, 1.2), y = y, label = label), size = 6.5, fontface = "bold") +
   theme_bw() +
-  # theme(
-  #   plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-  #   plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-  #   text = element_text(colour="black"),
-  #   axis.text = element_text(colour="black"),
-  #   axis.text.x = element_text(face = "bold", size = 16),
-  #   axis.text.y = element_text(size = 13),
-  #   axis.title.x = element_text(face = "bold", size = 20, vjust = -2), # the size of the texts in plot
-  #   axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-  #   axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-  #   axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-#   # axis.text.x = element_text(angle = 45, vjust = 0.5),
-#   panel.border = element_blank(),
-#   panel.grid.minor = element_blank(),
-#   panel.grid.major = element_blank(),
-#   panel.spacing = unit(2, "lines")
-# remove the facet background color
-# strip.text = element_blank(),
-# strip.background = element_blank(),
-# strip.placement = "outside",
-# ) +
+ theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text = element_text(size = 15), # element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
 NULL
 
-# ggsave('plot_decode_all_topbottom.png', plot_topbottom_all, width = 6, height = 5)
-
+# ggsave('plot_decode_all_topbottom.pdf', plot_topbottom_all, width = 8, height = 7)
+plot_topbottom_all
 ```
 
 
