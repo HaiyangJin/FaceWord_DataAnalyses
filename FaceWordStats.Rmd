@@ -202,7 +202,7 @@ head(df_clean_uni_E1)
 
 ### Data of decoding
 ```{r load data file from cosmoMVPA E1, message=FALSE, include=showAll}
-df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_noz.csv"))
+df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_HJ.csv"))
 
 head(df_decode_E1)
 ```
@@ -226,7 +226,7 @@ df_decode_acc_E1
 
 ### Data for the Similarity of top + bottom
 ```{r Data for the Similarity of top + bottom E1, message=FALSE, include=showAll}
-df_simi <- read_csv(file.path("data", "faceword_E1_similarity_noz.csv"))
+df_simi <- read_csv(file.path("data", "faceword_E1_similarity_HJ.csv"))
 
 head(df_simi)
 ```
@@ -1037,7 +1037,7 @@ pair_order_E2 <- c("English_intact-Chinese_intact",
 ```
 
 ```{r load data file from cosmoMVPA E2, message=FALSE, include=showAll}
-df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_noz.csv"))
+df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_HJ.csv"))
 
 head(df_decode_E2)
 ```
@@ -1076,7 +1076,7 @@ simi_order_E2 <- c("English_partA0.25-English_partB0.75",
 
 
 ```{r Data for the Similarity of top + bottom E2, message=FALSE, include=showAll}
-df_simi_E2 <- read_csv(file.path("data", "faceword_E2_similarity_noz.csv"))
+df_simi_E2 <- read_csv(file.path("data", "faceword_E2_similarity_HJ.csv"))
 
 head(df_simi_E2)
 ```
@@ -1879,7 +1879,6 @@ plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
   NULL
 
 # ggsave('plot_decode_all_intact.png', plot_intact_all, width = 8, height = 8)
-
 plot_intact_all
 ```
 
@@ -2046,13 +2045,13 @@ plot_inex_E2 <- ggplot(filter(df_inex, Exp == "E2"), aes(y = mean, x = ROI)) +
   ) +
 NULL
 
-(plot_inex_lr <- ggarrange(plot_inex_E1, plot_inex_E2, ncol = 2, 
-                           labels = c("", "Intact vs. Exchange"), 
-                           label.x = -0.36,
-                           label.y = 1,
-                           font.label = list(size = 24)))
+plot_inex_lr <- ggarrange(plot_inex_E1, plot_inex_E2, ncol = 2, 
+                          labels = c("", "Intact vs. Exchange"), 
+                          label.x = -0.36,
+                          label.y = 1,
+                          font.label = list(size = 24))
 # ggsave('plot_decode_all_inex_lr.pdf', plot_inex_lr, width = 15, height = 8)
-
+plot_inex_lr
 ```
 
 
@@ -2220,13 +2219,17 @@ plot_topbottom_E2 <- ggplot(filter(df_parts, Exp == "E2"), aes(y = mean, x = ROI
   ) +
 NULL
 
-(plot_topbottom_lr <- ggarrange(plot_topbottom_E1, plot_topbottom_E2, ncol = 2, 
-                           labels = c("", "Top vs. bottom; left vs. right"), 
-                           label.x = -0.6,
-                           label.y = 1,
-                           font.label = list(size = 24)))
+plot_topbottom_lr <- ggarrange(plot_topbottom_E1, plot_topbottom_E2, ncol = 2, 
+                               labels = c("", "Top vs. bottom; left vs. right"), 
+                               label.x = -0.6,
+                               label.y = 1,
+                               font.label = list(size = 24))
 # ggsave('plot_decode_all_topbottom_lr.pdf', plot_topbottom_lr, width = 15, height = 8)
+plot_topbottom_lr
 ```
+
+## Univariate analysis
+
 
 
 # Versions of packages used
