@@ -1,7 +1,7 @@
 ---
 title: "FaceWord Project -- Data Analysis"
 author: "[Haiyang Jin](https://haiyangjin.github.io/)"
-date: "`r format(Sys.time(), '%d-%m-%Y')`"
+date: "`r format(Sys.time(), '%b %d %Y')`"
 output:
   html_document:
     df_print: paged
@@ -269,6 +269,7 @@ df_uni_E1_FFA1 %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left FFA1
+###### 4 * 2
 ```{r anova for univariate E1 FFA1 left}
 anova_E1_lFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA1, Label == label_FFA1[[1]]))
@@ -298,16 +299,37 @@ contr_aov_E1_lFFA1 <- contrast(emm_aov_E1_lFFA1, "pairwise", simple = "each", co
 contr_aov_E1_lFFA1
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E1_lFFA1_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E1_FFA1, 
-                                      Label == label_FFA1[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E1_lFFA1_22, "pes")
+anova_E1_lFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA1, 
+                                         Label == label_FFA1[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E1_lFFA1_ie, "pes")
+```
+
+```{r}
+emm_E1_lFFA1_ie <- emmeans(anova_E1_lFFA1_ie, ~ FaceWord + Layout)
+(simple_E1_lFFA1_ie <- pairs(emm_E1_lFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_lFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA1, 
+                                         Label == label_FFA1[[1]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_lFFA1_tb, "pes")
+```
+
+```{r}
+emm_E1_lFFA1_tb <- emmeans(anova_E1_lFFA1_tb, ~ FaceWord + Layout)
+(simple_E1_lFFA1_tb <- pairs(emm_E1_lFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 ##### Right FFA1
+###### 4 * 2
 ```{r anova for univariate E1 FFA1 right}
 anova_E1_rFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA1, Label == label_FFA1[[2]]))
@@ -337,19 +359,33 @@ contr_aov_E1_rFFA1 <- contrast(emm_aov_E1_rFFA1, "pairwise", simple = "each", co
 contr_aov_E1_rFFA1
 ```
 
+###### 2 * 2
 ```{r}
-anova_E1_rFFA1_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E1_rFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA1, 
                                       Label == label_FFA1[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E1_rFFA1_22, "pes")
+anova(anova_E1_rFFA1_ie, "pes")
 ```
 
 ```{r}
-emm_aov_E1_rFFA1_22 <- emmeans(anova_E1_rFFA1_22, ~ FaceWord + Layout) 
-contrast(emm_aov_E1_rFFA1_22, interaction = "pairwise")
+emm_E1_rFFA1_ie <- emmeans(anova_E1_rFFA1_ie, ~ FaceWord + Layout) 
+(simple_E1_rFFA1_ie <- pairs(emm_E1_rFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_rFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA1, 
+                                         Label == label_FFA1[[2]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_rFFA1_tb, "pes")
+```
+
+```{r}
+emm_E1_rFFA1_tb <- emmeans(anova_E1_rFFA1_tb, ~ FaceWord + Layout)
+(simple_E1_rFFA1_tb <- pairs(emm_E1_rFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
 
 #### Plot
 ```{r plots for functional scans E1 (anova) FFA1, fig.asp = .8, fig.width = 8}
@@ -361,12 +397,36 @@ desp_uni_E1_FFA1 <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E1_lFFA1), as.
 plot_uni_E1_FFA1 <- plot_uni(desp_uni_E1_FFA1, contr_aov_E1_lFFA1, contr_aov_E1_rFFA1, "FFA1")
 
 # ggsave('plot_uni_E1_FFA1.png', plot_uni_E1_FFA1, width = 10, height = 10)
-
 plot_uni_E1_FFA1
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
 Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+
+```{r plots for functional scans E1 (22 anova) FFA1 ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lFFA1_ie))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA1_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lFFA1_ie), as.data.frame(emm_E1_rFFA1_ie)))
+
+plot_uni_E1_FFA1_ie <- plot_uni(desp_uni_E1_FFA1_ie, simple_E1_lFFA1_ie, simple_E1_rFFA1_ie, "FFA1", F)
+
+# ggsave('plot_uni_E1_FFA1_ie.png', plot_uni_E1_FFA1_ie, width = 10, height = 5)
+plot_uni_E1_FFA1_ie
+```
+
+```{r plots for functional scans E1 (22 anova) FFA1 tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lFFA1_tb))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA1_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lFFA1_tb), as.data.frame(emm_E1_rFFA1_tb)))
+
+plot_uni_E1_FFA1_tb <- plot_uni(desp_uni_E1_FFA1_tb, simple_E1_lFFA1_tb, simple_E1_rFFA1_tb, "FFA1", F)
+
+# ggsave('plot_uni_E1_FFA1_tb.png', plot_uni_E1_FFA1_tb, width = 10, height = 5)
+plot_uni_E1_FFA1_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -455,6 +515,7 @@ df_uni_E1_FFA2 %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left FFA2
+###### 4 * 2
 ```{r anova for univariate E1 FFA2 left}
 anova_E1_lFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA2, Label == label_FFA2[[1]]))
@@ -484,16 +545,37 @@ contr_aov_E1_lFFA2 <- contrast(emm_aov_E1_lFFA2, "pairwise", simple = "each", co
 contr_aov_E1_lFFA2
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E1_lFFA2_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E1_FFA2, 
-                                      Label == label_FFA2[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E1_lFFA2_22, "pes")
+anova_E1_lFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA2, 
+                                         Label == label_FFA2[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E1_lFFA2_ie, "pes")
+```
+
+```{r}
+emm_E1_lFFA2_ie <- emmeans(anova_E1_lFFA2_ie, ~ FaceWord + Layout)
+(simple_E1_lFFA2_ie <- pairs(emm_E1_lFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_lFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA2, 
+                                         Label == label_FFA2[[1]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_lFFA2_tb, "pes")
+```
+
+```{r}
+emm_E1_lFFA2_tb <- emmeans(anova_E1_lFFA2_tb, ~ FaceWord + Layout)
+(simple_E1_lFFA2_tb <- pairs(emm_E1_lFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 ##### Right FFA2
+###### 4 * 2
 ```{r anova for univariate E1 FFA2 right}
 anova_E1_rFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA2, Label == label_FFA2[[2]]))
@@ -523,13 +605,32 @@ contr_aov_E1_rFFA2 <- contrast(emm_aov_E1_rFFA2, "pairwise", simple = "each", co
 contr_aov_E1_rFFA2
 ```
 
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+###### 2 * 2
 ```{r}
-anova_E1_rFFA2_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E1_rFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_FFA2, 
                                       Label == label_FFA2[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E1_rFFA2_22, "pes")
+anova(anova_E1_rFFA2_ie, "pes")
+```
+
+```{r}
+emm_E1_rFFA2_ie <- emmeans(anova_E1_rFFA2_ie, ~ FaceWord + Layout) 
+(simple_E1_rFFA2_ie <- pairs(emm_E1_rFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_rFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_FFA2, 
+                                         Label == label_FFA2[[2]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_rFFA2_tb, "pes")
+```
+
+```{r}
+emm_E1_rFFA2_tb <- emmeans(anova_E1_rFFA2_tb, ~ FaceWord + Layout)
+(simple_E1_rFFA2_tb <- pairs(emm_E1_rFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
@@ -548,6 +649,30 @@ plot_uni_E1_FFA2
 <br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+```{r plots for functional scans E1 (22 anova) FFA2 ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lFFA2_ie))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA2_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lFFA2_ie), as.data.frame(emm_E1_rFFA2_ie)))
+
+plot_uni_E1_FFA2_ie <- plot_uni(desp_uni_E1_FFA2_ie, simple_E1_lFFA2_ie, simple_E1_rFFA2_ie, "FFA2", F)
+
+# ggsave('plot_uni_E1_FFA2_ie.png', plot_uni_E1_FFA2_ie, width = 10, height = 5)
+plot_uni_E1_FFA2_ie
+```
+
+```{r plots for functional scans E1 (22 anova) FFA2 tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lFFA2_tb))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_FFA2_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lFFA2_tb), as.data.frame(emm_E1_rFFA2_tb)))
+
+plot_uni_E1_FFA2_tb <- plot_uni(desp_uni_E1_FFA2_tb, simple_E1_lFFA2_tb, simple_E1_rFFA2_tb, "FFA2", F)
+
+# ggsave('plot_uni_E1_FFA2_tb.png', plot_uni_E1_FFA2_tb, width = 10, height = 5)
+plot_uni_E1_FFA2_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -636,6 +761,7 @@ df_uni_E1_VWFA %>%
 
 ### Univariate analyses
 #### rm-ANOVA 
+###### 4 * 2
 ```{r anova for univariate E1 VWFA left}
 anova_E1_VWFA <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E1_VWFA, Label == label_VWFA))
@@ -665,33 +791,71 @@ contr_aov_E1_VWFA <- contrast(emm_aov_E1_VWFA, "pairwise", simple = "each", comb
 contr_aov_E1_VWFA
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E1_VWFA_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E1_VWFA, 
-                                      Label == label_VWFA[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E1_VWFA_22, "pes")
+anova_E1_VWFA_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_VWFA, 
+                                         Label == label_VWFA[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E1_VWFA_ie, "pes")
+```
+
+```{r}
+emm_E1_VWFA_ie <- emmeans(anova_E1_VWFA_ie, ~ FaceWord + Layout)
+(simple_E1_VWFA_ie <- pairs(emm_E1_VWFA_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_VWFA_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_VWFA, 
+                                         Label == label_VWFA[[1]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_VWFA_tb, "pes")
+```
+
+```{r}
+emm_E1_VWFA_tb <- emmeans(anova_E1_VWFA_tb, ~ FaceWord + Layout)
+(simple_E1_VWFA_tb <- pairs(emm_E1_VWFA_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
 ```{r plots for functional scans E1 (anova) VWFA, fig.asp = 1, fig.width = 6}
-
-
 nRow_E1 <-nrow(as.data.frame(emm_aov_E1_VWFA))
 Hemisphere <- c(rep("left", nRow_E1))
 desp_uni_E1_VWFA <- cbind(Hemisphere, as.data.frame(emm_aov_E1_VWFA))
 
-
 plot_uni_E1_VWFA <- plot_uni_vwfa(desp_uni_E1_VWFA, contr_aov_E1_VWFA, "VWFA")
 
 # ggsave('plot_uni_E1_VWFA.png', plot_uni_E1_VWFA, width = 5.5, height = 10)
-
 plot_uni_E1_VWFA
 ```
 <br/>
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: *, _p_ < .05
+
+```{r plots for functional scans E1 (anova) VWFA ie, fig.asp = .5, fig.width = 6}
+nRow_E1 <-nrow(as.data.frame(emm_E1_VWFA_ie))
+Hemisphere <- c(rep("left", nRow_E1))
+desp_uni_E1_VWFA_ie <- cbind(Hemisphere, as.data.frame(emm_E1_VWFA_ie))
+
+plot_uni_E1_VWFA_ie <- plot_uni_vwfa(desp_uni_E1_VWFA_ie, simple_E1_VWFA_ie, "VWFA", FALSE)
+
+# ggsave('plot_uni_E1_VWFA_ie.png', plot_uni_E1_VWFA_ie, width = 5.5, height = 10)
+plot_uni_E1_VWFA_ie
+```
+
+```{r plots for functional scans E1 (anova) VWFA tb, fig.asp = .5, fig.width = 6}
+nRow_E1 <-nrow(as.data.frame(emm_E1_VWFA_tb))
+Hemisphere <- c(rep("left", nRow_E1))
+desp_uni_E1_VWFA_tb <- cbind(Hemisphere, as.data.frame(emm_E1_VWFA_tb))
+
+plot_uni_E1_VWFA_tb <- plot_uni_vwfa(desp_uni_E1_VWFA_tb, simple_E1_VWFA_tb, "VWFA", FALSE)
+
+# ggsave('plot_uni_E1_VWFA_tb.png', plot_uni_E1_VWFA_tb, width = 5.5, height = 10)
+plot_uni_E1_VWFA_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -780,6 +944,7 @@ df_uni_E1_LO %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left LO
+###### 4 * 2
 ```{r anova for univariate E1 LO left}
 anova_E1_lLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E1_LO, Label == label_LO[[1]]))
@@ -809,16 +974,37 @@ contr_aov_E1_lLO <- contrast(emm_aov_E1_lLO, "pairwise", simple = "each", combin
 contr_aov_E1_lLO
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E1_lLO_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E1_LO, 
-                                      Label == label_LO[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E1_lLO_22, "pes")
+anova_E1_lLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_LO, 
+                                         Label == label_LO[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E1_lLO_ie, "pes")
+```
+
+```{r}
+emm_E1_lLO_ie <- emmeans(anova_E1_lLO_ie, ~ FaceWord + Layout)
+(simple_E1_lLO_ie <- pairs(emm_E1_lLO_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_lLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_LO, 
+                                         Label == label_LO[[1]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_lLO_tb, "pes")
+```
+
+```{r}
+emm_E1_lLO_tb <- emmeans(anova_E1_lLO_tb, ~ FaceWord + Layout)
+(simple_E1_lLO_tb <- pairs(emm_E1_lLO_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 ##### Right LO
+###### 4 * 2
 ```{r aov for univariate E1 LO right}
 aov_E1_rLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E1_LO, Label == label_LO[[2]]))
@@ -848,13 +1034,33 @@ contr_aov_E1_rLO <- contrast(emm_aov_E1_rLO, "pairwise", simple = "each", combin
 contr_aov_E1_rLO
 ```
 
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+###### 2 * 2
 ```{r}
-anova_E1_rLO_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E1_rLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E1_LO, 
                                       Label == label_LO[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E1_rLO_22, "pes")
+anova(anova_E1_rLO_ie, "pes")
+```
+
+```{r}
+emm_E1_rLO_ie <- emmeans(anova_E1_rLO_ie, ~ FaceWord + Layout) 
+(simple_E1_rLO_ie <- pairs(emm_E1_rLO_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E1_rLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E1_LO, 
+                                         Label == label_LO[[2]],
+                                         Layout %in% c("top", "bottom")))
+anova(anova_E1_rLO_tb, "pes")
+```
+
+```{r}
+emm_E1_rLO_tb <- emmeans(anova_E1_rLO_tb, ~ FaceWord + Layout)
+(simple_E1_rLO_tb <- pairs(emm_E1_rLO_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
@@ -875,6 +1081,30 @@ plot_uni_E1_LO
 <br/>
 The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: *, _p_ < .05
+
+```{r plots for functional scans E1 (22 anova) LO ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lLO_ie))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_LO_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lLO_ie), as.data.frame(emm_E1_rLO_ie)))
+
+plot_uni_E1_LO_ie <- plot_uni(desp_uni_E1_LO_ie, simple_E1_lLO_ie, simple_E1_rLO_ie, "LO", F)
+
+# ggsave('plot_uni_E1_LO_ie.png', plot_uni_E1_LO_ie, width = 10, height = 5)
+plot_uni_E1_LO_ie
+```
+
+```{r plots for functional scans E1 (22 anova) LO tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E1 <-nrow(as.data.frame(emm_E1_lLO_tb))
+Hemisphere <- c(rep("left", nRow_E1), rep("right", nRow_E1))
+desp_uni_E1_LO_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E1_lLO_tb), as.data.frame(emm_E1_rLO_tb)))
+
+plot_uni_E1_LO_tb <- plot_uni(desp_uni_E1_LO_tb, simple_E1_lLO_tb, simple_E1_rLO_tb, "LO", F)
+
+# ggsave('plot_uni_E1_LO_tb.png', plot_uni_E1_LO_tb, width = 10, height = 5)
+plot_uni_E1_LO_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -1122,6 +1352,7 @@ df_uni_E2_FFA1 %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left FFA1
+###### 4 * 2
 ```{r anova for univariate E2 FFA1 left}
 anova_E2_lFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA1, Label == label_FFA1[[1]]))
@@ -1151,16 +1382,37 @@ contr_aov_E2_lFFA1 <- contrast(emm_aov_E2_lFFA1, "pairwise", simple = "each", co
 contr_aov_E2_lFFA1
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E2_lFFA1_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E2_FFA1, 
-                                      Label == label_FFA1[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E2_lFFA1_22, "pes")
+anova_E2_lFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA1, 
+                                         Label == label_FFA1[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E2_lFFA1_ie, "pes")
+```
+
+```{r}
+emm_E2_lFFA1_ie <- emmeans(anova_E2_lFFA1_ie, ~ FaceWord + Layout)
+(simple_E2_lFFA1_ie <- pairs(emm_E2_lFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_lFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA1, 
+                                         Label == label_FFA1[[1]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_lFFA1_tb, "pes")
+```
+
+```{r}
+emm_E2_lFFA1_tb <- emmeans(anova_E2_lFFA1_tb, ~ FaceWord + Layout)
+(simple_E2_lFFA1_tb <- pairs(emm_E2_lFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 ##### Right FFA1
+###### 4 * 2
 ```{r anova for univariate E2 FFA1 right}
 anova_E2_rFFA1 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA1, Label == label_FFA1[[2]]))
@@ -1190,13 +1442,32 @@ contr_aov_E2_rFFA1 <- contrast(emm_aov_E2_rFFA1, "pairwise", simple = "each", co
 contr_aov_E2_rFFA1
 ```
 
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+###### 2 * 2
 ```{r}
-anova_E2_rFFA1_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E2_rFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA1, 
                                       Label == label_FFA1[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E2_rFFA1_22, "pes")
+anova(anova_E2_rFFA1_ie, "pes")
+```
+
+```{r}
+emm_E2_rFFA1_ie <- emmeans(anova_E2_rFFA1_ie, ~ FaceWord + Layout) 
+(simple_E2_rFFA1_ie <- pairs(emm_E2_rFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_rFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA1, 
+                                         Label == label_FFA1[[2]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_rFFA1_tb, "pes")
+```
+
+```{r}
+emm_E2_rFFA1_tb <- emmeans(anova_E2_rFFA1_tb, ~ FaceWord + Layout)
+(simple_E2_rFFA1_tb <- pairs(emm_E2_rFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
@@ -1215,6 +1486,30 @@ plot_uni_E2_FFA1
 <br/>
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
 Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+```{r plots for functional scans E2 (22 anova) FFA1 ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lFFA1_ie))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA1_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lFFA1_ie), as.data.frame(emm_E2_rFFA1_ie)))
+
+plot_uni_E2_FFA1_ie <- plot_uni(desp_uni_E2_FFA1_ie, simple_E2_lFFA1_ie, simple_E2_rFFA1_ie, "FFA1", F)
+
+# ggsave('plot_uni_E2_FFA1_ie.png', plot_uni_E2_FFA1_ie, width = 10, height = 5)
+plot_uni_E2_FFA1_ie
+```
+
+```{r plots for functional scans E2 (22 anova) FFA1 tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lFFA1_tb))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA1_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lFFA1_tb), as.data.frame(emm_E2_rFFA1_tb)))
+
+plot_uni_E2_FFA1_tb <- plot_uni(desp_uni_E2_FFA1_tb, simple_E2_lFFA1_tb, simple_E2_rFFA1_tb, "FFA1", F, T)
+
+# ggsave('plot_uni_E2_FFA1_tb.png', plot_uni_E2_FFA1_tb, width = 10, height = 5)
+plot_uni_E2_FFA1_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -1245,7 +1540,6 @@ one_decode_agg_E2_FFA1
 plot_decode_E2_FFA1 <- plot_decode(one_decode_agg_E2_FFA1, "FFA1")
 
 # ggsave('plot_decode_E2_FFA1.png', plot_decode_E2_FFA1, width = 6.5, height = 16)
-
 plot_decode_E2_FFA1
 ```
 <br/>
@@ -1272,15 +1566,12 @@ one_simi_E2_FFA1 <- {
 }
 
 one_simi_E2_FFA1
-
 ```
 
 #### Plot
 ```{r plot Similarity of top+bottom to intact vs. exchange in FFA1 E2, fig.asp=1, fig.width = 8}
-
 plot_simi_E2_FFA1 <- plot_simi(one_simi_E2_FFA1, "FFA1")
 # ggsave('plot_simi_E2_FFA1.png', plot_simi_E2_FFA1, width = 8, height = 10)
-
 plot_simi_E2_FFA1
 ```
 <br/>
@@ -1303,6 +1594,7 @@ df_uni_E2_FFA2 %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left FFA2
+###### 4 * 2
 ```{r anova for univariate E2 FFA2 left}
 anova_E2_lFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA2, Label == label_FFA2[[1]]))
@@ -1332,16 +1624,38 @@ contr_aov_E2_lFFA2 <- contrast(emm_aov_E2_lFFA2, "pairwise", simple = "each", co
 contr_aov_E2_lFFA2
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E2_lFFA2_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E2_FFA2, 
-                                      Label == label_FFA2[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E2_lFFA2_22, "pes")
+anova_E2_lFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA2, 
+                                         Label == label_FFA2[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E2_lFFA2_ie, "pes")
 ```
 
+```{r}
+emm_E2_lFFA2_ie <- emmeans(anova_E2_lFFA2_ie, ~ FaceWord + Layout)
+(simple_E2_lFFA2_ie <- pairs(emm_E2_lFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_lFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA2, 
+                                         Label == label_FFA2[[1]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_lFFA2_tb, "pes")
+```
+
+```{r}
+emm_E2_lFFA2_tb <- emmeans(anova_E2_lFFA2_tb, ~ FaceWord + Layout)
+(simple_E2_lFFA2_tb <- pairs(emm_E2_lFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+
 ##### Right FFA2
+###### 4 * 2
 ```{r anova for univariate E2 FFA2 right}
 anova_E2_rFFA2 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA2, Label == label_FFA2[[2]]))
@@ -1371,15 +1685,33 @@ contr_aov_E2_rFFA2 <- contrast(emm_aov_E2_rFFA2, "pairwise", simple = "each", co
 contr_aov_E2_rFFA2
 ```
 
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+###### 2 * 2
 ```{r}
-anova_E2_rFFA2_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E2_rFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_FFA2, 
                                       Label == label_FFA2[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E2_rFFA2_22, "pes")
+anova(anova_E2_rFFA2_ie, "pes")
 ```
 
+```{r}
+emm_E2_rFFA2_ie <- emmeans(anova_E2_rFFA2_ie, ~ FaceWord + Layout) 
+(simple_E2_rFFA2_ie <- pairs(emm_E2_rFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_rFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_FFA2, 
+                                         Label == label_FFA2[[2]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_rFFA2_tb, "pes")
+```
+
+```{r}
+emm_E2_rFFA2_tb <- emmeans(anova_E2_rFFA2_tb, ~ FaceWord + Layout)
+(simple_E2_rFFA2_tb <- pairs(emm_E2_rFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
 
 #### Plot
 ```{r plots for functional scans E2 (anova) FFA2, fig.asp = .8, fig.width = 8}
@@ -1397,6 +1729,30 @@ plot_uni_E2_FFA2
 <br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+
+```{r plots for functional scans E2 (22 anova) FFA2 ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lFFA2_ie))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA2_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lFFA2_ie), as.data.frame(emm_E2_rFFA2_ie)))
+
+plot_uni_E2_FFA2_ie <- plot_uni(desp_uni_E2_FFA2_ie, simple_E2_lFFA2_ie, simple_E2_rFFA2_ie, "FFA2", F)
+
+# ggsave('plot_uni_E2_FFA2_ie.png', plot_uni_E2_FFA2_ie, width = 10, height = 5)
+plot_uni_E2_FFA2_ie
+```
+
+```{r plots for functional scans E2 (22 anova) FFA2 tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lFFA2_tb))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_FFA2_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lFFA2_tb), as.data.frame(emm_E2_rFFA2_tb)))
+
+plot_uni_E2_FFA2_tb <- plot_uni(desp_uni_E2_FFA2_tb, simple_E2_lFFA2_tb, simple_E2_rFFA2_tb, "FFA2", F, T)
+
+# ggsave('plot_uni_E2_FFA2_tb.png', plot_uni_E2_FFA2_tb, width = 10, height = 5)
+plot_uni_E2_FFA2_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -1485,6 +1841,7 @@ df_uni_E2_VWFA %>%
 
 ### Univariate analyses
 #### rm-ANOVA 
+###### 4 * 2
 ```{r anova for univariate E2 VWFA left}
 anova_E2_VWFA <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E2_VWFA, Label == label_VWFA))
@@ -1514,13 +1871,33 @@ contr_aov_E2_VWFA <- contrast(emm_aov_E2_VWFA, "pairwise", simple = "each", comb
 contr_aov_E2_VWFA
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E2_VWFA_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E2_VWFA, 
-                                      Label == label_VWFA[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E2_VWFA_22, "pes")
+anova_E2_VWFA_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_VWFA, 
+                                         Label == label_VWFA[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E2_VWFA_ie, "pes")
+```
+
+```{r}
+emm_E2_VWFA_ie <- emmeans(anova_E2_VWFA_ie, ~ FaceWord + Layout)
+(simple_E2_VWFA_ie <- pairs(emm_E2_VWFA_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_VWFA_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_VWFA, 
+                                         Label == label_VWFA[[1]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_VWFA_tb, "pes")
+```
+
+```{r}
+emm_E2_VWFA_tb <- emmeans(anova_E2_VWFA_tb, ~ FaceWord + Layout)
+(simple_E2_VWFA_tb <- pairs(emm_E2_VWFA_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
@@ -1541,6 +1918,28 @@ plot_uni_E2_VWFA
 <br/>
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: *, _p_ < .05
+
+```{r plots for functional scans E2 (anova) VWFA ie, fig.asp = .5, fig.width = 6}
+nRow_E2 <-nrow(as.data.frame(emm_E2_VWFA_ie))
+Hemisphere <- c(rep("left", nRow_E2))
+desp_uni_E2_VWFA_ie <- cbind(Hemisphere, as.data.frame(emm_E2_VWFA_ie))
+
+plot_uni_E2_VWFA_ie <- plot_uni_vwfa(desp_uni_E2_VWFA_ie, simple_E2_VWFA_tb, "VWFA", FALSE)
+
+# ggsave('plot_uni_E2_VWFA_ie.png', plot_uni_E2_VWFA_ie, width = 5.5, height = 10)
+plot_uni_E2_VWFA_ie
+```
+
+```{r plots for functional scans E2 (anova) VWFA tb, fig.asp = .5, fig.width = 6}
+nRow_E2 <-nrow(as.data.frame(emm_E2_VWFA_tb))
+Hemisphere <- c(rep("left", nRow_E2))
+desp_uni_E2_VWFA_tb <- cbind(Hemisphere, as.data.frame(emm_E2_VWFA_tb))
+
+plot_uni_E2_VWFA_tb <- plot_uni_vwfa(desp_uni_E2_VWFA_tb, simple_E2_VWFA_tb, "VWFA", FALSE, T)
+
+# ggsave('plot_uni_E2_VWFA_tb.png', plot_uni_E2_VWFA_tb, width = 5.5, height = 10)
+plot_uni_E2_VWFA_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -1627,6 +2026,7 @@ df_uni_E2_LO %>%
 ### Univariate analyses
 #### rm-ANOVA 
 ##### Left LO
+###### 4 * 2
 ```{r anova for univariate E2 LO left}
 anova_E2_lLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E2_LO, Label == label_LO[[1]]))
@@ -1656,16 +2056,37 @@ contr_aov_E2_lLO <- contrast(emm_aov_E2_lLO, "pairwise", simple = "each", combin
 contr_aov_E2_lLO
 ```
 
+###### 2 * 2
 2(face vs. word)$\times$2(intact vs. exchange) ANOVA
 ```{r}
-anova_E2_lLO_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
-                        data = filter(df_uni_E2_LO, 
-                                      Label == label_LO[[1]],
-                                      Layout %in% c("intact", "exchange")))
-anova(anova_E2_lLO_22, "pes")
+anova_E2_lLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_LO, 
+                                         Label == label_LO[[1]],
+                                         Layout %in% c("intact", "exchange")))
+anova(anova_E2_lLO_ie, "pes")
+```
+
+```{r}
+emm_E2_lLO_ie <- emmeans(anova_E2_lLO_ie, ~ FaceWord + Layout)
+(simple_E2_lLO_ie <- pairs(emm_E2_lLO_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_lLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_LO, 
+                                         Label == label_LO[[1]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_lLO_tb, "pes")
+```
+
+```{r}
+emm_E2_lLO_tb <- emmeans(anova_E2_lLO_tb, ~ FaceWord + Layout)
+(simple_E2_lLO_tb <- pairs(emm_E2_lLO_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 ##### Right LO
+###### 4 * 2
 ```{r aov for univariate E2 LO right}
 aov_E2_rLO <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                        data = filter(df_uni_E2_LO, Label == label_LO[[2]]))
@@ -1695,13 +2116,33 @@ contr_aov_E2_rLO <- contrast(emm_aov_E2_rLO, "pairwise", simple = "each", combin
 contr_aov_E2_rLO
 ```
 
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+###### 2 * 2
 ```{r}
-anova_E2_rLO_22 <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+anova_E2_rLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                         data = filter(df_uni_E2_LO, 
                                       Label == label_LO[[2]],
                                       Layout %in% c("intact", "exchange")))
-anova(anova_E2_rLO_22, "pes")
+anova(anova_E2_rLO_ie, "pes")
+```
+
+```{r}
+emm_E2_rLO_ie <- emmeans(anova_E2_rLO_ie, ~ FaceWord + Layout) 
+(simple_E2_rLO_ie <- pairs(emm_E2_rLO_ie, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+
+2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+anova_E2_rLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
+                           data = filter(df_uni_E2_LO, 
+                                         Label == label_LO[[2]],
+                                         Layout %in% c("partA", "partB")))
+anova(anova_E2_rLO_tb, "pes")
+```
+
+```{r}
+emm_E2_rLO_tb <- emmeans(anova_E2_rLO_tb, ~ FaceWord + Layout)
+(simple_E2_rLO_tb <- pairs(emm_E2_rLO_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
 #### Plot
@@ -1712,7 +2153,6 @@ nRow_E2 <-nrow(as.data.frame(emm_aov_E2_lLO))
 Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
 desp_uni_E2_LO <- cbind(Hemisphere, rbind(as.data.frame(emm_aov_E2_lLO), as.data.frame(emm_aov_E2_rLO)))
 
-
 plot_uni_E2_LO <- plot_uni(desp_uni_E2_LO, contr_aov_E2_lLO, contr_aov_E2_rLO, "LO")
 
 # ggsave('plot_uni_E2_LO.png', plot_uni_E2_LO, width = 10, height = 10)
@@ -1722,6 +2162,30 @@ plot_uni_E2_LO
 <br/>
 The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
 Note: *, _p_ < .05
+
+```{r plots for functional scans E2 (22 anova) LO ie, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lLO_ie))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_LO_ie <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lLO_ie), as.data.frame(emm_E2_rLO_ie)))
+
+plot_uni_E2_LO_ie <- plot_uni(desp_uni_E2_LO_ie, simple_E2_lLO_ie, simple_E2_rLO_ie, "LO", F)
+
+# ggsave('plot_uni_E2_LO_ie.png', plot_uni_E2_LO_ie, width = 10, height = 5)
+plot_uni_E2_LO_ie
+```
+
+```{r plots for functional scans E2 (22 anova) LO tb, fig.asp =.4, fig.width = 8}
+# add the column of Hemisphere
+nRow_E2 <-nrow(as.data.frame(emm_E2_lLO_tb))
+Hemisphere <- c(rep("left", nRow_E2), rep("right", nRow_E2))
+desp_uni_E2_LO_tb <- cbind(Hemisphere, rbind(as.data.frame(emm_E2_lLO_tb), as.data.frame(emm_E2_rLO_tb)))
+
+plot_uni_E2_LO_tb <- plot_uni(desp_uni_E2_LO_tb, simple_E2_lLO_tb, simple_E2_rLO_tb, "LO", F, T)
+
+# ggsave('plot_uni_E2_LO_tb.png', plot_uni_E2_LO_tb, width = 10, height = 5)
+plot_uni_E2_LO_tb
+```
 
 ### Decoding
 #### One-sample t-test
@@ -1793,7 +2257,6 @@ plot_simi_E2_LO
 <br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in LO. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
-
 # Plots
 ## Decoding
 ```{r warning=FALSE}
@@ -1817,11 +2280,9 @@ df_decoding <- rbind(mutate(one_decode_agg_E1_FFA1, Exp = "E1", ROI = "FFA1"),
   select(-c(Stimuli1, Stimuli2, Layout1, Layout2))
 
 # df_decoding$ROI <- fct_relevel(df_decoding$ROI, "LO", after = Inf)
-
-  # xaxislabel <- strsplit(unique(df_0$Stimuli), "\nvs.\n")[[1]]
+# xaxislabel <- strsplit(unique(df_0$Stimuli), "\nvs.\n")[[1]]
 
 ```
-
 
 ### All intact stimuli
 ```{r fig.width=6, fig.asp=1}
@@ -2056,7 +2517,6 @@ plot_inex_lr
 
 
 ### Top vs. bottom
-
 ```{r fig.width=6, fig.asp=2}
 df_parts <- df_decoding %>% 
   filter(str_detect(Stimuli, "vs.", negate = TRUE),
@@ -2230,7 +2690,562 @@ plot_topbottom_lr
 
 ## Univariate analysis
 
+### Intact vs. exchange
 
+```{r}
+df_uni_ie <- rbind(mutate(desp_uni_E1_FFA1_ie, Exp = "E1", ROI = "FFA1"),
+                   mutate(desp_uni_E1_FFA2_ie, Exp = "E1", ROI = "FFA2"),
+                   mutate(desp_uni_E1_VWFA_ie, Exp = "E1", ROI = "VWFA"),
+                   mutate(desp_uni_E1_LO_ie, Exp = "E1", ROI = "LO"),
+                   mutate(desp_uni_E2_FFA1_ie, Exp = "E2", ROI = "FFA1"),
+                   mutate(desp_uni_E2_FFA2_ie, Exp = "E2", ROI = "FFA2"),
+                   mutate(desp_uni_E2_VWFA_ie, Exp = "E2", ROI = "VWFA"),
+                   mutate(desp_uni_E2_LO_ie, Exp = "E2", ROI = "LO")) %>% 
+  mutate(Stimuli = FaceWord,
+         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI))
+
+df_uni_ie_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_ie), Exp = "E1", ROI = "FFA1", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_lFFA2_ie), Exp = "E1", ROI = "FFA2", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_VWFA_ie), Exp = "E1", ROI = "VWFA", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_lLO_ie), Exp = "E1", ROI = "LO", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lFFA1_ie), Exp = "E2", ROI = "FFA1", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lFFA2_ie), Exp = "E2", ROI = "FFA2", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_VWFA_ie), Exp = "E2", ROI = "VWFA", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lLO_ie), Exp = "E2", ROI = "LO", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_rFFA1_ie), Exp = "E1", ROI = "FFA1", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E1_rFFA2_ie), Exp = "E1", ROI = "FFA2", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E1_rLO_ie), Exp = "E1", ROI = "LO", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rFFA1_ie), Exp = "E2", ROI = "FFA1", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rFFA2_ie), Exp = "E2", ROI = "FFA2", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rLO_ie), Exp = "E2", ROI = "LO", Hemisphere = "right")) %>% 
+  filter(FaceWord != ".") %>% 
+  mutate(Stimuli = FaceWord,
+         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI),
+         Layout = "intact") %>% 
+  select(Exp, Layout, Stimuli, HemiROI, p.value) 
+
+df_uni_ie <- left_join(df_uni_ie, df_uni_ie_sig) %>% 
+  mutate(p.value = if_else(is.na(p.value), 1, p.value),
+         Stimuli = as_factor(Stimuli)) 
+
+df_uni_ie$Layout <- fct_relevel(df_uni_ie$Layout, "exchange", after = Inf)
+
+```
+
+```{r fig.width=6, fig.asp=2}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+dat_text_inex_all <- data.frame(
+  Stimuli = levels(df_uni_ie$Stimuli),
+  HemiROI = c("lFFA1"),
+  label = levels(df_uni_ie$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2),
+  y     = 2.4
+)
+
+plot_uni_inex_all <- ggplot(df_uni_ie, aes(y = emmean, x = Layout)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ HemiROI, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+plot_uni_inex_all
+```
+
+```{r fig.width=6, fig.asp=2}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+dat_text_inex_all_ <- data.frame(
+  Stimuli = levels(df_uni_ie$Stimuli),
+  Hemisphere = "left",
+  Layout = "intact",
+  label = levels(df_uni_ie$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2)-0.3,
+  y     = 2.4
+)
+
+plot_uni_inex_all_ <- ggplot(df_uni_ie, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#C0C0C0", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    # axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+plot_uni_inex_all_
+```
+
+```{r fig.width=8, fig.asp=.75}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+df_uni_ie_1 <- filter(df_uni_ie, Stimuli %in% c("faces", "words")) %>% 
+  droplevels()
+
+dat_text_inex_all_lr1 <- data.frame(
+  Stimuli = levels(df_uni_ie_1$Stimuli),
+  Hemisphere = "left",
+  Layout = "intact",
+  label = levels(df_uni_ie_1$Stimuli),
+  x     = c(1, 1.1),
+  y     = 2.4
+)
+
+plot_uni_inex_all_lr1 <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 18), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+df_uni_ie_2 <- filter(df_uni_ie, Stimuli %in% c("English", "Chinese")) %>% 
+  droplevels()
+
+dat_text_inex_all_lr2 <- data.frame(
+  Stimuli = levels(df_uni_ie_2$Stimuli),
+  Hemisphere = "left",
+  Layout = "intact",
+  label = levels(df_uni_ie_2$Stimuli),
+  x     = c(1.1, 1.2),
+  y     = 2.4
+)
+
+plot_uni_inex_all_lr2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 18), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+plot_uni_ie_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol = 2, 
+                              labels = c("", "Intact vs. Exchange"), 
+                              label.x = -0.36,
+                              label.y = 1,
+                              font.label = list(size = 24))
+
+# ggsave('plot_uni_all_ie_lr.png', plot_uni_ie_lr, width = 15, height = 9)
+plot_uni_ie_lr
+```
+
+
+### Top vs. bottom
+```{r}
+df_uni_tb <- rbind(mutate(desp_uni_E1_FFA1_tb, Exp = "E1", ROI = "FFA1"),
+                   mutate(desp_uni_E1_FFA2_tb, Exp = "E1", ROI = "FFA2"),
+                   mutate(desp_uni_E1_VWFA_tb, Exp = "E1", ROI = "VWFA"),
+                   mutate(desp_uni_E1_LO_tb, Exp = "E1", ROI = "LO"),
+                   mutate(desp_uni_E2_FFA1_tb, Exp = "E2", ROI = "FFA1"),
+                   mutate(desp_uni_E2_FFA2_tb, Exp = "E2", ROI = "FFA2"),
+                   mutate(desp_uni_E2_VWFA_tb, Exp = "E2", ROI = "VWFA"),
+                   mutate(desp_uni_E2_LO_tb, Exp = "E2", ROI = "LO")) %>% 
+  mutate(Stimuli = FaceWord,
+         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI))
+
+df_uni_tb_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_tb), Exp = "E1", ROI = "FFA1", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_lFFA2_tb), Exp = "E1", ROI = "FFA2", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_VWFA_tb), Exp = "E1", ROI = "VWFA", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_lLO_tb), Exp = "E1", ROI = "LO", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lFFA1_tb), Exp = "E2", ROI = "FFA1", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lFFA2_tb), Exp = "E2", ROI = "FFA2", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_VWFA_tb), Exp = "E2", ROI = "VWFA", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E2_lLO_tb), Exp = "E2", ROI = "LO", Hemisphere = "left"),
+                       mutate(as_tibble(simple_E1_rFFA1_tb), Exp = "E1", ROI = "FFA1", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E1_rFFA2_tb), Exp = "E1", ROI = "FFA2", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E1_rLO_tb), Exp = "E1", ROI = "LO", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rFFA1_tb), Exp = "E2", ROI = "FFA1", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rFFA2_tb), Exp = "E2", ROI = "FFA2", Hemisphere = "right"),
+                       mutate(as_tibble(simple_E2_rLO_tb), Exp = "E2", ROI = "LO", Hemisphere = "right")) %>% 
+  filter(FaceWord != ".") %>% 
+  mutate(Stimuli = FaceWord,
+         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI),
+         Layout = case_when(Exp == "E1" ~ "top",
+                            Exp == "E2" ~ "partA")) %>% 
+  select(Exp, Layout, Stimuli, HemiROI, p.value) 
+
+df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>% 
+  mutate(p.value = if_else(is.na(p.value), 1, p.value),
+         Stimuli = as_factor(Stimuli)) 
+
+# df_uni_tb$Layout <- fct_relevel(df_uni_tb$Layout, "exchange", after = Inf)
+
+```
+
+```{r fig.width=6, fig.asp=2}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+dat_text_inex_all <- data.frame(
+  Stimuli = levels(df_uni_tb$Stimuli),
+  HemiROI = c("lFFA1"),
+  label = levels(df_uni_tb$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2),
+  y     = 2.4
+)
+
+df_uni_tb_all <- df_uni_tb %>% 
+  mutate(Layout = case_when(Layout %in% c("top", "partA") ~ "partA",
+                            Layout %in% c("bottom", "partB") ~ "partB"))
+
+plot_uni_inex_all <- ggplot(df_uni_tb_all, aes(y = emmean, x = Layout)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ HemiROI, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "Top vs. Bottom; Left vs. Right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+plot_uni_inex_all
+```
+
+```{r fig.width=6, fig.asp=2}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+dat_text_inex_all_ <- data.frame(
+  Stimuli = levels(df_uni_tb$Stimuli),
+  Hemisphere = "left",
+  Layout = "partA",
+  label = levels(df_uni_tb$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2)-0.3,
+  y     = 2.4
+)
+
+plot_uni_inex_all_ <- ggplot(df_uni_tb_all, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#C0C0C0", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "Top vs. Bottom; Left vs. Right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    # axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+plot_uni_inex_all_
+```
+
+```{r fig.width=8, fig.asp=.75}
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
+# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+
+df_uni_tb_1 <- filter(df_uni_tb_all, Stimuli %in% c("faces", "words")) %>% 
+  droplevels()
+
+dat_text_inex_all_lr1 <- data.frame(
+  Stimuli = levels(df_uni_tb_1$Stimuli),
+  Hemisphere = "left",
+  Layout = "partA",
+  label = levels(df_uni_tb_1$Stimuli),
+  x     = c(1, 1.1),
+  y     = 2.4
+)
+
+plot_uni_inex_all_lr1 <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 18), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+df_uni_tb_2 <- filter(df_uni_tb_all, Stimuli %in% c("English", "Chinese")) %>% 
+  droplevels()
+
+dat_text_inex_all_lr2 <- data.frame(
+  Stimuli = levels(df_uni_tb_2$Stimuli),
+  Hemisphere = "left",
+  Layout = "partA",
+  label = levels(df_uni_tb_2$Stimuli),
+  x     = c(1.1, 1.2),
+  y     = 2.4
+)
+
+plot_uni_inex_all_lr2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = Layout)) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) +
+  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 18),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 18),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 18), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+plot_uni_tb_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol = 2, 
+                              labels = c("", "Top vs. Bottom; Left vs. Right"), 
+                              label.x = -0.6,
+                              label.y = 1,
+                              font.label = list(size = 24))
+
+# ggsave('plot_uni_all_tb_lr.png', plot_uni_tb_lr, width = 15, height = 9)
+plot_uni_tb_lr
+```
 
 # Versions of packages used
 ```{r versions}

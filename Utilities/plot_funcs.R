@@ -1,37 +1,55 @@
 
 # function to plot results in FaceWord project
-plot_uni <- function(df, contrL, contrR, roi){
-  
-  # significance 
-  nCon = 16
-  nGroup = 4
-  sig_uni <- rep(1, nCon)
-  sig_uni[seq(1, nCon, nGroup)] <- c(signif(as.data.frame(contrL)[c(5, 11), "p.value"], nDigitals),
-                                     signif(as.data.frame(contrR)[c(5, 11), "p.value"], nDigitals))
-  ast <- sig_ast(sig_uni)
+plot_uni <- function(df, contrL, contrR, roi, is4 = TRUE, isE2 = FALSE){
   
   # split the data into two parts by FaceWord
   fwLevels <- levels(df$FaceWord)
-  xaxislabel <- toTitleCase(levels(df$Layout))
+  n_layout <- length(unique(df$Layout))
+  
+  if (isE2) {
+    df <- df %>% 
+      mutate(Layout = case_when((FaceWord == "English" & Layout == "partA") ~ "left",
+                                (FaceWord == "English" & Layout == "partB") ~ "right",
+                                (FaceWord == "Chinese" & Layout == "partA") ~ "top",
+                                (FaceWord == "Chinese" & Layout == "partB") ~ "bottom"
+      ),
+      Layout = as_factor(Layout))
+  }
+  # xaxislabel <- toTitleCase(levels(df$Layout))
+  
+  # significance 
+  if (is4) {
+    row_index = c(5,11)
+    label_pos = c(0.85, 4.15)
+  } else {
+    row_index = c(3,4)
+    label_pos = c(0.85, 2.15)
+  }
+  nCon = nrow(df)
+  nGroup = nCon/n_layout
+  sig_uni <- rep(1, nCon)
+  sig_uni[seq(1, nCon, n_layout)] <- c(signif(as.data.frame(contrL)[row_index, "p.value"], nDigitals),
+                                     signif(as.data.frame(contrR)[row_index, "p.value"], nDigitals))
+  ast <- sig_ast(sig_uni)
   
   # annotations for ROI and hemi
   dat_text <- data.frame(
     Hemisphere = c("left", "right"),
     label = paste0(c("L", "R"), toupper(roi)),
-    x     = c(0.85, 4.15),
+    x     = label_pos,
     y     = 2.4
   )
   
   # general codes to create the plots
   uni <- function(subdf, subsig, half) {
     
-    ggplot(data = filter(df, FaceWord == fwLevels[half]), aes(y = emmean, x = Layout, group = Hemisphere)) + # set the data, varialbes for x and y axises
+    ggplot(data = filter(subdf, FaceWord == fwLevels[half]), aes(y = emmean, x = Layout, group = Hemisphere)) + # set the data, varialbes for x and y axises
       geom_col(position = "dodge", width = 0.5, fill = "#CDCDC8") +  # position of columns and countour of columns
       facet_grid(. ~ Hemisphere) +
       geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                     show.legend = FALSE, width = 0.2, alpha = .5,
                     position = position_dodge(width=0.9)) +
-      scale_x_discrete(labels = xaxislabel) +
+      # scale_x_discrete(labels = xaxislabel) +
       scale_y_continuous(expand= c(0, 0), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis , limits = c(0, activationUL), 
       labs(title = toTitleCase(fwLevels[half]), x = "Configuration", y = "Beta values") +  # set the names for main, x and y axises 
       coord_cartesian(ylim = c(0, activationUL)) +
@@ -60,20 +78,28 @@ plot_uni <- function(df, contrL, contrR, roi){
       )
   }
   
-  # the first plot (face or English)
-  plot_1 <- uni(df, ast[c(1:4, 9:12)], 1) + 
-    theme(axis.title.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-    ) 
-  # the second plot (word or Chinese)
-  plot_2 <- uni(df, ast[c(5:8, 13:16)], 2)
+  if (is4) {
+    # the first plot (face or English)
+    plot_1 <- uni(df, ast[c(1:n_layout, 2*n_layout+(1:n_layout))], 1) + 
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+            axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+      ) 
+    # the second plot (word or Chinese)
+    plot_2 <- uni(df, ast[c(n_layout+(1:n_layout), 3*n_layout+(1:n_layout))], 2)
+    
+    # combine the two plots
+    ggarrange(plot_1, plot_2, nrow = 2,
+              heights = c(0.89, 1))  # ratio between the two subplots
+  } else {
+    plot_1 <- uni(df, ast[c(1:n_layout, 2*n_layout+(1:n_layout))], 1)
+    plot_2 <- uni(df, ast[c(n_layout+(1:n_layout), 3*n_layout+(1:n_layout))], 2)
+    
+    ggarrange(plot_1, plot_2, nrow = 1, ncol = 2)
+  }
   
-  # combine the two plots
-  ggarrange(plot_1, plot_2, nrow = 2,
-            heights = c(0.89, 1))  # ratio between the two subplots
 }
 
 # function to plot decode results
@@ -298,20 +324,36 @@ plot_simi <- function(df, roi) {
 
 
 # function to plot results in FaceWord project
-plot_uni_vwfa <- function(df, contrL, roi){
-  
-  # significance 
-  nCon = 16
-  nGroup = 4
-  sig_uni <- rep(1, nCon)
-  sig_uni[seq(1, nCon, nGroup)] <- c(signif(as.data.frame(contrL)[c(5, 11), "p.value"], nDigitals))
-  ast <- sig_ast(sig_uni)
+plot_uni_vwfa <- function(df, contrL, roi, is4 = TRUE, isE2 = FALSE){
   
   # split the data into two parts by FaceWord
   fwLevels <- levels(df$FaceWord)
-  xaxislabel <- toTitleCase(levels(df$Layout))
+  n_layout <- length(unique(df$Layout))
   
-  # annotations for ROI and hemi
+  if (isE2) {
+    df <- df %>% 
+      mutate(Layout = case_when((FaceWord == "English" & Layout == "partA") ~ "left",
+                                (FaceWord == "English" & Layout == "partB") ~ "right",
+                                (FaceWord == "Chinese" & Layout == "partA") ~ "top",
+                                (FaceWord == "Chinese" & Layout == "partB") ~ "bottom"
+      ),
+      Layout = as_factor(Layout))
+  }
+  # xaxislabel <- toTitleCase(levels(df$Layout))
+  
+  # significance 
+  if (is4) {
+    row_index = c(5,11)
+  } else {
+    row_index = c(3,4)
+  }
+  nCon = nrow(df)
+  nGroup = nCon/n_layout
+  sig_uni <- rep(1, nCon)
+  sig_uni[seq(1, nCon, n_layout)] <- signif(as.data.frame(contrL)[row_index, "p.value"], nDigitals)
+  ast <- sig_ast(sig_uni)
+  
+   # annotations for ROI and hemi
   dat_text <- data.frame(
     Hemisphere = c("left"),
     label = toupper(roi),
@@ -328,7 +370,7 @@ plot_uni_vwfa <- function(df, contrL, roi){
       geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                     show.legend = FALSE, width = 0.2, alpha = .5,
                     position = position_dodge(width=0.9)) +
-      scale_x_discrete(labels = xaxislabel) +
+      # scale_x_discrete(labels = xaxislabel) +
       scale_y_continuous(expand= c(0, 0), breaks = seq(0, 3, .5)) +  # remove the space between columns and x axis , limits = c(0, activationUL), 
       labs(title = toTitleCase(fwLevels[half]), x = "Configuration", y = "Beta values") +  # set the names for main, x and y axises 
       coord_cartesian(ylim = c(0, activationUL)) +
@@ -357,20 +399,28 @@ plot_uni_vwfa <- function(df, contrL, roi){
       )
   }
   
-  # the first plot (face or English)
-  plot_1 <- uni(df, ast[c(1:4)], 1) + 
-    theme(axis.title.x = element_blank(),
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-          axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
-    ) 
-  # the second plot (word or Chinese)
-  plot_2 <- uni(df, ast[c(5:8)], 2)
-  
-  # combine the two plots
-  ggarrange(plot_1, plot_2, nrow = 2,
-            heights = c(0.89, 1))  # ratio between the two subplots
+  if (is4) {
+    # the first plot (face or English)
+    plot_1 <- uni(df, ast[c(1:n_layout)], 1) + 
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+            axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'),
+      ) 
+    # the second plot (word or Chinese)
+    plot_2 <- uni(df, ast[n_layout+(1:n_layout)], 2)
+    
+    # combine the two plots
+    ggarrange(plot_1, plot_2, nrow = 2,
+              heights = c(0.89, 1))  # ratio between the two subplots
+  } else {
+    plot_1 <- uni(df, ast[c(1:n_layout)], 1)
+    plot_2 <- uni(df, ast[n_layout+(1:n_layout)], 2)
+    
+    ggarrange(plot_1, plot_2, nrow = 1, ncol =2,
+              heights = c(0.89, 1))  # ratio between the two subplots
+  }
 }
 
 # function to plot decode results
