@@ -2257,6 +2257,622 @@ plot_simi_E2_LO
 <br/>
 The above figure shows the probability of top+bottom being decoded as exchange conditions in LO. Patterns of top and bottom were combined with different weights, i.e., "face_top0.25-face_bottom0.75" denotes the linear combinations of face_top and face_bottom with the weights of 0.25/0.75. The numbers are the p-values for the two-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
 
+# Decoding in LO with different area sizes
+
+Labels for LO were defined with the maximum area of 100, 150, 200 and 300 mm^2, respecitvely. 
+
+## Experiment 1
+
+### LO Label (ROI) information
+
+```{r label information E1 LO, message=FALSE}
+df_label_LO_E1 <- read_csv(file.path("data", "faceword_E1_Label_LO_HJ.csv")) %>% 
+  mutate(roi = str_remove(Label, "roi."),
+         roi = str_remove(roi, ".label")) %>% 
+  mutate(Subject = str_replace(SubjCode, "\\_.*", ""))
+
+# df_label %>% head()
+```
+
+#### Size of labels
+```{r size (mm2) of labels for each subject E1 LO}
+df_label_LO_E1 %>% 
+  select(SubjCode, roi, Size) %>% 
+  pivot_wider(names_from = roi, values_from = Size) %>% 
+  arrange(SubjCode)
+```
+The above table displays the size (in mm2) of each label for each participant. (NA denotes that this label is not available for that particiapnt.)
+
+#### Number of vertices for each label
+```{r Number of vertices for each label E1 LO}
+df_label_LO_E1 %>% 
+  select(SubjCode, roi, NVtxs) %>% 
+  pivot_wider(names_from = roi, values_from = NVtxs) %>% 
+  arrange(SubjCode)
+```
+The above table displays the number of vertices for each label and each participant. (NA denotes that this label is not available for that particiapnt.)
+
+
+#### Number of participants for each ROI
+```{r Number of available labels for each ROI E1 LO}
+df_label_LO_E1 %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+```
+
+#### Number of remaining participants
+```{r Number of remaining participants E1 LO}
+df_nlabel_LO_E1 <- df_label_LO_E1 %>% 
+  filter(Size > nVtx_size_min) %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+
+df_nlabel_LO_E1
+```
+The above table dispalys the number of participants included in the following analyses for each ROI. (VWFA is only found on the left hemisphere.)
+
+### Decoding
+```{r}
+# load decoding results in LO
+df_LO_area_E1 <- read_csv(file.path("data", "faceword_E1_Decode_LO_zscore.csv")) %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Subject = str_remove(SessCode, "\\_.*")) %>% 
+  left_join(df_label_LO_E1, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_decode_LO_acc_E1 <- df_LO_area_E1 %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_LO_acc_E1
+```
+
+#### One-sample t-test
+```{r one-sample for results of decode E1 LO area}
+# one-sample for results of decode E1 LO
+one_decode_agg_E1_LO_area <- {
+  df_decode_LO_acc_E1 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
+    group_by(Hemisphere, ClassifyPair, Label) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E1_LO_area
+```
+
+
+## Experiment 2
+
+### LO Label (ROI) information
+
+```{r label information E2 LO, message=FALSE}
+df_label_LO_E2 <- read_csv(file.path("data", "faceword_E2_Label_LO_HJ.csv")) %>% 
+  mutate(roi = str_remove(Label, "roi."),
+         roi = str_remove(roi, ".label")) %>% 
+  mutate(Subject = str_replace(SubjCode, "\\_.*", ""))
+# df_label %>% head()
+```
+
+#### Size of labels
+```{r size (mm2) of labels for each subject E2 LO}
+df_label_LO_E2 %>% 
+  select(SubjCode, roi, Size) %>% 
+  pivot_wider(names_from = roi, values_from = Size) %>% 
+  arrange(SubjCode)
+```
+The above table displays the size (in mm2) of each label for each participant. (NA denotes that this label is not available for that particiapnt.)
+
+#### Number of vertices for each label
+```{r Number of vertices for each label E2 LO}
+df_label_LO_E2 %>% 
+  select(SubjCode, roi, NVtxs) %>% 
+  pivot_wider(names_from = roi, values_from = NVtxs) %>% 
+  arrange(SubjCode)
+```
+The above table displays the number of vertices for each label and each participant. (NA denotes that this label is not available for that particiapnt.)
+
+
+#### Number of participants for each ROI
+```{r Number of available labels for each ROI E2 LO}
+df_label_LO_E2 %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+```
+
+#### Number of remaining participants
+```{r Number of remaining participants E2 LO}
+df_nlabel_LO_E2 <- df_label_LO_E2 %>% 
+  filter(Size > nVtx_size_min) %>% 
+  group_by(Label, roi) %>% 
+  summarize(Count = n(),
+            meanSize = mean(Size),
+            meanNVtx = mean(NVtxs)) 
+
+df_nlabel_LO_E2
+```
+The above table dispalys the number of participants included in the following analyses for each ROI. (VWFA is only found on the left hemisphere.)
+
+### Decoding
+```{r}
+# load decoding results in LO
+df_LO_area_E2 <- read_csv(file.path("data", "faceword_E2_Decode_LO_zscore.csv")) %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Subject = str_remove(SessCode, "\\_.*"),
+         ClassifyPair = fct_recode(ClassifyPair, 
+                                   `Chinese_partA-Chinese_partB` = "Chinese_top-Chinese_bottom",
+                                   `English_partA-English_partB` = "English_top-English_bottom"),
+         ClassifyPair = factor(ClassifyPair, levels = pair_order_E2)) %>% 
+  left_join(df_label_LO_E2, by = c("Label", "Subject")) %>% 
+  filter(Size > nVtx_size_min)
+
+df_decode_LO_acc_E2 <- df_LO_area_E2 %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_LO_acc_E2
+```
+
+#### One-sample t-test
+```{r one-sample for results of decode E2 LO area}
+# one-sample for results of decode E2 LO
+one_decode_agg_E2_LO_area <- {
+  df_decode_LO_acc_E2 %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
+    group_by(Hemisphere, ClassifyPair, Label) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_agg_E2_LO_area
+```
+
+
+## Plot
+```{r}
+df_decode_LO_area <- rbind(mutate(one_decode_agg_E1_LO_area, Exp = "E1"),
+                           mutate(one_decode_agg_E2_LO_area, Exp = "E2")) %>% 
+  separate(ClassifyPair, c("Stimuli1", "Layout1", "Stimuli2", "Layout2")) %>% 
+  filter(!(Label %in% c("roi.lh.o-vs-scr.label", "roi.rh.o-vs-scr.label"))) %>% 
+  mutate(Stimuli1 = if_else(Stimuli1 %in% c("face", "word"), paste0(Stimuli1, "s"), Stimuli1),
+         Stimuli2 = if_else(Stimuli2 %in% c("face", "word"), paste0(Stimuli2, "s"), Stimuli2),
+         Stimuli = ifelse(Stimuli1 == Stimuli2, Stimuli1, 
+                          paste(Stimuli1, Stimuli2, sep = "\nvs.\n")),
+         Layout = ifelse(Layout1 == Layout2, Layout1,
+                         paste(toTitleCase(Layout1), toTitleCase(Layout2), sep = "\nvs.\n")),
+         Area = substr(Label, 18, 20)) %>% 
+  select(-c(Stimuli1, Stimuli2, Layout1, Layout2))
+```
+
+##### Intact faces vs. words
+```{r fig.width=6, fig.asp=1}
+# save the df for intact English vs. intact Chinese
+df_intact_LO_area <- filter(df_decode_LO_area, Layout == "intact") %>% 
+  mutate(Stimuli = fct_rev(Stimuli))
+
+dat_text_intact_LO_area <- data.frame(
+  Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
+  Hemisphere = c("left"),
+  label = c("faces vs. words", "English vs. Chinese"),
+  x     = c(1.35, 1.6),
+  y     = 1.05
+)
+
+# intact
+plot_intact_LO_area <- ggplot(df_intact_LO_area, aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "Intact stimuli", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_intact_LO_area, aes(x = x, y = y, label = label), size = 5, fontface = "bold") + #
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+  NULL
+
+# ggsave('plot_decode_LO_area_intact.pdf', plot_intact_LO_area, width = 8, height = 8)
+plot_intact_LO_area
+```
+
+### Intact vs. exchange
+```{r fig.width=6, fig.asp=2}
+df_inex_LO_area <- df_decode_LO_area %>% 
+  filter(str_detect(Stimuli, "vs.", negate = TRUE),
+         Layout == "Intact\nvs.\nExchange")
+df_inex_LO_area$Stimuli <- fct_relevel(df_inex_LO_area$Stimuli, "English", after = Inf)
+df_inex_LO_area$Stimuli <- fct_relevel(df_inex_LO_area$Stimuli, "Chinese", after = Inf)
+
+dat_text_inex_LO_area <- data.frame(
+  Stimuli = levels(df_inex_LO_area$Stimuli),
+  Hemisphere = c("left"),
+  label = levels(df_inex_LO_area$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2),
+  y     = 1.05
+)
+
+plot_inex_LO_area <- ggplot(df_inex_LO_area, aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "Intact vs. Exchange", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+# ggsave('plot_decode_LO_area_inex.pdf', plot_inex_LO_area, width = 8, height = 16)
+plot_inex_LO_area
+```
+
+```{r fig.width=12, fig.asp=.5}
+
+dat_text_inex_LO_area_lr_fw <- data.frame(
+  Stimuli = levels(df_inex_LO_area$Stimuli)[1:2],
+  Hemisphere = "left",
+  label = levels(df_inex_LO_area$Stimuli)[1:2],
+  x     = c(1, 1.1),
+  y     = 1.05
+)
+
+plot_inex_LO_area_E1 <- ggplot(filter(df_inex_LO_area, Exp == "E1"), aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_LO_area_lr_fw, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.y = element_blank(),    
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+dat_text_inex_LO_area_lr_ec <- data.frame(
+  Stimuli = levels(df_inex_LO_area$Stimuli)[3:4],
+  Hemisphere = "left",
+  label = levels(df_inex_LO_area$Stimuli)[3:4],
+  x     = c(1.1, 1.2),
+  y     = 1.05
+)
+
+plot_inex_LO_area_E2 <- ggplot(filter(df_inex_LO_area, Exp == "E2"), aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_inex_LO_area_lr_ec, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+plot_inex_LO_area_lr <- ggarrange(plot_inex_LO_area_E1, plot_inex_LO_area_E2, ncol = 2, 
+                          labels = c("", "Intact vs. Exchange"), 
+                          label.x = -0.36,
+                          label.y = 1,
+                          font.label = list(size = 24))
+# ggsave('plot_decode_LO_area_inex_lr.pdf', plot_inex_LO_area_lr, width = 15, height = 8)
+plot_inex_LO_area_lr
+```
+
+### Top vs. bottom
+```{r fig.width=6, fig.asp=2}
+df_parts_LO_area <- df_decode_LO_area %>% 
+  filter(str_detect(Stimuli, "vs.", negate = TRUE),
+         Layout != "Intact\nvs.\nExchange") %>% 
+  mutate(Stimuli = as_factor(Stimuli))
+df_parts_LO_area$Stimuli <- fct_relevel(df_parts_LO_area$Stimuli, "English", after = Inf)
+df_parts_LO_area$Stimuli <- fct_relevel(df_parts_LO_area$Stimuli, "Chinese", after = Inf)
+
+dat_parts_inex_LO_area <- data.frame(
+  Stimuli = levels(df_parts_LO_area$Stimuli),
+  Hemisphere = c("left"),
+  label = levels(df_parts_LO_area$Stimuli),
+  x     = c(1, 1.1, 1.2, 1.2),
+  y     = 1.05
+)
+
+plot_topbottom_LO_area <- ggplot(df_parts_LO_area, aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x", 
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "Top vs. bottom; left vs. right", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_parts_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+  NULL
+
+# ggsave('plot_decode_LO_area_topbottom.pdf', plot_topbottom_LO_area, width = 8, height = 16)
+plot_topbottom_LO_area
+```
+
+
+```{r fig.width=12, fig.asp=.5}
+
+dat_text_tb_all_lr_E1 <- data.frame(
+  Stimuli = levels(df_parts_LO_area$Stimuli)[1:2],
+  Hemisphere = "left",
+  label = levels(df_parts_LO_area$Stimuli)[1:2],
+  x     = c(1, 1.1),
+  y     = 1.05
+)
+
+plot_topbottom_LO_area_E1 <- ggplot(filter(df_parts_LO_area, Exp == "E1"), aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x",
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+dat_text_tb_all_lr_E2 <- data.frame(
+  Stimuli = levels(df_parts_LO_area$Stimuli)[3:4],
+  Hemisphere = "left",
+  label = levels(df_parts_LO_area$Stimuli)[3:4],
+  x     = c(1.1, 1.2),
+  y     = 1.05
+)
+
+plot_topbottom_LO_area_E2 <- ggplot(filter(df_parts_LO_area, Exp == "E2"), aes(y = mean, x = Area)) +
+  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x", 
+             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black"),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(face = "bold", size = 16),
+    axis.text.y = element_text(size = 13),
+    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(1.5, "lines"),
+    # remove the facet background color
+    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+NULL
+
+plot_topbottom_LO_area_lr <- ggarrange(plot_topbottom_LO_area_E1, plot_topbottom_LO_area_E2, ncol = 2, 
+                               labels = c("", "Top vs. bottom; left vs. right"), 
+                               label.x = -0.6,
+                               label.y = 1,
+                               font.label = list(size = 24))
+# ggsave('plot_decode_LO_area_topbottom_lr.pdf', plot_topbottom_LO_area_lr, width = 15, height = 8)
+plot_topbottom_LO_area_lr
+```
+
 # Plots
 ## Decoding
 ```{r warning=FALSE}
