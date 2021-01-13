@@ -202,7 +202,7 @@ head(df_clean_uni_E1)
 
 ### Data of decoding
 ```{r load data file from cosmoMVPA E1, message=FALSE, include=showAll}
-df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_HJ.csv"))
+df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_zscore.csv"))
 
 head(df_decode_E1)
 ```
@@ -226,7 +226,7 @@ df_decode_acc_E1
 
 ### Data for the Similarity of top + bottom
 ```{r Data for the Similarity of top + bottom E1, message=FALSE, include=showAll}
-df_simi <- read_csv(file.path("data", "faceword_E1_similarity_HJ.csv"))
+df_simi <- read_csv(file.path("data", "faceword_E1_Similarity_zscore.csv"))
 
 head(df_simi)
 ```
@@ -1267,7 +1267,7 @@ pair_order_E2 <- c("English_intact-Chinese_intact",
 ```
 
 ```{r load data file from cosmoMVPA E2, message=FALSE, include=showAll}
-df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_HJ.csv"))
+df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_zscore.csv"))
 
 head(df_decode_E2)
 ```
@@ -1306,7 +1306,7 @@ simi_order_E2 <- c("English_partA0.25-English_partB0.75",
 
 
 ```{r Data for the Similarity of top + bottom E2, message=FALSE, include=showAll}
-df_simi_E2 <- read_csv(file.path("data", "faceword_E2_similarity_HJ.csv"))
+df_simi_E2 <- read_csv(file.path("data", "faceword_E2_Similarity_zscore.csv"))
 
 head(df_simi_E2)
 ```
@@ -2955,12 +2955,11 @@ plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
   ) +
   NULL
 
-# ggsave('plot_decode_all_intact.png', plot_intact_all, width = 8, height = 8)
+# ggsave('plot_decode_all_intact.pdf', plot_intact_all, width = 8, height = 8)
 plot_intact_all
 ```
 
 ### Intact vs. exchange
-
 ```{r fig.width=6, fig.asp=2}
 df_inex <- df_decoding %>% 
   filter(str_detect(Stimuli, "vs.", negate = TRUE),
@@ -3017,7 +3016,7 @@ plot_inex_all <- ggplot(df_inex, aes(y = mean, x = ROI)) +
   ) +
 NULL
 
-# ggsave('plot_decode_all_inex.png', plot_inex_all, width = 8, height = 16)
+# ggsave('plot_decode_all_inex.pdf', plot_inex_all, width = 8, height = 16)
 plot_inex_all
 ```
 
@@ -3305,7 +3304,6 @@ plot_topbottom_lr
 ```
 
 ## Univariate analysis
-
 ### Intact vs. exchange
 
 ```{r}
@@ -3400,7 +3398,7 @@ plot_uni_inex_all <- ggplot(df_uni_ie, aes(y = emmean, x = Layout)) +
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
 plot_uni_inex_all
 ```
 
@@ -3458,7 +3456,7 @@ plot_uni_inex_all_ <- ggplot(df_uni_ie, aes(y = emmean, x = ROI, fill = Layout))
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
 plot_uni_inex_all_
 ```
 
@@ -3578,7 +3576,7 @@ plot_uni_ie_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol =
                               label.y = 1,
                               font.label = list(size = 24))
 
-# ggsave('plot_uni_all_ie_lr.png', plot_uni_ie_lr, width = 15, height = 9)
+# ggsave('plot_uni_all_ie_lr.pdf', plot_uni_ie_lr, width = 15, height = 9)
 plot_uni_ie_lr
 ```
 
@@ -3681,7 +3679,7 @@ plot_uni_inex_all <- ggplot(df_uni_tb_all, aes(y = emmean, x = Layout)) +
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
 plot_uni_inex_all
 ```
 
@@ -3739,7 +3737,7 @@ plot_uni_inex_all_ <- ggplot(df_uni_tb_all, aes(y = emmean, x = ROI, fill = Layo
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.png', plot_uni_inex_all, width = 8, height = 16)
+# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
 plot_uni_inex_all_
 ```
 
@@ -3859,7 +3857,7 @@ plot_uni_tb_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol =
                               label.y = 1,
                               font.label = list(size = 24))
 
-# ggsave('plot_uni_all_tb_lr.png', plot_uni_tb_lr, width = 15, height = 9)
+# ggsave('plot_uni_all_tb_lr.pdf', plot_uni_tb_lr, width = 15, height = 9)
 plot_uni_tb_lr
 ```
 
