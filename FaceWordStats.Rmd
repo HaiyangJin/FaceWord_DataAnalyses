@@ -202,7 +202,7 @@ head(df_clean_uni_E1)
 
 ### Data of decoding
 ```{r load data file from cosmoMVPA E1, message=FALSE, include=showAll}
-df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_zscore.csv"))
+df_decode_E1 <- read_csv(file.path("data", "faceword_E1_Decode_noz.csv"))
 
 head(df_decode_E1)
 ```
@@ -226,7 +226,7 @@ df_decode_acc_E1
 
 ### Data for the Similarity of top + bottom
 ```{r Data for the Similarity of top + bottom E1, message=FALSE, include=showAll}
-df_simi <- read_csv(file.path("data", "faceword_E1_Similarity_zscore.csv"))
+df_simi <- read_csv(file.path("data", "faceword_E1_Similarity_noz.csv"))
 
 head(df_simi)
 ```
@@ -1267,7 +1267,7 @@ pair_order_E2 <- c("English_intact-Chinese_intact",
 ```
 
 ```{r load data file from cosmoMVPA E2, message=FALSE, include=showAll}
-df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_zscore.csv"))
+df_decode_E2 <- read_csv(file.path("data", "faceword_E2_Decode_noz.csv"))
 
 head(df_decode_E2)
 ```
@@ -1306,7 +1306,7 @@ simi_order_E2 <- c("English_partA0.25-English_partB0.75",
 
 
 ```{r Data for the Similarity of top + bottom E2, message=FALSE, include=showAll}
-df_simi_E2 <- read_csv(file.path("data", "faceword_E2_Similarity_zscore.csv"))
+df_simi_E2 <- read_csv(file.path("data", "faceword_E2_Similarity_noz.csv"))
 
 head(df_simi_E2)
 ```
@@ -2318,7 +2318,7 @@ The above table dispalys the number of participants included in the following an
 ### Decoding
 ```{r}
 # load decoding results in LO
-df_LO_area_E1 <- read_csv(file.path("data", "faceword_E1_Decode_LO_zscore.csv")) %>% 
+df_LO_area_E1 <- read_csv(file.path("data", "faceword_E1_Decode_LO_noz.csv")) %>% 
   select(Label, SessCode, ClassifyPair, ACC) %>% 
   mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
                               if_else(grepl("rh", Label), "right", "NA")),
@@ -2413,7 +2413,7 @@ The above table dispalys the number of participants included in the following an
 ### Decoding
 ```{r}
 # load decoding results in LO
-df_LO_area_E2 <- read_csv(file.path("data", "faceword_E2_Decode_LO_zscore.csv")) %>% 
+df_LO_area_E2 <- read_csv(file.path("data", "faceword_E2_Decode_LO_noz.csv")) %>% 
   select(Label, SessCode, ClassifyPair, ACC) %>% 
   mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
                               if_else(grepl("rh", Label), "right", "NA")),
