@@ -62,11 +62,11 @@ The probability was estimated for each particiapnt separately:
 ```{r general setting for this document, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
 knitr::opts_chunk$set(message = FALSE)  # hide all messages
-knitr::opts_chunk$set(echo = FALSE)  # hide all codes and only show output
+# knitr::opts_chunk$set(echo = FALSE)  # hide all codes and only show output
 # knitr::opts_chunk$set(fig.width = 11)  
 
 options(width = 450)
-showAll = FALSE  # if show steps for cleaning 
+showAll = TRUE  # if show steps for cleaning 
 ```
 
 ```{r preparation, include=FALSE}
@@ -2481,8 +2481,9 @@ df_intact_LO_area <- filter(df_decode_LO_area, Layout == "intact") %>%
 dat_text_intact_LO_area <- data.frame(
   Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
   Hemisphere = c("left"),
-  label = c("faces vs. words", "English vs. Chinese"),
-  x     = c(1.35, 1.6),
+  label = c("Chinese speakers: \nChinese faces vs. characters", 
+            "English speakers: \nEnglish words vs. Chinese characters"),
+  x     = .5, # c(1.35, 1.6),
   y     = 1.05
 )
 
@@ -2498,10 +2499,10 @@ plot_intact_LO_area <- ggplot(df_intact_LO_area, aes(y = mean, x = Area)) +
   geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "Intact stimuli", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
+  labs(x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_intact_LO_area, aes(x = x, y = y, label = label), size = 5, fontface = "bold") + #
+  geom_text(data = dat_text_intact_LO_area, aes(x = x, y = y, label = label), size = 4, fontface = "bold", hjust=0) + #
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2542,8 +2543,11 @@ df_inex_LO_area$Stimuli <- fct_relevel(df_inex_LO_area$Stimuli, "Chinese", after
 dat_text_inex_LO_area <- data.frame(
   Stimuli = levels(df_inex_LO_area$Stimuli),
   Hemisphere = c("left"),
-  label = levels(df_inex_LO_area$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_inex_LO_area$Stimuli),
+  x     = .5, # c(1, 1.1, 1.2, 1.2),
   y     = 1.05
 )
 
@@ -2562,7 +2566,7 @@ plot_inex_LO_area <- ggplot(df_inex_LO_area, aes(y = mean, x = Area)) +
   labs(title = "Intact vs. Exchange", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2597,8 +2601,9 @@ plot_inex_LO_area
 dat_text_inex_LO_area_lr_fw <- data.frame(
   Stimuli = levels(df_inex_LO_area$Stimuli)[1:2],
   Hemisphere = "left",
-  label = levels(df_inex_LO_area$Stimuli)[1:2],
-  x     = c(1, 1.1),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters"),
+  x     = .5, # c(1, 1.1),
   y     = 1.05
 )
 
@@ -2614,10 +2619,10 @@ plot_inex_LO_area_E1 <- ggplot(filter(df_inex_LO_area, Exp == "E1"), aes(y = mea
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  labs(x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_LO_area_lr_fw, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_LO_area_lr_fw, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2646,8 +2651,9 @@ NULL
 dat_text_inex_LO_area_lr_ec <- data.frame(
   Stimuli = levels(df_inex_LO_area$Stimuli)[3:4],
   Hemisphere = "left",
-  label = levels(df_inex_LO_area$Stimuli)[3:4],
-  x     = c(1.1, 1.2),
+  label = c("English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_inex_LO_area$Stimuli)[3:4],
+  x     = .5, # c(1.1, 1.2),
   y     = 1.05
 )
 
@@ -2663,10 +2669,10 @@ plot_inex_LO_area_E2 <- ggplot(filter(df_inex_LO_area, Exp == "E2"), aes(y = mea
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  labs(x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_LO_area_lr_ec, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_LO_area_lr_ec, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2693,9 +2699,9 @@ plot_inex_LO_area_E2 <- ggplot(filter(df_inex_LO_area, Exp == "E2"), aes(y = mea
 NULL
 
 plot_inex_LO_area_lr <- ggarrange(plot_inex_LO_area_E1, plot_inex_LO_area_E2, ncol = 2, 
-                          labels = c("", "Intact vs. Exchange"), 
-                          label.x = -0.36,
-                          label.y = 1,
+                          # labels = c("", "Intact vs. Exchange"), 
+                          # label.x = -0.36,
+                          # label.y = 1,
                           font.label = list(size = 24))
 # ggsave('plot_decode_LO_area_inex_lr.pdf', plot_inex_LO_area_lr, width = 15, height = 8)
 plot_inex_LO_area_lr
@@ -2713,8 +2719,11 @@ df_parts_LO_area$Stimuli <- fct_relevel(df_parts_LO_area$Stimuli, "Chinese", aft
 dat_parts_inex_LO_area <- data.frame(
   Stimuli = levels(df_parts_LO_area$Stimuli),
   Hemisphere = c("left"),
-  label = levels(df_parts_LO_area$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"),
+  x     = .5, # c(1, 1.1, 1.2, 1.2),
   y     = 1.05
 )
 
@@ -2733,7 +2742,7 @@ plot_topbottom_LO_area <- ggplot(df_parts_LO_area, aes(y = mean, x = Area)) +
   labs(title = "Top vs. bottom; left vs. right", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_parts_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_parts_inex_LO_area, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2769,8 +2778,9 @@ plot_topbottom_LO_area
 dat_text_tb_all_lr_E1 <- data.frame(
   Stimuli = levels(df_parts_LO_area$Stimuli)[1:2],
   Hemisphere = "left",
-  label = levels(df_parts_LO_area$Stimuli)[1:2],
-  x     = c(1, 1.1),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters"), # levels(df_parts_LO_area$Stimuli)[1:2],
+  x     = .5, # c(1, 1.1),
   y     = 1.05
 )
 
@@ -2786,10 +2796,10 @@ plot_topbottom_LO_area_E1 <- ggplot(filter(df_parts_LO_area, Exp == "E1"), aes(y
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  labs(x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2818,8 +2828,9 @@ NULL
 dat_text_tb_all_lr_E2 <- data.frame(
   Stimuli = levels(df_parts_LO_area$Stimuli)[3:4],
   Hemisphere = "left",
-  label = levels(df_parts_LO_area$Stimuli)[3:4],
-  x     = c(1.1, 1.2),
+  label = c("English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_parts_LO_area$Stimuli)[3:4],
+  x     = .5, # c(1.1, 1.2),
   y     = 1.05
 )
 
@@ -2835,10 +2846,10 @@ plot_topbottom_LO_area_E2 <- ggplot(filter(df_parts_LO_area, Exp == "E2"), aes(y
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  labs(x = expression(paste("Lateral Occipital Label Area (", mm^2, ")")), y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2865,9 +2876,9 @@ plot_topbottom_LO_area_E2 <- ggplot(filter(df_parts_LO_area, Exp == "E2"), aes(y
 NULL
 
 plot_topbottom_LO_area_lr <- ggarrange(plot_topbottom_LO_area_E1, plot_topbottom_LO_area_E2, ncol = 2, 
-                               labels = c("", "Top vs. bottom; left vs. right"), 
-                               label.x = -0.6,
-                               label.y = 1,
+                               # labels = c("", "Top vs. bottom; left vs. right"), 
+                               # label.x = -0.6,
+                               # label.y = 1,
                                font.label = list(size = 24))
 # ggsave('plot_decode_LO_area_topbottom_lr.pdf', plot_topbottom_LO_area_lr, width = 15, height = 8)
 plot_topbottom_LO_area_lr
