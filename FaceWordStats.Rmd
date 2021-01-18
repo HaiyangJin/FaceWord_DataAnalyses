@@ -2909,8 +2909,9 @@ df_intact <- filter(df_decoding, Layout == "intact") %>%
 dat_text_intact_all <- data.frame(
   Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
   Hemisphere = c("left"),
-  label = c("faces vs. words", "English vs. Chinese"),
-  x     = c(1.3, 1.55),
+  label = c("Chinese speakers: \nChinese faces vs. characters", 
+            "English speakers: \nEnglish words vs. Chinese characters"),
+  x     = 0.5,
   y     = 1.05
 )
 
@@ -2926,10 +2927,10 @@ plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
   geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "Intact stimuli", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_intact_all, aes(x = x, y = y, label = label), size = 5, fontface = "bold") + #
+  geom_text(data = dat_text_intact_all, aes(x = x, y = y, label = label), hjust = 0, size = 4, fontface = "bold") + #
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -2970,8 +2971,11 @@ df_inex$Stimuli <- fct_relevel(df_inex$Stimuli, "Chinese", after = Inf)
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_inex$Stimuli),
   Hemisphere = c("left"),
-  label = levels(df_inex$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_inex$Stimuli),
+  x     = .5,
   y     = 1.05
 )
 
@@ -2987,10 +2991,10 @@ plot_inex_all <- ggplot(df_inex, aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises title = "Intact vs. Exchange", 
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3026,8 +3030,9 @@ plot_inex_all
 dat_text_inex_all_lr_fw <- data.frame(
   Stimuli = levels(df_inex$Stimuli)[1:2],
   Hemisphere = "left",
-  label = levels(df_inex$Stimuli)[1:2],
-  x     = c(1, 1.1),
+  label = c("Chinese speakers: \nChinese faces", # intact vs. exchanged 
+            "Chinese speakers: \nChinese characters"), # intact vs. exchanged levels(df_inex$Stimuli)[1:2],
+  x     = .5,
   y     = 1.05
 )
 
@@ -3043,10 +3048,10 @@ plot_inex_E1 <- ggplot(filter(df_inex, Exp == "E1"), aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1 title = "", 
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr_fw, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr_fw, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3075,8 +3080,9 @@ NULL
 dat_text_inex_all_lr_ec <- data.frame(
   Stimuli = levels(df_inex$Stimuli)[3:4],
   Hemisphere = "left",
-  label = levels(df_inex$Stimuli)[3:4],
-  x     = c(1.1, 1.2),
+  label = c("English speakers: \nEnglish words", # intact vs. exchanged 
+            "English speakers: \nChinese characters"), # intact vs. exchanged levels(df_inex$Stimuli)[3:4],
+  x     = .5,
   y     = 1.05
 )
 
@@ -3092,10 +3098,10 @@ plot_inex_E2 <- ggplot(filter(df_inex, Exp == "E2"), aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2 title = "", 
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr_ec, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr_ec, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3122,9 +3128,9 @@ plot_inex_E2 <- ggplot(filter(df_inex, Exp == "E2"), aes(y = mean, x = ROI)) +
 NULL
 
 plot_inex_lr <- ggarrange(plot_inex_E1, plot_inex_E2, ncol = 2, 
-                          labels = c("", "Intact vs. Exchange"), 
-                          label.x = -0.36,
-                          label.y = 1,
+                          # labels = c("", "Intact vs. Exchange"), 
+                          # label.x = -0.36,
+                          # label.y = 1,
                           font.label = list(size = 24))
 # ggsave('plot_decode_all_inex_lr.pdf', plot_inex_lr, width = 15, height = 8)
 plot_inex_lr
@@ -3143,8 +3149,11 @@ df_parts$Stimuli <- fct_relevel(df_parts$Stimuli, "Chinese", after = Inf)
 dat_parts_inex_all <- data.frame(
   Stimuli = levels(df_parts$Stimuli),
   Hemisphere = c("left"),
-  label = levels(df_parts$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), #levels(df_parts$Stimuli),
+  x     = .5, # c(1, 1.1, 1.2, 1.2),
   y     = 1.05
 )
 
@@ -3163,7 +3172,7 @@ plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = ROI)) +
   labs(title = "Top vs. bottom; left vs. right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_parts_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold") +
+  geom_text(data = dat_parts_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3199,8 +3208,9 @@ plot_topbottom_all
 dat_text_tb_all_lr_E1 <- data.frame(
   Stimuli = levels(df_parts$Stimuli)[1:2],
   Hemisphere = "left",
-  label = levels(df_parts$Stimuli)[1:2],
-  x     = c(1, 1.1),
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters"), #levels(df_parts$Stimuli)[1:2],
+  x     = .5,
   y     = 1.05
 )
 
@@ -3216,10 +3226,10 @@ plot_topbottom_E1 <- ggplot(filter(df_parts, Exp == "E1"), aes(y = mean, x = ROI
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust =0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3248,8 +3258,9 @@ NULL
 dat_text_tb_all_lr_E2 <- data.frame(
   Stimuli = levels(df_parts$Stimuli)[3:4],
   Hemisphere = "left",
-  label = levels(df_parts$Stimuli)[3:4],
-  x     = c(1.1, 1.2),
+  label = c("English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), #levels(df_parts$Stimuli)[3:4],
+  x     = .5,
   y     = 1.05
 )
 
@@ -3265,10 +3276,10 @@ plot_topbottom_E2 <- ggplot(filter(df_parts, Exp == "E2"), aes(y = mean, x = ROI
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 6.5, fontface = "bold") +
+  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3295,9 +3306,9 @@ plot_topbottom_E2 <- ggplot(filter(df_parts, Exp == "E2"), aes(y = mean, x = ROI
 NULL
 
 plot_topbottom_lr <- ggarrange(plot_topbottom_E1, plot_topbottom_E2, ncol = 2, 
-                               labels = c("", "Top vs. bottom; left vs. right"), 
-                               label.x = -0.6,
-                               label.y = 1,
+                               # labels = c("", "Top vs. bottom; left vs. right"), 
+                               # label.x = -0.6,
+                               # label.y = 1,
                                font.label = list(size = 24))
 # ggsave('plot_decode_all_topbottom_lr.pdf', plot_topbottom_lr, width = 15, height = 8)
 plot_topbottom_lr
@@ -3305,7 +3316,6 @@ plot_topbottom_lr
 
 ## Univariate analysis
 ### Intact vs. exchange
-
 ```{r}
 df_uni_ie <- rbind(mutate(desp_uni_E1_FFA1_ie, Exp = "E1", ROI = "FFA1"),
                    mutate(desp_uni_E1_FFA2_ie, Exp = "E1", ROI = "FFA2"),
@@ -3353,9 +3363,12 @@ df_uni_ie$Layout <- fct_relevel(df_uni_ie$Layout, "exchange", after = Inf)
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_uni_ie$Stimuli),
   HemiROI = c("lFFA1"),
-  label = levels(df_uni_ie$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
+  x     = .5, # c(1, 1.1, 1.2, 1.2),
+  y     = 2.65
 )
 
 plot_uni_inex_all <- ggplot(df_uni_ie, aes(y = emmean, x = Layout)) +
@@ -3372,7 +3385,7 @@ plot_uni_inex_all <- ggplot(df_uni_ie, aes(y = emmean, x = Layout)) +
   labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust =0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3410,9 +3423,12 @@ dat_text_inex_all_ <- data.frame(
   Stimuli = levels(df_uni_ie$Stimuli),
   Hemisphere = "left",
   Layout = "intact",
-  label = levels(df_uni_ie$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2)-0.3,
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
+  x     = .5, #c(1, 1.1, 1.2, 1.2)-0.3,
+  y     = 2.65
 )
 
 plot_uni_inex_all_ <- ggplot(df_uni_ie, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3430,7 +3446,7 @@ plot_uni_inex_all_ <- ggplot(df_uni_ie, aes(y = emmean, x = ROI, fill = Layout))
   labs(title = "Intact vs. Exchange", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3471,9 +3487,10 @@ dat_text_inex_all_lr1 <- data.frame(
   Stimuli = levels(df_uni_ie_1$Stimuli),
   Hemisphere = "left",
   Layout = "intact",
-  label = levels(df_uni_ie_1$Stimuli),
-  x     = c(1, 1.1),
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters"), # levels(df_uni_ie_1$Stimuli),
+  x     = .5, # c(1, 1.1),
+  y     = 2.65
 )
 
 plot_uni_inex_all_lr1 <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3488,10 +3505,10 @@ plot_uni_inex_all_lr1 <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = Lay
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3524,9 +3541,10 @@ dat_text_inex_all_lr2 <- data.frame(
   Stimuli = levels(df_uni_ie_2$Stimuli),
   Hemisphere = "left",
   Layout = "intact",
-  label = levels(df_uni_ie_2$Stimuli),
-  x     = c(1.1, 1.2),
-  y     = 2.4
+  label = c("English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_ie_2$Stimuli),
+  x     = .5, #c(1.1, 1.2),
+  y     = 2.65
 )
 
 plot_uni_inex_all_lr2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3541,10 +3559,10 @@ plot_uni_inex_all_lr2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = Lay
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3571,9 +3589,9 @@ plot_uni_inex_all_lr2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = Lay
 NULL
 
 plot_uni_ie_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol = 2, 
-                              labels = c("", "Intact vs. Exchange"), 
-                              label.x = -0.36,
-                              label.y = 1,
+                              # labels = c("", "Intact vs. Exchange"), 
+                              # label.x = -0.36,
+                              # label.y = 1,
                               font.label = list(size = 24))
 
 # ggsave('plot_uni_all_ie_lr.pdf', plot_uni_ie_lr, width = 15, height = 9)
@@ -3630,9 +3648,12 @@ df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>%
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_uni_tb$Stimuli),
   HemiROI = c("lFFA1"),
-  label = levels(df_uni_tb$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2),
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
+  x     = .5, # c(1, 1.1, 1.2, 1.2),
+  y     = 2.65
 )
 
 df_uni_tb_all <- df_uni_tb %>% 
@@ -3650,10 +3671,10 @@ plot_uni_inex_all <- ggplot(df_uni_tb_all, aes(y = emmean, x = Layout)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "Top vs. Bottom; Left vs. Right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises title = "Top vs. Bottom; Left vs. Right", 
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3691,9 +3712,12 @@ dat_text_inex_all_ <- data.frame(
   Stimuli = levels(df_uni_tb$Stimuli),
   Hemisphere = "left",
   Layout = "partA",
-  label = levels(df_uni_tb$Stimuli),
-  x     = c(1, 1.1, 1.2, 1.2)-0.3,
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters", 
+            "English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
+  x     = .5, # c(1, 1.1, 1.2, 1.2)-0.3,
+  y     = 2.65
 )
 
 plot_uni_inex_all_ <- ggplot(df_uni_tb_all, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3711,7 +3735,7 @@ plot_uni_inex_all_ <- ggplot(df_uni_tb_all, aes(y = emmean, x = ROI, fill = Layo
   labs(title = "Top vs. Bottom; Left vs. Right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3752,9 +3776,10 @@ dat_text_inex_all_lr1 <- data.frame(
   Stimuli = levels(df_uni_tb_1$Stimuli),
   Hemisphere = "left",
   Layout = "partA",
-  label = levels(df_uni_tb_1$Stimuli),
-  x     = c(1, 1.1),
-  y     = 2.4
+  label = c("Chinese speakers: \nChinese faces", 
+            "Chinese speakers: \nChinese characters"), #levels(df_uni_tb_1$Stimuli),
+  x     = .5, # c(1, 1.1),
+  y     = 2.65
 )
 
 plot_uni_inex_all_lr1 <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3769,10 +3794,10 @@ plot_uni_inex_all_lr1 <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = Lay
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3805,9 +3830,10 @@ dat_text_inex_all_lr2 <- data.frame(
   Stimuli = levels(df_uni_tb_2$Stimuli),
   Hemisphere = "left",
   Layout = "partA",
-  label = levels(df_uni_tb_2$Stimuli),
-  x     = c(1.1, 1.2),
-  y     = 2.4
+  label = c("English speakers: \nEnglish words", 
+            "English speakers: \nChinese characters"), # levels(df_uni_tb_2$Stimuli),
+  x     = .5, # c(1.1, 1.2),
+  y     = 2.65
 )
 
 plot_uni_inex_all_lr2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = Layout)) +
@@ -3822,10 +3848,10 @@ plot_uni_inex_all_lr2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = Lay
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "", x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
+  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold") +
+  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
@@ -3852,9 +3878,9 @@ plot_uni_inex_all_lr2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = Lay
 NULL
 
 plot_uni_tb_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol = 2, 
-                              labels = c("", "Top vs. Bottom; Left vs. Right"), 
-                              label.x = -0.6,
-                              label.y = 1,
+                              # labels = c("", "Top vs. Bottom; Left vs. Right"), 
+                              # label.x = -0.6,
+                              # label.y = 1,
                               font.label = list(size = 24))
 
 # ggsave('plot_uni_all_tb_lr.pdf', plot_uni_tb_lr, width = 15, height = 9)
