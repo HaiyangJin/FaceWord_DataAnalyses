@@ -2455,7 +2455,6 @@ one_decode_agg_E2_LO_area <- {
 one_decode_agg_E2_LO_area
 ```
 
-
 ## Plot
 ```{r}
 df_decode_LO_area <- rbind(mutate(one_decode_agg_E1_LO_area, Exp = "E1"),
@@ -2959,6 +2958,7 @@ plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
     panel.spacing = unit(1.5, "lines"),
+    
     # remove the facet background color
     strip.text.x = element_text(size = 15),
     strip.text.y = element_blank(),
@@ -3668,8 +3668,8 @@ dat_text_inex_all <- data.frame(
 )
 
 df_uni_tb_all <- df_uni_tb %>% 
-  mutate(Layout = case_when(Layout %in% c("top", "partA") ~ "partA",
-                            Layout %in% c("bottom", "partB") ~ "partB"))
+  mutate(Layout = case_when(Layout %in% c("top", "partA") ~ "Part 1",
+                            Layout %in% c("bottom", "partB") ~ "Part 2"))
 
 plot_uni_inex_all <- ggplot(df_uni_tb_all, aes(y = emmean, x = Layout)) +
   geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
@@ -3722,7 +3722,7 @@ plot_uni_inex_all
 dat_text_inex_all_ <- data.frame(
   Stimuli = levels(df_uni_tb$Stimuli),
   Hemisphere = "left",
-  Layout = "partA",
+  Layout = "Part 1",
   label = c("Chinese speakers: \nChinese faces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
@@ -3786,7 +3786,7 @@ df_uni_tb_1 <- filter(df_uni_tb_all, Stimuli %in% c("faces", "words")) %>%
 dat_text_inex_all_lr1 <- data.frame(
   Stimuli = levels(df_uni_tb_1$Stimuli),
   Hemisphere = "left",
-  Layout = "partA",
+  Layout = "Part 1",
   label = c("Chinese speakers: \nChinese faces", 
             "Chinese speakers: \nChinese characters"), #levels(df_uni_tb_1$Stimuli),
   x     = .5, # c(1, 1.1),
@@ -3840,7 +3840,7 @@ df_uni_tb_2 <- filter(df_uni_tb_all, Stimuli %in% c("English", "Chinese")) %>%
 dat_text_inex_all_lr2 <- data.frame(
   Stimuli = levels(df_uni_tb_2$Stimuli),
   Hemisphere = "left",
-  Layout = "partA",
+  Layout = "Part 1",
   label = c("English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_uni_tb_2$Stimuli),
   x     = .5, # c(1.1, 1.2),
