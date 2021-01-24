@@ -157,7 +157,9 @@ df_label %>%
   group_by(Label, roi) %>% 
   summarize(Count = n(),
             meanSize = mean(Size),
-            meanNVtx = mean(NVtxs)) 
+            SDSize = sd(Size),
+            meanNVtx = mean(NVtxs),
+            SDNVtx = sd(NVtxs)) 
 ```
 
 #### Number of remaining participants
@@ -168,7 +170,9 @@ df_nlabel <- df_label %>%
   group_by(Label, roi) %>% 
   summarize(Count = n(),
             meanSize = mean(Size),
-            meanNVtx = mean(NVtxs)) 
+            SDSize = sd(Size),
+            meanNVtx = mean(NVtxs),
+            SDNVtx = sd(NVtxs)) 
 
 df_nlabel
 ```
@@ -1215,7 +1219,9 @@ df_label_E2 %>%
   group_by(Label, roi) %>% 
   summarize(Count = n(),
             meanSize = mean(Size),
-            meanNVtx = mean(NVtxs)) 
+            SDSize = sd(Size),
+            meanNVtx = mean(NVtxs),
+            SDNVtx = sd(NVtxs)) 
 ```
 
 #### Number of remaining participants
@@ -1225,7 +1231,9 @@ df_nlabel_E2 <- df_label_E2 %>%
   group_by(Label, roi) %>% 
   summarize(Count = n(),
             meanSize = mean(Size),
-            meanNVtx = mean(NVtxs)) 
+            SDSize = sd(Size),
+            meanNVtx = mean(NVtxs),
+            SDNVtx = sd(NVtxs)) 
 
 df_nlabel_E2
 ```
