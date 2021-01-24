@@ -20,14 +20,14 @@ output:
 This file serves to be a supplementary document that describes all the statistics results performed for this project. It may help to test some new questions that are not included in the corresponding slides. 
 
 ## Experiment designs
-This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed Chinese faces and characters in four conditions (*Layout*: intact, exchange [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, exchange, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
+This file displays the results of the FaceWord project (data collected at NYU). There are two experiments in this project. In Experiment 1, Chinese participants viewed faces and Chinese characters in four conditions (*Layout*: intact, exchange [top and bottom parts were switched], top and bottom) and completed an additional localizer (Chinese faces, Chinese characters, objects, scrambled objects). In Experiment 2, English speakers viewed Chinese characters and English words in four conditions (*Layout*: intact, exchange, top [top parts of Chinese characters; left two letters for English words] and bottom [bottom parts of Chinese characters; right four letters for English words]) and completed an additional localizer (Caucasian faces, English words, objects, scrambled objects).
 
 ## Introduction to the analyses included in this file
 For the **main runs**, analysis is conducted for each ROI separately (FFA1, FFA2, VWFA, LOC).   
 For each ROI, three analyses are performed: 
 
 1. Univariate analysis (Repeated-measures ANOVA) is performed to compare the neural responses (beta values) of different conditions.
-    + E1: 2(Chinese faces vs. Chinese Characters) * 4 (intact, exchange, top vs. bottom); 
+    + E1: 2(faces vs. Chinese Characters) * 4 (intact, exchange, top vs. bottom); 
     + E2: 2(Chinese characters vs. English words) * 4 (intact, exchange, top vs. bottom).
 2. Multivariate pattern analysis (MVPA) with `libsvm` is used to decode different condition pairs (see below) and one-tail one-sample t-tests is used to test if the pair of conditions can be decoded [whether the accuracy is significantly larger than the chancel level (0.5); one-tail one-sample t-tests]. Leave-one(-run)-out cross-validation is applied. No normalized or demean were used.
     + Pairs in E1: 
@@ -111,7 +111,7 @@ nDigitals <- 3 # number of digitials of p-values in plots
 
 ```
 
-# Experiment 1: Chinese faces and Chinese characters for Chinese participants
+# Experiment 1: faces and Chinese characters for Chinese participants
 ## Load and clean data 
 ```{r assign filenames E1, include=showAll}
 pair_order_E1 <- c("face_intact-word_intact",
@@ -2488,7 +2488,7 @@ df_intact_LO_area <- filter(df_decode_LO_area, Layout == "intact") %>%
 dat_text_intact_LO_area <- data.frame(
   Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces vs. characters", 
+  label = c("Chinese speakers: \nfaces vs. Chinese characters", 
             "English speakers: \nEnglish words vs. Chinese characters"),
   x     = .5, # c(1.35, 1.6),
   y     = 1.05
@@ -2550,7 +2550,7 @@ df_inex_LO_area$Stimuli <- fct_relevel(df_inex_LO_area$Stimuli, "Chinese", after
 dat_text_inex_LO_area <- data.frame(
   Stimuli = levels(df_inex_LO_area$Stimuli),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_inex_LO_area$Stimuli),
@@ -2608,7 +2608,7 @@ plot_inex_LO_area
 dat_text_inex_LO_area_lr_fw <- data.frame(
   Stimuli = levels(df_inex_LO_area$Stimuli)[1:2],
   Hemisphere = "left",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters"),
   x     = .5, # c(1, 1.1),
   y     = 1.05
@@ -2726,7 +2726,7 @@ df_parts_LO_area$Stimuli <- fct_relevel(df_parts_LO_area$Stimuli, "Chinese", aft
 dat_parts_inex_LO_area <- data.frame(
   Stimuli = levels(df_parts_LO_area$Stimuli),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"),
@@ -2785,7 +2785,7 @@ plot_topbottom_LO_area
 dat_text_tb_all_lr_E1 <- data.frame(
   Stimuli = levels(df_parts_LO_area$Stimuli)[1:2],
   Hemisphere = "left",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters"), # levels(df_parts_LO_area$Stimuli)[1:2],
   x     = .5, # c(1, 1.1),
   y     = 1.05
@@ -2927,7 +2927,7 @@ df_intact <- filter(df_decoding, Layout == "intact") %>%
 dat_text_intact_all <- data.frame(
   Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces vs. characters", 
+  label = c("Chinese speakers: \nfaces vs. Chinese characters", 
             "English speakers: \nEnglish words vs. Chinese characters"),
   x     = 0.5,
   y     = 1.05
@@ -2990,7 +2990,7 @@ df_inex$Stimuli <- fct_relevel(df_inex$Stimuli, "Chinese", after = Inf)
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_inex$Stimuli),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_inex$Stimuli),
@@ -3049,7 +3049,7 @@ plot_inex_all
 dat_text_inex_all_lr_fw <- data.frame(
   Stimuli = levels(df_inex$Stimuli)[1:2],
   Hemisphere = "left",
-  label = c("Chinese speakers: \nChinese faces", # intact vs. exchanged 
+  label = c("Chinese speakers: \nfaces", # intact vs. exchanged 
             "Chinese speakers: \nChinese characters"), # intact vs. exchanged levels(df_inex$Stimuli)[1:2],
   x     = .5,
   y     = 1.05
@@ -3168,7 +3168,7 @@ df_parts$Stimuli <- fct_relevel(df_parts$Stimuli, "Chinese", after = Inf)
 dat_parts_inex_all <- data.frame(
   Stimuli = levels(df_parts$Stimuli),
   Hemisphere = c("left"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), #levels(df_parts$Stimuli),
@@ -3227,7 +3227,7 @@ plot_topbottom_all
 dat_text_tb_all_lr_E1 <- data.frame(
   Stimuli = levels(df_parts$Stimuli)[1:2],
   Hemisphere = "left",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters"), #levels(df_parts$Stimuli)[1:2],
   x     = .5,
   y     = 1.05
@@ -3382,7 +3382,7 @@ df_uni_ie$Layout <- fct_relevel(df_uni_ie$Layout, "exchange", after = Inf)
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_uni_ie$Stimuli),
   HemiROI = c("lFFA1"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
@@ -3442,7 +3442,7 @@ dat_text_inex_all_ <- data.frame(
   Stimuli = levels(df_uni_ie$Stimuli),
   Hemisphere = "left",
   Layout = "intact",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
@@ -3506,7 +3506,7 @@ dat_text_inex_all_lr1 <- data.frame(
   Stimuli = levels(df_uni_ie_1$Stimuli),
   Hemisphere = "left",
   Layout = "intact",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters"), # levels(df_uni_ie_1$Stimuli),
   x     = .5, # c(1, 1.1),
   y     = 2.65
@@ -3667,7 +3667,7 @@ df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>%
 dat_text_inex_all <- data.frame(
   Stimuli = levels(df_uni_tb$Stimuli),
   HemiROI = c("lFFA1"),
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
@@ -3731,7 +3731,7 @@ dat_text_inex_all_ <- data.frame(
   Stimuli = levels(df_uni_tb$Stimuli),
   Hemisphere = "left",
   Layout = "Part 1",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters", 
             "English speakers: \nEnglish words", 
             "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
@@ -3795,7 +3795,7 @@ dat_text_inex_all_lr1 <- data.frame(
   Stimuli = levels(df_uni_tb_1$Stimuli),
   Hemisphere = "left",
   Layout = "Part 1",
-  label = c("Chinese speakers: \nChinese faces", 
+  label = c("Chinese speakers: \nfaces", 
             "Chinese speakers: \nChinese characters"), #levels(df_uni_tb_1$Stimuli),
   x     = .5, # c(1, 1.1),
   y     = 2.65
