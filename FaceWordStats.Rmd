@@ -304,7 +304,7 @@ contr_aov_E1_lFFA1
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E1_lFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA1, 
@@ -318,7 +318,11 @@ emm_E1_lFFA1_ie <- emmeans(anova_E1_lFFA1_ie, ~ FaceWord + Layout)
 (simple_E1_lFFA1_ie <- pairs(emm_E1_lFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_lFFA1_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_lFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA1, 
@@ -330,6 +334,10 @@ anova(anova_E1_lFFA1_tb, "pes")
 ```{r}
 emm_E1_lFFA1_tb <- emmeans(anova_E1_lFFA1_tb, ~ FaceWord + Layout)
 (simple_E1_lFFA1_tb <- pairs(emm_E1_lFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_lFFA1_tb, interaction = "pairwise")
 ```
 
 ##### Right FFA1
@@ -377,7 +385,11 @@ emm_E1_rFFA1_ie <- emmeans(anova_E1_rFFA1_ie, ~ FaceWord + Layout)
 (simple_E1_rFFA1_ie <- pairs(emm_E1_rFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_rFFA1_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_rFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA1, 
@@ -389,6 +401,10 @@ anova(anova_E1_rFFA1_tb, "pes")
 ```{r}
 emm_E1_rFFA1_tb <- emmeans(anova_E1_rFFA1_tb, ~ FaceWord + Layout)
 (simple_E1_rFFA1_tb <- pairs(emm_E1_rFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_rFFA1_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -550,7 +566,7 @@ contr_aov_E1_lFFA2
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E1_lFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA2, 
@@ -564,7 +580,11 @@ emm_E1_lFFA2_ie <- emmeans(anova_E1_lFFA2_ie, ~ FaceWord + Layout)
 (simple_E1_lFFA2_ie <- pairs(emm_E1_lFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_lFFA2_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_lFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA2, 
@@ -576,6 +596,10 @@ anova(anova_E1_lFFA2_tb, "pes")
 ```{r}
 emm_E1_lFFA2_tb <- emmeans(anova_E1_lFFA2_tb, ~ FaceWord + Layout)
 (simple_E1_lFFA2_tb <- pairs(emm_E1_lFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_lFFA2_tb, interaction = "pairwise")
 ```
 
 ##### Right FFA2
@@ -623,7 +647,11 @@ emm_E1_rFFA2_ie <- emmeans(anova_E1_rFFA2_ie, ~ FaceWord + Layout)
 (simple_E1_rFFA2_ie <- pairs(emm_E1_rFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_rFFA2_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_rFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_FFA2, 
@@ -635,6 +663,10 @@ anova(anova_E1_rFFA2_tb, "pes")
 ```{r}
 emm_E1_rFFA2_tb <- emmeans(anova_E1_rFFA2_tb, ~ FaceWord + Layout)
 (simple_E1_rFFA2_tb <- pairs(emm_E1_rFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_rFFA2_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -796,7 +828,7 @@ contr_aov_E1_VWFA
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E1_VWFA_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_VWFA, 
@@ -810,7 +842,11 @@ emm_E1_VWFA_ie <- emmeans(anova_E1_VWFA_ie, ~ FaceWord + Layout)
 (simple_E1_VWFA_ie <- pairs(emm_E1_VWFA_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_VWFA_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_VWFA_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_VWFA, 
@@ -822,6 +858,10 @@ anova(anova_E1_VWFA_tb, "pes")
 ```{r}
 emm_E1_VWFA_tb <- emmeans(anova_E1_VWFA_tb, ~ FaceWord + Layout)
 (simple_E1_VWFA_tb <- pairs(emm_E1_VWFA_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_VWFA_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -979,7 +1019,7 @@ contr_aov_E1_lLO
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E1_lLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_LO, 
@@ -993,7 +1033,11 @@ emm_E1_lLO_ie <- emmeans(anova_E1_lLO_ie, ~ FaceWord + Layout)
 (simple_E1_lLO_ie <- pairs(emm_E1_lLO_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E1_lLO_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_lLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_LO, 
@@ -1005,6 +1049,10 @@ anova(anova_E1_lLO_tb, "pes")
 ```{r}
 emm_E1_lLO_tb <- emmeans(anova_E1_lLO_tb, ~ FaceWord + Layout)
 (simple_E1_lLO_tb <- pairs(emm_E1_lLO_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_lLO_tb, interaction = "pairwise")
 ```
 
 ##### Right LO
@@ -1052,8 +1100,11 @@ emm_E1_rLO_ie <- emmeans(anova_E1_rLO_ie, ~ FaceWord + Layout)
 (simple_E1_rLO_ie <- pairs(emm_E1_rLO_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
+```{r}
+contrast(emm_E1_rLO_ie, interaction = "pairwise")
+```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E1_rLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E1_LO, 
@@ -1065,6 +1116,10 @@ anova(anova_E1_rLO_tb, "pes")
 ```{r}
 emm_E1_rLO_tb <- emmeans(anova_E1_rLO_tb, ~ FaceWord + Layout)
 (simple_E1_rLO_tb <- pairs(emm_E1_rLO_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E1_rLO_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -1391,7 +1446,7 @@ contr_aov_E2_lFFA1
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1405,7 +1460,11 @@ emm_E2_lFFA1_ie <- emmeans(anova_E2_lFFA1_ie, ~ FaceWord + Layout)
 (simple_E2_lFFA1_ie <- pairs(emm_E2_lFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_lFFA1_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1417,6 +1476,10 @@ anova(anova_E2_lFFA1_tb, "pes")
 ```{r}
 emm_E2_lFFA1_tb <- emmeans(anova_E2_lFFA1_tb, ~ FaceWord + Layout)
 (simple_E2_lFFA1_tb <- pairs(emm_E2_lFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_lFFA1_tb, interaction = "pairwise")
 ```
 
 ##### Right FFA1
@@ -1464,7 +1527,11 @@ emm_E2_rFFA1_ie <- emmeans(anova_E2_rFFA1_ie, ~ FaceWord + Layout)
 (simple_E2_rFFA1_ie <- pairs(emm_E2_rFFA1_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_rFFA1_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1476,6 +1543,10 @@ anova(anova_E2_rFFA1_tb, "pes")
 ```{r}
 emm_E2_rFFA1_tb <- emmeans(anova_E2_rFFA1_tb, ~ FaceWord + Layout)
 (simple_E2_rFFA1_tb <- pairs(emm_E2_rFFA1_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_rFFA1_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -1633,7 +1704,7 @@ contr_aov_E2_lFFA2
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1647,7 +1718,11 @@ emm_E2_lFFA2_ie <- emmeans(anova_E2_lFFA2_ie, ~ FaceWord + Layout)
 (simple_E2_lFFA2_ie <- pairs(emm_E2_lFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_lFFA2_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1661,6 +1736,9 @@ emm_E2_lFFA2_tb <- emmeans(anova_E2_lFFA2_tb, ~ FaceWord + Layout)
 (simple_E2_lFFA2_tb <- pairs(emm_E2_lFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
+```{r}
+contrast(emm_E2_lFFA2_tb, interaction = "pairwise")
+```
 
 ##### Right FFA2
 ###### 4 * 2
@@ -1707,7 +1785,11 @@ emm_E2_rFFA2_ie <- emmeans(anova_E2_rFFA2_ie, ~ FaceWord + Layout)
 (simple_E2_rFFA2_ie <- pairs(emm_E2_rFFA2_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_rFFA2_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1719,6 +1801,10 @@ anova(anova_E2_rFFA2_tb, "pes")
 ```{r}
 emm_E2_rFFA2_tb <- emmeans(anova_E2_rFFA2_tb, ~ FaceWord + Layout)
 (simple_E2_rFFA2_tb <- pairs(emm_E2_rFFA2_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_rFFA2_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -1880,7 +1966,7 @@ contr_aov_E2_VWFA
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_VWFA_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_VWFA, 
@@ -1894,7 +1980,11 @@ emm_E2_VWFA_ie <- emmeans(anova_E2_VWFA_ie, ~ FaceWord + Layout)
 (simple_E2_VWFA_ie <- pairs(emm_E2_VWFA_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_VWFA_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_VWFA_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_VWFA, 
@@ -1906,6 +1996,10 @@ anova(anova_E2_VWFA_tb, "pes")
 ```{r}
 emm_E2_VWFA_tb <- emmeans(anova_E2_VWFA_tb, ~ FaceWord + Layout)
 (simple_E2_VWFA_tb <- pairs(emm_E2_VWFA_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_VWFA_tb, interaction = "pairwise")
 ```
 
 #### Plot
@@ -2065,7 +2159,7 @@ contr_aov_E2_lLO
 ```
 
 ###### 2 * 2
-2(face vs. word)$\times$2(intact vs. exchange) ANOVA
+2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2079,7 +2173,11 @@ emm_E2_lLO_ie <- emmeans(anova_E2_lLO_ie, ~ FaceWord + Layout)
 (simple_E2_lLO_ie <- pairs(emm_E2_lLO_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+```{r}
+contrast(emm_E2_lLO_ie, interaction = "pairwise")
+```
+
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2091,6 +2189,10 @@ anova(anova_E2_lLO_tb, "pes")
 ```{r}
 emm_E2_lLO_tb <- emmeans(anova_E2_lLO_tb, ~ FaceWord + Layout)
 (simple_E2_lLO_tb <- pairs(emm_E2_lLO_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_lLO_tb, interaction = "pairwise")
 ```
 
 ##### Right LO
@@ -2138,8 +2240,11 @@ emm_E2_rLO_ie <- emmeans(anova_E2_rLO_ie, ~ FaceWord + Layout)
 (simple_E2_rLO_ie <- pairs(emm_E2_rLO_ie, simple = "each", combine = TRUE, adjust = "none"))
 ```
 
+```{r}
+contrast(emm_E2_rLO_ie, interaction = "pairwise")
+```
 
-2(face vs. word)$\times$2(top vs. bottom) ANOVA
+2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2151,6 +2256,10 @@ anova(anova_E2_rLO_tb, "pes")
 ```{r}
 emm_E2_rLO_tb <- emmeans(anova_E2_rLO_tb, ~ FaceWord + Layout)
 (simple_E2_rLO_tb <- pairs(emm_E2_rLO_tb, simple = "each", combine = TRUE, adjust = "none"))
+```
+
+```{r}
+contrast(emm_E2_rLO_tb, interaction = "pairwise")
 ```
 
 #### Plot
