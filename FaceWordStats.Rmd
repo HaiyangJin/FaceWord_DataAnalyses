@@ -457,7 +457,8 @@ one_decode_agg_E1_FFA1 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -492,7 +493,8 @@ one_simi_E1_FFA1 <- {
   df_simi_E1_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -719,7 +721,8 @@ one_decode_agg_E1_FFA2 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -752,7 +755,8 @@ one_simi_E1_FFA2 <- {
   df_simi_E1_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -910,7 +914,8 @@ one_decode_agg_E1_VWFA <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -946,7 +951,8 @@ one_simi_E1_VWFA <- {
   df_simi_E1_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -1174,7 +1180,8 @@ one_decode_agg_E1_LO <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -1209,7 +1216,8 @@ one_simi_E1_LO <- {
   df_simi_E1_LO %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -1446,7 +1454,7 @@ contr_aov_E2_lFFA1
 ```
 
 ###### 2 * 2
-2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lFFA1_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1464,7 +1472,7 @@ emm_E2_lFFA1_ie <- emmeans(anova_E2_lFFA1_ie, ~ FaceWord + Layout)
 contrast(emm_E2_lFFA1_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1531,7 +1539,7 @@ emm_E2_rFFA1_ie <- emmeans(anova_E2_rFFA1_ie, ~ FaceWord + Layout)
 contrast(emm_E2_rFFA1_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rFFA1_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA1, 
@@ -1599,7 +1607,8 @@ one_decode_agg_E2_FFA1 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -1633,7 +1642,8 @@ one_simi_E2_FFA1 <- {
   df_simi_E2_FFA1 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -1704,7 +1714,7 @@ contr_aov_E2_lFFA2
 ```
 
 ###### 2 * 2
-2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lFFA2_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1722,7 +1732,7 @@ emm_E2_lFFA2_ie <- emmeans(anova_E2_lFFA2_ie, ~ FaceWord + Layout)
 contrast(emm_E2_lFFA2_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1789,7 +1799,7 @@ emm_E2_rFFA2_ie <- emmeans(anova_E2_rFFA2_ie, ~ FaceWord + Layout)
 contrast(emm_E2_rFFA2_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rFFA2_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_FFA2, 
@@ -1857,7 +1867,8 @@ one_decode_agg_E2_FFA2 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -1890,7 +1901,8 @@ one_simi_E2_FFA2 <- {
   df_simi_E2_FFA2 %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -1966,7 +1978,7 @@ contr_aov_E2_VWFA
 ```
 
 ###### 2 * 2
-2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_VWFA_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_VWFA, 
@@ -1984,7 +1996,7 @@ emm_E2_VWFA_ie <- emmeans(anova_E2_VWFA_ie, ~ FaceWord + Layout)
 contrast(emm_E2_VWFA_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_VWFA_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_VWFA, 
@@ -2052,7 +2064,8 @@ one_decode_agg_E2_VWFA <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -2086,7 +2099,8 @@ one_simi_E2_VWFA <- {
   df_simi_E2_VWFA %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -2159,7 +2173,7 @@ contr_aov_E2_lLO
 ```
 
 ###### 2 * 2
-2(face vs. word) $\times$ 2(intact vs. exchange) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(intact vs. exchange) ANOVA
 ```{r}
 anova_E2_lLO_ie <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2177,7 +2191,7 @@ emm_E2_lLO_ie <- emmeans(anova_E2_lLO_ie, ~ FaceWord + Layout)
 contrast(emm_E2_lLO_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_lLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2244,7 +2258,7 @@ emm_E2_rLO_ie <- emmeans(anova_E2_rLO_ie, ~ FaceWord + Layout)
 contrast(emm_E2_rLO_ie, interaction = "pairwise")
 ```
 
-2(face vs. word) $\times$ 2(top vs. bottom) ANOVA
+2(English words vs. Chinese characters) $\times$ 2(top vs. bottom) ANOVA
 ```{r}
 anova_E2_rLO_tb <- aov_4(Response ~ FaceWord * Layout + (FaceWord * Layout | SubjCode), 
                            data = filter(df_uni_E2_LO, 
@@ -2313,7 +2327,8 @@ one_decode_agg_E2_LO <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
     group_by(Hemisphere, ClassifyPair) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -2348,7 +2363,8 @@ one_simi_E2_LO <- {
   df_simi_E2_LO %>% 
     group_by(Hemisphere, Combination) %>% 
     summarize(mean = t.test(RateAsExchange, mu = 0.5)[[5]],
-              SD = t.test(RateAsExchange, mu = 0.5)[[7]],
+              SE = t.test(RateAsExchange, mu = 0.5)[[7]],
+              cohens_d = (mean-0.5)/sd(RateAsExchange),
               t = t.test(RateAsExchange, mu = 0.5)[[1]],
               df = t.test(RateAsExchange, mu = 0.5)[[2]],
               p = round(t.test(RateAsExchange, mu = 0.5)[[3]], 5),
@@ -2459,7 +2475,8 @@ one_decode_agg_E1_LO_area <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1)) %>% 
     group_by(Hemisphere, ClassifyPair, Label) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
@@ -2558,7 +2575,8 @@ one_decode_agg_E2_LO_area <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2)) %>% 
     group_by(Hemisphere, ClassifyPair, Label) %>% 
     summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SD = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
               t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
               df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
               p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
