@@ -4154,262 +4154,367 @@ plot_inex_lr_pub
 
 ## For VSS2021
 ```{r}
-vss_colors <- c("#1107F5", "#726DF5", "#E7ED4E", "#EAEC94", "#75FB4C", "#B1FC9A", "#D030E2", "#D989E3")
+# vss_colors <- c("#e3eb00", "#ecf081", # FFA2
+#                 "#e88b1a", "#e3a65d", # FFA1
+#                 "#1dd904", "#86db7b", # VWFA (green) "#20e307"
+#                 # "#1107F5", "#6e67f0",# VWFA (blue)
+#                 "#d12e11", "#c97263") # LO
+
+vss_colors <- c("#e88b1a", "#e3a65d", # FFA2
+                "#d12e11", "#c97263", # FFA1
+                "#1107F5", "#6e67f0",# VWFA (blue)
+                "#1dd904", "#86db7b") # LO
+
 ```
 
 ```{r fig.width=5, fig.asp=.618}
-vssplot_uni_ie_E1 <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+
+df_uni_ie_1_vss <- df_uni_ie_1 %>% 
+  mutate(HemiROI = as_factor(toupper(HemiROI)),
+         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
+         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
+         Hemisphere = fct_rev(Hemisphere))
+
+vssplot_uni_face_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="faces"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  facet_grid( ~ Hemisphere, scales = "free_x", space = "free_x",
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
-
-ggsave("vss_plot_uni_ie_E1.pdf", vssplot_uni_ie_E1, width = 11, height=11*.7)
+vssplot_uni_face_ie_E1
+# ggsave("vss_plot_uni_ie_face_E1.pdf", vssplot_uni_face_ie_E1, width = 11, height=11*.35)
 ```
 
-
 ```{r fig.width=5, fig.asp=.618}
-vssplot_uni_tb_E1 <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+vssplot_uni_word_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="words"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  facet_grid( ~ Hemisphere, scales = "free_x", space = "free_x",
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
-
-ggsave("vss_plot_uni_tb_E1.pdf", vssplot_uni_tb_E1, width = 11, height=11*.7)
+vssplot_uni_word_ie_E1
+# ggsave("vss_plot_uni_ie_word_E1.pdf", vssplot_uni_word_ie_E1, width = 11, height=11*.35)
 ```
 
-```{r fig.width=5, fig.asp=.618}
-vssplot_uni_ie_E2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+```{r fig.width=4, fig.asp=.618}
+
+df_uni_tb_1_vss <- df_uni_tb_1 %>% 
+  mutate(HemiROI = as_factor(toupper(HemiROI)),
+         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
+         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
+         Hemisphere = fct_rev(Hemisphere)) %>% 
+  filter(Hemisphere=="left")
+
+vssplot_uni_face_tb_E1 <- ggplot(filter(df_uni_tb_1_vss, Stimuli=="faces"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  # facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
+  #            switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
-NULL
-
-ggsave("vss_plot_uni_ie_E2.pdf", vssplot_uni_ie_E2, width = 11, height=11*.7)
+  NULL
+vssplot_uni_face_tb_E1
+# ggsave("vss_plot_uni_tb_face_E1.pdf", vssplot_uni_face_tb_E1, width = 6.2, height=11*.35)
 ```
 
+```{r fig.width=4, fig.asp=.618}
 
-```{r fig.width=5, fig.asp=.618}
-vssplot_uni_tb_E2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+vssplot_uni_tb_word_E1 <- ggplot(filter(df_uni_tb_1_vss, Stimuli=="words"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  # facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
+  #            switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
-NULL
-
-ggsave("vss_plot_uni_tb_E2.pdf", vssplot_uni_tb_E2, width = 11, height=11*.7)
+  NULL
+vssplot_uni_tb_word_E1
+# ggsave("vss_plot_uni_tb_word_E1.pdf", vssplot_uni_tb_word_E1, width = 6.2, height=11*.35)
 ```
 
 ```{r fig.width=5, fig.asp=.618}
-vssplot_uni_ie_E1_vlegend <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+
+df_uni_ie_2_vss <- df_uni_ie_2 %>% 
+  mutate(HemiROI = as_factor(toupper(HemiROI)),
+         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
+         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
+         Hemisphere = fct_rev(Hemisphere),
+         lower.CL = ifelse(lower.CL<0, 0, lower.CL))
+
+vssplot_uni_en_ie_E2 <- ggplot(filter(df_uni_ie_2_vss, Stimuli=="English"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  facet_grid( ~ Hemisphere, scales = "free_x", space = "free_x",
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "right",
+    legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
-
-ggsave("vss_plot_uni_ie_E1_vlengend.pdf", vssplot_uni_ie_E1_vlegend, width = 11, height=11*.7)
+vssplot_uni_en_ie_E2
+# ggsave("vss_plot_uni_ie_en_E2.pdf", vssplot_uni_en_ie_E2, width = 11, height=11*.35)
 ```
 
 ```{r fig.width=5, fig.asp=.618}
-vssplot_uni_tb_E1_vlegend <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+
+vssplot_uni_cn_ie_E2 <- ggplot(filter(df_uni_ie_2_vss, Stimuli=="Chinese"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+  facet_grid( ~ Hemisphere, scales = "free_x", space = "free_x",
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axis
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "right",
+    legend.position = "bottom",
     legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
-
-ggsave("vss_plot_uni_tb_E1_vlengend.pdf", vssplot_uni_tb_E1_vlegend, width = 11, height=11*.7)
+vssplot_uni_cn_ie_E2
+# ggsave("vss_plot_uni_ie_cn_E2.pdf", vssplot_uni_cn_ie_E2, width = 11, height=11*.35)
 ```
+
+
+```{r fig.width=4, fig.asp=.618}
+
+df_uni_tb_2_vss <- df_uni_tb_2 %>% 
+  mutate(HemiROI = as_factor(toupper(HemiROI)),
+         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
+         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
+         Hemisphere = fct_rev(Hemisphere),
+         lower.CL = ifelse(lower.CL<0, 0, lower.CL)) %>% 
+  filter(Hemisphere=="left")
+
+vssplot_uni_en_tb_E2 <- ggplot(filter(df_uni_tb_2_vss, Stimuli=="English"), 
+                            aes(y = emmean, x = HemiROI, 
+                                fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = vss_colors) +
+  # facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
+  #            switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    # remove the facet background color
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+  ) +
+  NULL
+vssplot_uni_en_tb_E2
+# ggsave("vss_plot_uni_tb_en_E2.pdf", vssplot_uni_en_tb_E2, width = 6.2, height=11*.35)
+```
+
+```{r fig.width=4, fig.asp=.618}
+
+vssplot_uni_cn_tb_E2 <- ggplot(filter(df_uni_tb_2_vss, Stimuli=="Chinese"), 
+                               aes(y = emmean, x = HemiROI, 
+                                   fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+  scale_fill_manual(values = vss_colors) +
+  # facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x",
+  #            switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  labs(y = "Beta values") +  # set the names for main, x and y axis
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    # remove the facet background color
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+  ) +
+  NULL
+vssplot_uni_cn_tb_E2
+# ggsave("vss_plot_uni_tb_cn_E2.pdf", vssplot_uni_cn_tb_E2, width = 6.2, height=11*.35)
+```
+
 
 # Versions of packages used
 ```{r versions}

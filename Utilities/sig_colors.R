@@ -18,8 +18,8 @@ sig_ast <- function(pvalue_list, default_ast = ""){
   pvalue_list <- as.numeric(pvalue_list)
   
   ast_list <- ifelse(pvalue_list < .001, "***",
-                       ifelse(pvalue_list < .01, "**", 
-                              ifelse(pvalue_list <= .05, "*", default_ast)))
+                     ifelse(pvalue_list < .01, "**", 
+                            ifelse(pvalue_list <= .05, "*", default_ast)))
   
   return(ast_list)
 }
