@@ -1,0 +1,865 @@
+---
+title: "FaceWord Project -- Data Analysis"
+author: "[Haiyang Jin](https://haiyangjin.github.io/)"
+date: "`r format(Sys.time(), '%b %d %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+    toc: true
+    toc_depth: 6
+    toc_float: 
+      collapsed: true
+      smooth_scroll: false
+    includes:
+      after_body: Utilities/footer.html
+---
+
+
+# Preparations
+```{r general setting for this document, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)  # hide all warnings
+knitr::opts_chunk$set(message = FALSE)  # hide all messages
+# knitr::opts_chunk$set(echo = FALSE)  # hide all codes and only show output
+# knitr::opts_chunk$set(fig.width = 11)  
+
+options(width = 450)
+showAll = TRUE  # if show steps for cleaning 
+```
+
+```{r preparation, include=FALSE}
+# load library
+library(tidyverse)
+library(afex)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(ggpubr)
+library(tools)
+
+```
+
+```{r include=showAll}
+# set the order of levels in factors
+loc_order <- c("face", "object", "word", "scrambled")
+
+faceword_order <- c("faces", "words")
+words_order <- c("English", "Chinese")
+layout_order <- c("intact", "exchange", "top", "bottom")
+roi_order <- c("FFA1", "FFA2", "VWFA", "LO")
+
+label_FFA1 <- c("roi.lh.f-vs-o.ffa1.label", "roi.rh.f-vs-o.ffa1.label")
+label_FFA2 <- c("roi.lh.f-vs-o.ffa2.label", "roi.rh.f-vs-o.ffa2.label")
+label_VWFA <- "roi.lh.word-vs-face-object-scrambled.label"
+label_LO <- c("roi.lh.o-vs-scr.label", "roi.rh.o-vs-scr.label")
+
+# criterion of vertex number
+nVtx_size_min <- 30  # mm^2
+
+```
+
+```{r setting for plots, include=showAll}
+# set up the theme for plot and rainclound plot
+# load all the R files in "Utilities/"
+tmp <- sapply(list.files('Utilities', "*.R", full.names = TRUE, recursive = TRUE), source)
+
+activationUL <- 2.75
+onesample0 <- 0.3 # the staring point of y axis (for one-sample t-tests)
+nDigitals <- 3 # number of digitials of p-values in plots
+
+```
+
+# Experiment 1: faces and Chinese characters for Chinese participants
+## Load and clean data 
+```{r assign filenames E1, include=showAll}
+pair_order_E1 <- c("face_intact-word_intact",
+                   "face_intact-face_exchange",
+                   "face_top-face_bottom",
+                   "word_intact-word_exchange",
+                   "word_top-word_bottom")
+
+```
+
+### Data for univariate analyses
+#### ROI area
+```{r}
+df_area_uni_E1 <- read_csv(file.path("data_roi_area", "faceword_E1_Uni_area_HJ.csv"))
+```
+
+```{r}
+df_clean_area_uni_E1 <- {
+  df_area_uni_E1 %>% 
+    filter(Response != "NaN") %>% 
+    separate(Condition, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
+    mutate(FaceWord = gsub("face", "faces", FaceWord),
+           FaceWord = gsub("word", "words", FaceWord),  
+           Layout = factor(Layout, levels = layout_order), # convert the two IVs to factors
+           Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
+    select(Hemisphere, Label, SessCode, FaceWord, Layout, Area, Response) %>% 
+    mutate(Subject = str_replace(SessCode, "\\_.*", "")) 
+}
+
+head(df_clean_area_uni_E1)
+```
+
+### Data of decoding
+
+#### ROI area
+```{r load data file from cosmoMVPA E1 area, message=FALSE, include=showAll}
+df_decode_area_E1 <- read_csv(file.path("data_roi_area", "faceword_roi_area_E1_Decode_noz.csv"))
+
+head(df_decode_area_E1)
+```
+
+```{r clean the cosmoMVPA data area E1 area, include=showAll}
+df_decode_area_acc_E1 <- df_decode_area_E1 %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Area = str_extract(Label, "a\\d"), # find the area
+         Subject = str_remove(SessCode, "\\_.*")) %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_area_acc_E1
+```
+
+## Label:FFA1
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA1
+Area
+```{r}
+anova_E1_lFFA1_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("lh.f-vs-o.ffa1", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_lFFA1_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_lFFA1 <-contrast(emmeans(anova_E1_lFFA1_area, ~ Layout | FaceWord + Area), 
+                                 "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right FFA1
+Area
+```{r}
+anova_E1_rFFA1_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("rh.f-vs-o.ffa1", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_rFFA1_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_rFFA1 <- contrast(emmeans(anova_E1_rFFA1_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E1 FFA1 area}
+# one-sample for results of decode E1 FFA1
+one_decode_area_agg_E1_FFA1 <- {
+  df_decode_area_acc_E1 %>% 
+    filter(grepl("f-vs-o.ffa1", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E1_FFA1
+```
+lFFA1 word_intact vs. word_exchange is significantly above chance (300 mm^2).
+
+rFFA1 face_intact vs. face_exchange is marginally (p = 0.05021) above chance (50 mm^2).
+
+## Label:FFA2
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA2
+Area
+```{r}
+anova_E1_lFFA2_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("lh.f-vs-o.ffa2", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_lFFA2_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_lFFA2 <- contrast(emmeans(anova_E1_lFFA2_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right FFA2
+Area
+```{r}
+anova_E1_rFFA2_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("rh.f-vs-o.ffa2", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_rFFA2_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_rFFA2 <- contrast(emmeans(anova_E1_rFFA2_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E1 FFA2 area}
+# one-sample for results of decode E1 FFA2
+one_decode_area_agg_E1_FFA2<- {
+  df_decode_area_acc_E1 %>% 
+    filter(grepl("f-vs-o.ffa2", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E1_FFA2
+```
+
+lFFA2: face intact vs. face exchanged above chance (200 and 300)
+rFFA2: face intact vs. face exchanged "marginally" above chance (>0.068; one-sided)
+
+
+## Label: left Visual Word Form Area (VWFA)
+
+### Univariate analyses
+#### rm-ANOVA 
+Area
+```{r}
+anova_E1_VWFA_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("lh.word-vs-face-object-scrambled", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_VWFA_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_VWFA <- contrast(emmeans(anova_E1_VWFA_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+
+Area
+```{r one-sample for results of decode E1 VWFA area}
+# one-sample for results of decode E1 VWFA
+one_decode_area_agg_E1_VWFA<- {
+  df_decode_area_acc_E1 %>% 
+    filter(grepl("lh.word-vs-face-object-scrambled", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E1_VWFA
+```
+
+VWFA: word_intact vs. word_exchange significant above chance (100, 300mm^2). 
+
+## Label:Lateral Occipital Cortex
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left LO
+Area
+```{r}
+anova_E1_lLO_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("lh.o-vs-scr", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_lLO_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_lLO <- contrast(emmeans(anova_E1_lLO_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right LO
+Area
+```{r}
+anova_E1_rLO_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E1 %>% 
+                                  filter(grepl("rh.o-vs-scr", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E1_rLO_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E1_rLO <- contrast(emmeans(anova_E1_rLO_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E1 LO area}
+# one-sample for results of decode E1 LO
+one_decode_area_agg_E1_LO<- {
+  df_decode_area_acc_E1 %>% 
+    filter(grepl("o-vs-scr", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E1_LO
+```
+
+# Experiment 2: English and Chinese characters for Caucasian participants
+## Load and clean data 
+```{r assign filenames E2, include=showAll}
+pair_order_E2 <- c("English_intact-Chinese_intact",
+                   "English_intact-English_exchange",
+                   "English_top-English_bottom", # English_top-English_bottom
+                   "Chinese_intact-Chinese_exchange",
+                   "Chinese_top-Chinese_bottom") # Chinese_top-Chinese_bottom
+
+```
+
+### Data for univariate analyses
+#### ROI area
+```{r}
+df_area_uni_E2 <- read_csv(file.path("data_roi_area", "faceword_E2_Uni_area_HJ.csv"))
+```
+
+```{r}
+df_clean_area_uni_E2 <- {
+  df_area_uni_E2 %>% 
+    filter(Response != "NaN") %>% 
+    separate(Condition, c("FaceWord", "Layout"), "_") %>% # separate the conditions into two IVs
+    mutate(FaceWord = gsub("face", "faces", FaceWord),
+           FaceWord = gsub("word", "words", FaceWord),  
+           Layout = factor(Layout, levels = layout_order), # convert the two IVs to factors
+           Hemisphere = if_else(grepl("lh", Label), "left", if_else(grepl("rh", Label), "right", "NA"))) %>% 
+    select(Hemisphere, Label, SessCode, FaceWord, Layout, Area, Response) %>% 
+    mutate(Subject = str_replace(SessCode, "\\_.*", "")) 
+}
+
+head(df_clean_area_uni_E2)
+```
+
+### Data of decoding
+
+#### ROI area
+```{r load data file from cosmoMVPA E2 area, message=FALSE, include=showAll}
+df_decode_area_E2 <- read_csv(file.path("data_roi_area", "faceword_roi_area_E2_Decode_noz.csv"))
+
+head(df_decode_area_E2)
+```
+
+```{r clean the cosmoMVPA data area E1, include=showAll}
+df_decode_area_acc_E2 <- df_decode_area_E2 %>% 
+  select(Label, SessCode, ClassifyPair, ACC) %>% 
+  mutate(Hemisphere = if_else(grepl("lh", Label), "left", 
+                              if_else(grepl("rh", Label), "right", "NA")),
+         Area = str_extract(Label, "a\\d"), # find the area
+         Subject = str_remove(SessCode, "\\_.*")) %>% 
+  group_by(Hemisphere, Label, SessCode, ClassifyPair) %>% # divide the data into groups by these columns 
+  summarize(Accuracy = mean(ACC), Count = n()) %>% 
+  ungroup()
+
+df_decode_area_acc_E2
+```
+
+## Label:FFA1
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA1
+Area
+```{r}
+anova_E2_lFFA1_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("lh.f-vs-o.ffa1", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_lFFA1_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_lFFA1 <- contrast(emmeans(anova_E2_lFFA1_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right FFA1
+Area
+```{r}
+anova_E2_rFFA1_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("rh.f-vs-o.ffa1", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_rFFA1_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_rFFA1 <- contrast(emmeans(anova_E2_rFFA1_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E2 FFA1 area}
+# one-sample for results of decode E2 FFA1
+one_decode_area_agg_E2_FFA1 <- {
+  df_decode_area_acc_E2 %>% 
+    filter(grepl("f-vs-o.ffa1", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E2_FFA1
+```
+lFFA1 can decode Chinese intact vs. exchange (300mm^2).
+lFFA1 can decode English intact vs. exchange (50, 300mm^2).
+
+rFFA1 can decode English intact vs. exchange (50, 200, 300mm^2).
+
+## Label:FFA2
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left FFA2
+Area
+```{r}
+anova_E2_lFFA2_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("lh.f-vs-o.ffa2", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_lFFA2_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_lFFA2 <- contrast(emmeans(anova_E2_lFFA2_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right FFA2
+Area
+```{r}
+anova_E2_rFFA1_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("rh.f-vs-o.ffa2", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_rFFA1_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_rFFA2 <- contrast(emmeans(anova_E2_rFFA1_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E2 FFA2 area}
+# one-sample for results of decode E2 FFA2
+one_decode_area_agg_E2_FFA2 <- {
+  df_decode_area_acc_E2 %>% 
+    filter(grepl("f-vs-o.ffa2", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E2_FFA2
+```
+
+lFFA2 can decode English intact vs. exchange (300mm^2).
+
+## Label: left Visual Word Form Area (VWFA)
+
+### Univariate analyses
+#### rm-ANOVA 
+Area
+```{r}
+anova_E2_VWFA_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("lh.word-vs-face-object-scrambled", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_VWFA_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_VWFA <- contrast(emmeans(anova_E2_VWFA_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E2 VWFA area}
+# one-sample for results of decode E2 VWFA
+one_decode_area_agg_E2_VWFA <- {
+  df_decode_area_acc_E2 %>% 
+    filter(grepl("lh.word-vs-face-object-scrambled", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E2_VWFA
+```
+
+VWFA can decode English intact vs. exchanged (50, 200, 300mm^2). 
+
+## Label:Lateral Occipital Cortex
+
+### Univariate analyses
+#### rm-ANOVA 
+##### Left LO
+Area
+```{r}
+anova_E2_lLO_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("lh.o-vs-scr", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_lLO_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_lLO <- contrast(emmeans(anova_E2_lLO_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+##### Right LO
+Area
+```{r}
+anova_E2_rLO_area <- aov_4(Response ~ FaceWord * Layout * Area + (FaceWord * Layout * Area | Subject), 
+                                data = df_clean_area_uni_E2 %>% 
+                                  filter(grepl("rh.o-vs-scr", Label)))
+```
+
+```{r}
+contrast(emmeans(anova_E2_rLO_area, ~ Layout + FaceWord | Area), interaction="pairwise", adjust="none", infer = TRUE)[seq(1,24,6)]
+```
+
+```{r}
+(sim_area_E2_rLO <- contrast(emmeans(anova_E2_rLO_area, ~ Layout | FaceWord + Area), "pairwise", adjust="none", infer = TRUE)[c(seq(1,48,6), seq(6,48,6))])
+```
+
+### Decoding
+Area
+```{r one-sample for results of decode E2 LO area}
+# one-sample for results of decode E2 LO
+one_decode_area_agg_E2_LO <- {
+  df_decode_area_acc_E2 %>% 
+    filter(grepl("o-vs-scr", Label)) %>% 
+    mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
+           Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
+    group_by(Hemisphere, ClassifyPair, Area) %>% 
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+              cohens_d = (mean-0.5)/sd(Accuracy),
+              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+    )
+}
+
+one_decode_area_agg_E2_LO
+```
+
+
+# Plots
+## ROI area
+### Univariate 
+
+```{r}
+df_area_uni <- bind_rows(
+  # E1
+  sim_area_E1_lFFA1 %>% as_tibble() %>% mutate(ROI = "lFFA1", Exp = "E1"),
+  sim_area_E1_rFFA1 %>% as_tibble() %>% mutate(ROI = "rFFA1", Exp = "E1"),
+  sim_area_E1_lFFA2 %>% as_tibble() %>% mutate(ROI = "lFFA2", Exp = "E1"),
+  sim_area_E1_rFFA2 %>% as_tibble() %>% mutate(ROI = "rFFA2", Exp = "E1"),
+  sim_area_E1_VWFA %>% as_tibble() %>% mutate(ROI = "lVWFA", Exp = "E1"),
+  sim_area_E1_lLO %>% as_tibble() %>% mutate(ROI = "lLO", Exp = "E1"),
+  sim_area_E1_rLO %>% as_tibble() %>% mutate(ROI = "rLO", Exp = "E1"),
+  # E2
+  sim_area_E2_lFFA1 %>% as_tibble() %>% mutate(ROI = "lFFA1", Exp = "E2"),
+  sim_area_E2_rFFA1 %>% as_tibble() %>% mutate(ROI = "rFFA1", Exp = "E2"),
+  sim_area_E2_lFFA2 %>% as_tibble() %>% mutate(ROI = "lFFA2", Exp = "E2"),
+  sim_area_E2_rFFA2 %>% as_tibble() %>% mutate(ROI = "rFFA2", Exp = "E2"),
+  sim_area_E2_VWFA %>% as_tibble() %>% mutate(ROI = "lVWFA", Exp = "E2"),
+  sim_area_E2_lLO %>% as_tibble() %>% mutate(ROI = "lLO", Exp = "E2"),
+  sim_area_E2_rLO %>% as_tibble() %>% mutate(ROI = "rLO", Exp = "E2")
+) %>% 
+  mutate(Area = fct_recode(Area, `50`="X50", `100`="X100", `200`="X200", `300`="X300"),
+         sig = sig_ast(p.value)) %>% 
+  rowwise() %>% 
+  mutate(y_sig = max(estimate, 0) + 0.15)
+
+```
+
+#### intact - exchange
+```{r fig.width=3, fig.height=1.5}
+ggplot(filter(df_area_uni, Exp=="E1", contrast=="intact - exchange"), 
+       aes(x = ROI, y = estimate, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(Exp, FaceWord)) +
+  geom_text(aes(y = y_sig, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  # papaja::theme_apa() +
+  NULL
+
+# ggsave("E1_area_uni_intact-exchange.pdf", width = 8, height = 4)
+```
+
+```{r fig.width=3, fig.height=1.5}
+ggplot(filter(df_area_uni, Exp=="E2", contrast=="intact - exchange"), 
+       aes(x = ROI, y = estimate, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(Exp, FaceWord)) +
+  geom_text(aes(y = y_sig, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  # papaja::theme_apa() +
+  NULL
+
+ggsave("E2_area_uni_intact-exchange.pdf", width = 8, height = 4)
+```
+
+#### part 1 - part 2
+```{r fig.width=3, fig.height=1.5}
+ggplot(filter(df_area_uni, Exp=="E1", contrast=="top - bottom"), 
+       aes(x = ROI, y = estimate, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(Exp, FaceWord)) +
+  geom_text(aes(y = y_sig, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  # papaja::theme_apa() +
+  NULL
+
+# ggsave("E1_area_uni_part1-2.pdf", width = 8, height = 4)
+```
+
+
+```{r fig.width=3, fig.height=1.5}
+ggplot(filter(df_area_uni, Exp=="E2", contrast=="top - bottom"), 
+       aes(x = ROI, y = estimate, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(Exp, FaceWord)) +
+  geom_text(aes(y = y_sig, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  # papaja::theme_apa() +
+  NULL
+
+ggsave("E2_area_uni_part1-2.pdf", width = 8, height = 4)
+```
+
+
+### Decoding
+```{r}
+df_area_decoding <- rbind(
+  one_decode_area_agg_E1_FFA1 %>% mutate(ROI="FFA1", Exp = "E1"),
+  one_decode_area_agg_E1_FFA2 %>% mutate(ROI="FFA2", Exp = "E1"),
+  one_decode_area_agg_E1_VWFA %>% mutate(ROI="VWFA", Exp = "E1"),
+  one_decode_area_agg_E1_LO %>% mutate(ROI="LO", Exp = "E1"),
+  one_decode_area_agg_E2_FFA1 %>% mutate(ROI="FFA1", Exp = "E2"),
+  one_decode_area_agg_E2_FFA2 %>% mutate(ROI="FFA2", Exp = "E2"),
+  one_decode_area_agg_E2_VWFA %>% mutate(ROI="VWFA", Exp = "E2"),
+  one_decode_area_agg_E2_LO %>% mutate(ROI="LO", Exp = "E2")
+) %>% 
+  mutate(Area = factor(Area),
+         ROI = paste0(substr(Hemisphere, 1,1), ROI),
+         sig = sig_ast(p),
+         sigcolor = sig_colors(p)) 
+```
+
+#### Intact vs. exchange
+```{r fig.width=3, fig.height=3}
+ggplot(filter(df_area_decoding, Exp=="E1", ClassifyPair %in% c("face_intact-word_intact",
+                                                               "face_intact-face_exchange",
+                                                               "word_intact-word_exchange")), 
+       aes(x = ROI, y = mean, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(ClassifyPair)) +
+  geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  coord_cartesian(ylim = c(0.5, 1)) +
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
+  # papaja::theme_apa() +
+  NULL
+
+# ggsave("E1_area_decoding_intact-exchange.pdf", width=8, height = 6)
+```
+
+```{r fig.width=3, fig.height=3}
+ggplot(filter(df_area_decoding, Exp=="E2", ClassifyPair %in% c("English_intact-Chinese_intact",
+                                                               "English_intact-English_exchange",
+                                                               "Chinese_intact-Chinese_exchange")), 
+       aes(x = ROI, y = mean, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(ClassifyPair)) +
+  geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  coord_cartesian(ylim = c(0.5, 1)) +
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
+  # papaja::theme_apa() +
+  NULL
+ggsave("E2_area_decoding_intact-exchange.pdf", width=8, height = 6)
+```
+
+#### Part 1 vs. 2
+
+```{r fig.width=3, fig.height=3}
+ggplot(filter(df_area_decoding, Exp=="E1", ClassifyPair %in% c("face_top-face_bottom",
+                                                               "word_top-word_bottom")), 
+       aes(x = ROI, y = mean, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(ClassifyPair)) +
+  geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  coord_cartesian(ylim = c(0.5, 1)) +
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
+  # papaja::theme_apa() +
+  NULL
+
+# ggsave("E1_area_decoding_part1-2.pdf", width=8, height = 6)
+```
+
+```{r fig.width=3, fig.height=3}
+ggplot(filter(df_area_decoding, Exp=="E2", ClassifyPair %in% c("English_top-English_bottom",
+                                                               "Chinese_top-Chinese_bottom")), 
+       aes(x = ROI, y = mean, fill = Area)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                position=position_dodge2(width=0.5, padding=0.5)) +
+  facet_grid(rows=vars(ClassifyPair)) +
+  geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
+            position = position_dodge(width=.9)) + # add starts to the significant columns
+  coord_cartesian(ylim = c(0.5, 1)) +
+  scale_fill_manual(values=c("#bdc9e1", "#74a9cf", "#2b8cbe", "#045a8d")) +
+  geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
+  # papaja::theme_apa() +
+  NULL
+ggsave("E2_area_decoding_part1-2.pdf", width=8, height = 6)
+```
+
+# Versions of packages used
+```{r versions}
+# rstudioapi::versionInfo()
+sessionInfo()
+```
