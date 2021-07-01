@@ -44,7 +44,7 @@ plot_uni <- function(df, contrL, contrR, roi, is4 = TRUE, isE2 = FALSE){
   uni <- function(subdf, subsig, half) {
     
     ggplot(data = filter(subdf, FaceWord == fwLevels[half]), aes(y = emmean, x = Layout, group = Hemisphere)) + # set the data, varialbes for x and y axises
-      geom_col(position = "dodge", width = 0.5, fill = "#CDCDC8") +  # position of columns and countour of columns
+      geom_col(position = "dodge", width = 0.5, fill = "#CDCDC8") +  # position of columns and contour of columns
       facet_grid(. ~ Hemisphere) +
       geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                     show.legend = FALSE, width = 0.2, alpha = .5,
