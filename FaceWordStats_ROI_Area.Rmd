@@ -56,6 +56,8 @@ label_LO <- c("roi.lh.o-vs-scr.label", "roi.rh.o-vs-scr.label")
 # criterion of vertex number
 nVtx_size_min <- 30  # mm^2
 
+decoding_sided <- "two.sided"
+
 ```
 
 ```{r setting for plots, include=showAll}
@@ -172,16 +174,16 @@ one_decode_area_agg_E1_FFA1 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -237,16 +239,16 @@ one_decode_area_agg_E1_FFA2<- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -287,16 +289,16 @@ one_decode_area_agg_E1_VWFA<- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -351,16 +353,16 @@ one_decode_area_agg_E1_LO<- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E1),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -469,16 +471,16 @@ one_decode_area_agg_E2_FFA1 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -535,16 +537,16 @@ one_decode_area_agg_E2_FFA2 <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -582,16 +584,16 @@ one_decode_area_agg_E2_VWFA <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -646,16 +648,16 @@ one_decode_area_agg_E2_LO <- {
     mutate(ClassifyPair = fct_relevel(ClassifyPair, pair_order_E2),
            Area = as.numeric(str_extract(Label, "\\d*0"))) %>% 
     group_by(Hemisphere, ClassifyPair, Area) %>% 
-    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = "greater")[[5]],
-              SE = t.test(Accuracy, mu = 0.5, alternative = "greater")[[7]],
+    summarize(mean = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[5]],
+              SE = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[7]],
               cohens_d = (mean-0.5)/sd(Accuracy),
-              t = t.test(Accuracy, mu = 0.5, alternative = "greater")[[1]],
-              df = t.test(Accuracy, mu = 0.5, alternative = "greater")[[2]],
-              p = round(t.test(Accuracy, mu = 0.5, alternative = "greater")[[3]], 5),
-              lower.CL = t.test(Accuracy, mu = 0.5, alternative = "greater")[[4]][1],
+              t = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[1]],
+              df = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[2]],
+              p = round(t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[3]], 5),
+              lower.CL = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[4]][1],
               upper.CL = mean * 2 - lower.CL, # t.test(Accuracy, mu = 0.5, alternative = "two.sided")[[4]][2],
-              nullValue = t.test(Accuracy, mu = 0.5, alternative = "greater")[[6]],
-              alternative = t.test(Accuracy, mu = 0.5, alternative = "greater")[[8]]
+              nullValue = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[6]],
+              alternative = t.test(Accuracy, mu = 0.5, alternative = decoding_sided)[[8]]
     )
 }
 
@@ -723,7 +725,7 @@ ggplot(filter(df_area_uni, Exp=="E2", contrast=="intact - exchange"),
   # papaja::theme_apa() +
   NULL
 
-ggsave("E2_area_uni_intact-exchange.pdf", width = 8, height = 4)
+# ggsave("E2_area_uni_intact-exchange.pdf", width = 8, height = 4)
 ```
 
 #### part 1 - part 2
@@ -757,7 +759,7 @@ ggplot(filter(df_area_uni, Exp=="E2", contrast=="top - bottom"),
   # papaja::theme_apa() +
   NULL
 
-ggsave("E2_area_uni_part1-2.pdf", width = 8, height = 4)
+# ggsave("E2_area_uni_part1-2.pdf", width = 8, height = 4)
 ```
 
 
@@ -816,7 +818,7 @@ ggplot(filter(df_area_decoding, Exp=="E2", ClassifyPair %in% c("English_intact-C
   geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
   # papaja::theme_apa() +
   NULL
-ggsave("E2_area_decoding_intact-exchange.pdf", width=8, height = 6)
+# ggsave("E2_area_decoding_intact-exchange.pdf", width=8, height = 6)
 ```
 
 #### Part 1 vs. 2
@@ -855,7 +857,7 @@ ggplot(filter(df_area_decoding, Exp=="E2", ClassifyPair %in% c("English_top-Engl
   geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
   # papaja::theme_apa() +
   NULL
-ggsave("E2_area_decoding_part1-2.pdf", width=8, height = 6)
+# ggsave("E2_area_decoding_part1-2.pdf", width=8, height = 6)
 ```
 
 # Versions of packages used
