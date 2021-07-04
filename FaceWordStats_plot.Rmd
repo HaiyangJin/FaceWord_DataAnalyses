@@ -15,6 +15,18 @@ output:
       after_body: Utilities/footer.html
 ---
 
+```{r}
+hroi_order_pub <- c("RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO")
+roi_order_pub <- c("FFA2", "FFA1", "VWFA", "LO")
+
+vss_colors <- c("#e88b1a", "#e3a65d", # FFA2
+                "#d12e11", "#c97263", # FFA1
+                "#1107F5", "#6e67f0",# VWFA (blue)
+                "#1dd904", "#86db7b") # LO
+
+```
+
+
 # Plots
 ## Decoding
 ```{r warning=FALSE}
@@ -34,99 +46,147 @@ df_decoding <- rbind(mutate(one_decode_agg_E1_FFA1, Exp = "E1", ROI = "FFA1"),
          Stimuli = ifelse(Stimuli1 == Stimuli2, Stimuli1, 
                           paste(Stimuli1, Stimuli2, sep = "\nvs.\n")),
          Layout = ifelse(Layout1 == Layout2, Layout1,
-                         paste(toTitleCase(Layout1), toTitleCase(Layout2), sep = "\nvs.\n"))) %>% 
+                         paste(toTitleCase(Layout1), toTitleCase(Layout2), sep = "\nvs.\n")),
+         HROI = toupper(paste0(substr(Hemisphere, 1, 1), ROI)),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left"))) %>% 
   select(-c(Stimuli1, Stimuli2, Layout1, Layout2))
-
-# df_decoding$ROI <- fct_relevel(df_decoding$ROI, "LO", after = Inf)
-# xaxislabel <- strsplit(unique(df_0$Stimuli), "\nvs.\n")[[1]]
 
 ```
 
 ### Only intact stimuli
-```{r fig.width=6, fig.asp=1}
+```{r fig.width=6, fig.asp=0.5}
 # save the df for intact English vs. intact Chinese
 df_intact <- filter(df_decoding, Layout == "intact") %>% 
   mutate(Stimuli = fct_rev(Stimuli))
 
-dat_text_intact_all <- data.frame(
-  Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
-  Hemisphere = c("left"),
-  label = c("Chinese speakers: \nfaces vs. Chinese characters", 
-            "English speakers: \nEnglish words vs. Chinese characters"),
-  x     = 0.5,
-  y     = 1.05
-)
+# dat_text_intact_all <- data.frame(
+#   Stimuli = c("faces\nvs.\nwords", "English\nvs.\nChinese"),
+#   Hemisphere = c("left"),
+#   label = c("Chinese speakers: \nfaces vs. Chinese characters", 
+#             "English speakers: \nEnglish words vs. Chinese characters"),
+#   x     = 0.5,
+#   y     = 1.05
+# )
 
 # intact
-plot_intact_all <- ggplot(df_intact, aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+plot_intact_E1 <- ggplot(filter(df_intact, Exp=="E1"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
+  facet_grid(~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
   geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_intact_all, aes(x = x, y = y, label = label), hjust = 0, size = 4, fontface = "bold") + #
+  # geom_text(data = dat_text_intact_all, aes(x = x, y = y, label = label), hjust = 0, size = 4, fontface = "bold") + #
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
     # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     panel.border = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
     
     # remove the facet background color
-    strip.text.x = element_text(size = 15),
+    strip.text.x = element_blank(),
     strip.text.y = element_blank(),
     strip.background = element_blank(),
     strip.placement = "outside",
   ) +
   NULL
 
-# ggsave('plot_decode_all_intact.pdf', plot_intact_all, width = 8, height = 8)
-plot_intact_all
+# ggsave('plot_decode_E1_intact.pdf', plot_intact_E1, width = 8, height = 4)
+plot_intact_E1
 ```
 
+```{r fig.width=6, fig.asp=0.5}
+# intact
+plot_intact_E2 <- ggplot(filter(df_intact, Exp=="E2"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
+  facet_grid(~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axis
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  # geom_text(data = dat_text_intact_all, aes(x = x, y = y, label = label), hjust = 0, size = 4, fontface = "bold") + #
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
+    
+    # remove the facet background color
+    strip.text.x = element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+  NULL
+
+# ggsave('plot_decode_E2_intact.pdf', plot_intact_E2, width = 8, height = 4)
+plot_intact_E2
+```
+
+
 ### Intact vs. exchange
-```{r fig.width=6, fig.asp=2}
+```{r fig.width=6, fig.asp=1}
 df_inex <- df_decoding %>% 
   filter(str_detect(Stimuli, "vs.", negate = TRUE),
          Layout == "Intact\nvs.\nExchange")
 df_inex$Stimuli <- fct_relevel(df_inex$Stimuli, "English", after = Inf)
 df_inex$Stimuli <- fct_relevel(df_inex$Stimuli, "Chinese", after = Inf)
 
-dat_text_inex_all <- data.frame(
-  Stimuli = levels(df_inex$Stimuli),
-  Hemisphere = c("left"),
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_inex$Stimuli),
-  x     = .5,
-  y     = 1.05
-)
+# dat_text_inex_all <- data.frame(
+#   Stimuli = levels(df_inex$Stimuli),
+#   Hemisphere = c("left"),
+#   label = c("Chinese speakers: \nfaces", 
+#             "Chinese speakers: \nChinese characters", 
+#             "English speakers: \nEnglish words", 
+#             "English speakers: \nChinese characters"), # levels(df_inex$Stimuli),
+#   x     = .5,
+#   y     = 1.05
+# )
 
-plot_inex_all <- ggplot(df_inex, aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+plot_inex_E1 <- ggplot(filter(df_inex, Exp=="E1"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
   facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -134,56 +194,47 @@ plot_inex_all <- ggplot(df_inex, aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises title = "Intact vs. Exchange", 
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axises title = "Intact vs. Exchange", 
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
     # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     panel.border = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
+    
     # remove the facet background color
-    strip.text.x = element_text(size = 13), # element_blank(),
+    strip.text.x = element_blank(),
     strip.text.y = element_blank(),
     strip.background = element_blank(),
     strip.placement = "outside",
   ) +
 NULL
 
-# ggsave('plot_decode_all_inex.pdf', plot_inex_all, width = 8, height = 16)
-plot_inex_all
+# ggsave('plot_decode_E1_inex.pdf', plot_inex_E1, width = 8, height = 8)
+plot_inex_E1
 ```
 
+```{r fig.width=6, fig.asp=1}
 
-```{r fig.width=12, fig.asp=.5}
-
-dat_text_inex_all_lr_fw <- data.frame(
-  Stimuli = levels(df_inex$Stimuli)[1:2],
-  Hemisphere = "left",
-  label = c("Chinese speakers: \nfaces", # intact vs. exchanged 
-            "Chinese speakers: \nChinese characters"), # intact vs. exchanged levels(df_inex$Stimuli)[1:2],
-  x     = .5,
-  y     = 1.05
-)
-
-plot_inex_E1 <- ggplot(filter(df_inex, Exp == "E1"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+plot_inex_E2 <- ggplot(filter(df_inex, Exp=="E2"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
   facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -191,85 +242,42 @@ plot_inex_E1 <- ggplot(filter(df_inex, Exp == "E1"), aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1 title = "", 
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axises title = "Intact vs. Exchange", 
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr_fw, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold", hjust = 0) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
     # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     panel.border = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
+    
     # remove the facet background color
-    strip.text.x = element_text(size = 15), # element_blank(),
-    strip.text.y = element_blank(),    
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-dat_text_inex_all_lr_ec <- data.frame(
-  Stimuli = levels(df_inex$Stimuli)[3:4],
-  Hemisphere = "left",
-  label = c("English speakers: \nEnglish words", # intact vs. exchanged 
-            "English speakers: \nChinese characters"), # intact vs. exchanged levels(df_inex$Stimuli)[3:4],
-  x     = .5,
-  y     = 1.05
-)
-
-plot_inex_E2 <- ggplot(filter(df_inex, Exp == "E2"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2 title = "", 
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr_ec, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold", hjust = 0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.x = element_blank(),
     strip.text.y = element_blank(),
     strip.background = element_blank(),
     strip.placement = "outside",
   ) +
 NULL
 
+# ggsave('plot_decode_E2_inex.pdf', plot_inex_E2, width = 8, height = 8)
+plot_inex_E2
+```
+
+```{r fig.width=12, fig.asp=.5}
 plot_inex_lr <- ggarrange(plot_inex_E1, plot_inex_E2, ncol = 2, 
                           # labels = c("", "Intact vs. Exchange"), 
                           # label.x = -0.36,
@@ -281,7 +289,7 @@ plot_inex_lr
 
 
 ### Top vs. bottom
-```{r fig.width=6, fig.asp=2}
+```{r fig.width=6, fig.asp=1}
 df_parts <- df_decoding %>% 
   filter(str_detect(Stimuli, "vs.", negate = TRUE),
          Layout != "Intact\nvs.\nExchange") %>% 
@@ -289,22 +297,21 @@ df_parts <- df_decoding %>%
 df_parts$Stimuli <- fct_relevel(df_parts$Stimuli, "English", after = Inf)
 df_parts$Stimuli <- fct_relevel(df_parts$Stimuli, "Chinese", after = Inf)
 
-dat_parts_inex_all <- data.frame(
-  Stimuli = levels(df_parts$Stimuli),
-  Hemisphere = c("left"),
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), #levels(df_parts$Stimuli),
-  x     = .5, # c(1, 1.1, 1.2, 1.2),
-  y     = 1.05
-)
+# dat_parts_inex_all <- data.frame(
+#   Stimuli = levels(df_parts$Stimuli),
+#   Hemisphere = c("left"),
+#   label = c("Chinese speakers: \nfaces", 
+#             "Chinese speakers: \nChinese characters", 
+#             "English speakers: \nEnglish words", 
+#             "English speakers: \nChinese characters"), #levels(df_parts$Stimuli),
+#   x     = .5, # c(1, 1.1, 1.2, 1.2),
+#   y     = 1.05
+# )
 
-plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
+plot_topbottom_E1 <- ggplot(filter(df_parts, Exp=="E1"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
   facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x", 
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.9)) +
@@ -312,141 +319,90 @@ plot_topbottom_all <- ggplot(df_parts, aes(y = mean, x = ROI)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
   coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(title = "Top vs. bottom; left vs. right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_parts_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust = 0) +
+  # geom_text(data = dat_parts_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust = 0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
     # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
     panel.border = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
+    
     # remove the facet background color
-    strip.text.x = element_text(size = 15), # element_blank(),
+    strip.text.x = element_blank(),
     strip.text.y = element_blank(),
     strip.background = element_blank(),
     strip.placement = "outside",
   ) +
   NULL
 
-# ggsave('plot_decode_all_topbottom.pdf', plot_topbottom_all, width = 8, height = 16)
-plot_topbottom_all
+# ggsave('plot_decode_E1_topbottom.pdf', plot_topbottom_E1, width = 8, height = 8)
+plot_topbottom_E1
 ```
 
+```{r fig.width=6, fig.asp=1}
+
+plot_topbottom_E2 <- ggplot(filter(df_parts, Exp=="E2"), aes(y = mean, x = HROI)) +
+  geom_col(aes(fill=ROI), position = "dodge", width = .5) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.9)) +
+  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0.4, 1.1)) +
+  scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
+  labs(y = "Accuracy") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  # geom_text(data = dat_parts_inex_all, mapping = aes(x = x, y = y, label = label), size = 6, fontface = "bold", hjust = 0) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    # axis.text.x = element_text(face = "bold", size = 16),
+    axis.title.x = element_blank(), #text(face = "bold", size = 20), # the size of the texts in plot
+    axis.title.y = element_text(vjust = 1.75), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    legend.position = "none",
+    
+    # remove the facet background color
+    strip.text.x = element_blank(),
+    strip.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+  ) +
+  NULL
+
+# ggsave('plot_decode_E2_topbottom.pdf', plot_topbottom_E2, width = 8, height = 8)
+plot_topbottom_E2
+```
 
 ```{r fig.width=12, fig.asp=.5}
-
-dat_text_tb_all_lr_E1 <- data.frame(
-  Stimuli = levels(df_parts$Stimuli)[1:2],
-  Hemisphere = "left",
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters"), #levels(df_parts$Stimuli)[1:2],
-  x     = .5,
-  y     = 1.05
-)
-
-plot_topbottom_E1 <- ggplot(filter(df_parts, Exp == "E1"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 1
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E1, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold", hjust =0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 15), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-dat_text_tb_all_lr_E2 <- data.frame(
-  Stimuli = levels(df_parts$Stimuli)[3:4],
-  Hemisphere = "left",
-  label = c("English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), #levels(df_parts$Stimuli)[3:4],
-  x     = .5,
-  y     = 1.05
-)
-
-plot_topbottom_E2 <- ggplot(filter(df_parts, Exp == "E2"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x", 
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises Experiment 2
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr_E2, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 15), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
 
 plot_topbottom_lr <- ggarrange(plot_topbottom_E1, plot_topbottom_E2, ncol = 2, 
                                labels = c("A", "B"),
@@ -469,7 +425,10 @@ df_uni_ie <- rbind(mutate(desp_uni_E1_FFA1_ie, Exp = "E1", ROI = "FFA1"),
                    mutate(desp_uni_E2_VWFA_ie, Exp = "E2", ROI = "VWFA"),
                    mutate(desp_uni_E2_LO_ie, Exp = "E2", ROI = "LO")) %>% 
   mutate(Stimuli = FaceWord,
-         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI))
+         HROI = toupper(paste0(substr(Hemisphere, 1, 1), ROI)),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")))
 
 df_uni_ie_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_ie), Exp = "E1", ROI = "FFA1", Hemisphere = "left"),
                        mutate(as_tibble(simple_E1_lFFA2_ie), Exp = "E1", ROI = "FFA2", Hemisphere = "left"),
@@ -487,9 +446,12 @@ df_uni_ie_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_ie), Exp = "E1", ROI = "
                        mutate(as_tibble(simple_E2_rLO_ie), Exp = "E2", ROI = "LO", Hemisphere = "right")) %>% 
   filter(FaceWord != ".") %>% 
   mutate(Stimuli = FaceWord,
-         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI),
+         HROI = toupper(paste0(substr(Hemisphere, 1, 1), ROI)),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")),
          Layout = "intact") %>% 
-  select(Exp, Layout, Stimuli, HemiROI, p.value) 
+  select(Exp, Layout, Stimuli, HROI, p.value) 
 
 df_uni_ie <- left_join(df_uni_ie, df_uni_ie_sig) %>% 
   mutate(p.value = if_else(is.na(p.value), 1, p.value),
@@ -499,245 +461,127 @@ df_uni_ie$Layout <- fct_relevel(df_uni_ie$Layout, "exchange", after = Inf)
 
 ```
 
-```{r fig.width=6, fig.asp=2}
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
+```{r fig.width=6, fig.asp=1}
 
-dat_text_inex_all <- data.frame(
-  Stimuli = levels(df_uni_ie$Stimuli),
-  HemiROI = c("lFFA1"),
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
-  x     = .5, # c(1, 1.1, 1.2, 1.2),
-  y     = 2.65
-)
+# dat_text_inex_all <- data.frame(
+#   Stimuli = levels(df_uni_ie$Stimuli),
+#   HemiROI = c("lFFA1"),
+#   label = c("Chinese speakers: \nfaces", 
+#             "Chinese speakers: \nChinese characters", 
+#             "English speakers: \nEnglish words", 
+#             "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
+#   x     = .5, # c(1, 1.1, 1.2, 1.2),
+#   y     = 2.65
+# )
 
-plot_uni_inex_all <- ggplot(df_uni_ie, aes(y = emmean, x = Layout)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ HemiROI, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "Intact vs. Exchanged", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust =0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 13), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
-plot_uni_inex_all
-```
-
-```{r fig.width=6, fig.asp=2}
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
-
-dat_text_inex_all_ <- data.frame(
-  Stimuli = levels(df_uni_ie$Stimuli),
-  Hemisphere = "left",
-  Layout = "intact",
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_ie$Stimuli),
-  x     = .5, #c(1, 1.1, 1.2, 1.2)-0.3,
-  y     = 2.65
-)
-
-plot_uni_inex_all_ <- ggplot(df_uni_ie, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#C0C0C0", "#A9A9A9")) +
+# vssplot_uni_face_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="faces"), 
+#                             aes(y = emmean, x = HemiROI, 
+#                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+#   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
+#   scale_fill_manual(values = vss_colors) +
+#   facet_grid( ~ Hemisphere, scales = "free_x", space = "free_x",
+#              switch = "x") +
+#   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+#                 show.legend = FALSE, width = 0.25, alpha = .5,
+#                 position = position_dodge(width=0.5)) +
+#   scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+#   labs(y = "Beta values") +  # set the names for main, x and y axis
+#   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  
+plot_uni_inex_E1 <- ggplot(filter(df_uni_ie, Exp=="E1"), aes(y = emmean, x = HROI,
+                                                             fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) +
   facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
   # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "Intact vs. Exchanged", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  coord_cartesian(ylim = c(0, activationUL)) + 
+  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+  scale_fill_manual(values = vss_colors) +
+  labs(y = "Beta values") +  # set the names for main, x and y axises
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust =0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    # axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
+    legend.position = "none",
+    legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 13), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
-plot_uni_inex_all_
+# ggsave('plot_uni_E1_inex.pdf', plot_uni_inex_E1, width = 11, height = 11*.55)
+plot_uni_inex_E1
+```
+
+```{r fig.width=6, fig.asp=1}
+
+plot_uni_inex_E2 <- ggplot(filter(df_uni_ie, Exp=="E2"), aes(y = emmean, x = HROI,
+                                                             fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
+  coord_cartesian(ylim = c(0, activationUL)) + 
+  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+  scale_fill_manual(values = vss_colors) +
+  labs(y = "Beta values") +  # set the names for main, x and y axises
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust =0) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "none",
+    legend.title = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    # remove the facet background color
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+  ) +
+  NULL
+
+# ggsave('plot_uni_E2_inex.pdf', plot_uni_inex_E2, width = 11, height = 11*.55)
+plot_uni_inex_E2
 ```
 
 ```{r fig.width=8, fig.asp=.75}
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
-
-df_uni_ie_1 <- filter(df_uni_ie, Stimuli %in% c("faces", "words")) %>% 
-  droplevels()
-
-dat_text_inex_all_lr1 <- data.frame(
-  Stimuli = levels(df_uni_ie_1$Stimuli),
-  Hemisphere = "left",
-  Layout = "intact",
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters"), # levels(df_uni_ie_1$Stimuli),
-  x     = .5, # c(1, 1.1),
-  y     = 2.65
-)
-
-plot_uni_inex_all_lr1 <- ggplot(df_uni_ie_1, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-df_uni_ie_2 <- filter(df_uni_ie, Stimuli %in% c("English", "Chinese")) %>% 
-  droplevels()
-
-dat_text_inex_all_lr2 <- data.frame(
-  Stimuli = levels(df_uni_ie_2$Stimuli),
-  Hemisphere = "left",
-  Layout = "intact",
-  label = c("English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_ie_2$Stimuli),
-  x     = .5, #c(1.1, 1.2),
-  y     = 2.65
-)
-
-plot_uni_inex_all_lr2 <- ggplot(df_uni_ie_2, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_lr2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-plot_uni_ie_lr <- ggarrange(plot_uni_inex_all_lr1, plot_uni_inex_all_lr2, ncol = 2, 
+plot_uni_ie_lr <- ggarrange(plot_uni_inex_E1, plot_uni_inex_E2, ncol = 2, 
                               labels = c("A", "B"),
                               # label.x = -0.36,
                               # label.y = 1,
                               font.label = list(size = 24))
 
-# ggsave('plot_uni_all_ie_lr.pdf', plot_uni_ie_lr, width = 15, height = 9)
+# ggsave('plot_uni_all_ie_lr.pdf', plot_uni_ie_lr, width = 22, height = 10)
 plot_uni_ie_lr
 ```
 
@@ -753,7 +597,10 @@ df_uni_tb <- rbind(mutate(desp_uni_E1_FFA1_tb, Exp = "E1", ROI = "FFA1"),
                    mutate(desp_uni_E2_VWFA_tb, Exp = "E2", ROI = "VWFA"),
                    mutate(desp_uni_E2_LO_tb, Exp = "E2", ROI = "LO")) %>% 
   mutate(Stimuli = FaceWord,
-         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI))
+         HROI = toupper(paste0(substr(Hemisphere, 1, 1), ROI)),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")))
 
 df_uni_tb_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_tb), Exp = "E1", ROI = "FFA1", Hemisphere = "left"),
                        mutate(as_tibble(simple_E1_lFFA2_tb), Exp = "E1", ROI = "FFA2", Hemisphere = "left"),
@@ -771,10 +618,13 @@ df_uni_tb_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_tb), Exp = "E1", ROI = "
                        mutate(as_tibble(simple_E2_rLO_tb), Exp = "E2", ROI = "LO", Hemisphere = "right")) %>% 
   filter(FaceWord != ".") %>% 
   mutate(Stimuli = FaceWord,
-         HemiROI = paste0(toTitleCase(substr(Hemisphere,1,1)), ROI),
+         HROI = toupper(paste0(substr(Hemisphere, 1, 1), ROI)),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")),
          Layout = case_when(Exp == "E1" ~ "top",
                             Exp == "E2" ~ "partA")) %>% 
-  select(Exp, Layout, Stimuli, HemiROI, p.value) 
+  select(Exp, Layout, Stimuli, HROI, p.value) 
 
 df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>% 
   mutate(p.value = if_else(is.na(p.value), 1, p.value),
@@ -784,249 +634,121 @@ df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>%
 
 ```
 
-```{r fig.width=6, fig.asp=2}
+```{r fig.width=6, fig.asp=1}
 # df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
 # df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
 
-dat_text_inex_all <- data.frame(
-  Stimuli = levels(df_uni_tb$Stimuli),
-  HemiROI = c("lFFA1"),
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
-  x     = .5, # c(1, 1.1, 1.2, 1.2),
-  y     = 2.65
-)
+# dat_text_inex_all <- data.frame(
+#   Stimuli = levels(df_uni_tb$Stimuli),
+#   HemiROI = c("lFFA1"),
+#   label = c("Chinese speakers: \nfaces", 
+#             "Chinese speakers: \nChinese characters", 
+#             "English speakers: \nEnglish words", 
+#             "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
+#   x     = .5, # c(1, 1.1, 1.2, 1.2),
+#   y     = 2.65
+# )
 
 df_uni_tb_all <- df_uni_tb %>% 
   mutate(Layout = case_when(Layout %in% c("top", "partA") ~ "Part 1",
                             Layout %in% c("bottom", "partB") ~ "Part 2"))
 
-plot_uni_inex_all <- ggplot(df_uni_tb_all, aes(y = emmean, x = Layout)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(Stimuli ~ HemiROI, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises title = "Top vs. Bottom; Left vs. Right", 
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65, nudge_x = 0.5) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 13), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
-plot_uni_inex_all
-```
-
-```{r fig.width=6, fig.asp=2}
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
-
-dat_text_inex_all_ <- data.frame(
-  Stimuli = levels(df_uni_tb$Stimuli),
-  Hemisphere = "left",
-  Layout = "Part 1",
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters", 
-            "English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_tb$Stimuli),
-  x     = .5, # c(1, 1.1, 1.2, 1.2)-0.3,
-  y     = 2.65
-)
-
-plot_uni_inex_all_ <- ggplot(df_uni_tb_all, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#C0C0C0", "#A9A9A9")) +
+plot_uni_tb_E1 <- ggplot(filter(df_uni_tb_all, Exp=="E1"), aes(y = emmean, x = HROI,
+                                                                 fill= interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) +
   facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
+             switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
   # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(title = "Top vs. Bottom; Left vs. Right", x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
+  coord_cartesian(ylim = c(0, activationUL)) + 
+  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+  scale_fill_manual(values = vss_colors) +
+  labs(y = "Beta values") +  # set the names for main, x and y axises title = "Top vs. Bottom; Left vs. Right", 
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_inex_all_, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
   theme_bw() +
   theme(
     plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
+    text = element_text(colour="black", size = 22),
     axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    # axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
     axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
     axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
     # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
+    legend.position = "none",
+    legend.title = element_blank(),
     panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
     # remove the facet background color
-    strip.text.x = element_text(size = 13), # element_blank(),
-    strip.text.y = element_blank(),
+    strip.text = element_blank(),
     strip.background = element_blank(),
-    strip.placement = "outside",
   ) +
 NULL
 
-# ggsave('plot_uni_all_inex.pdf', plot_uni_inex_all, width = 8, height = 16)
-plot_uni_inex_all_
+# ggsave('plot_uni_E1_tb.pdf', plot_uni_tb_E1, width = 11, height = 11*.55)
+plot_uni_tb_E1
 ```
+
+```{r fig.width=6, fig.asp=1}
+
+plot_uni_tb_E2 <- ggplot(filter(df_uni_tb_all, Exp=="E2"), aes(y = emmean, x = HROI,
+                                                                 fill= interaction(ROI, Layout, sep="-", lex.order = T))) +
+  geom_col(position = "dodge", width = .5) +
+  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
+             switch = "x") +
+  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
+                show.legend = FALSE, width = 0.25, alpha = .5,
+                position = position_dodge(width=0.5)) +
+  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
+  coord_cartesian(ylim = c(0, activationUL)) + 
+  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+  scale_fill_manual(values = vss_colors) +
+  labs(y = "Beta values") +  # set the names for main, x and y axises title = "Top vs. Bottom; Left vs. Right", 
+  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
+  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
+  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+    text = element_text(colour="black", size = 22),
+    axis.text = element_text(colour="black"),
+    axis.text.x = element_text(size = 22, vjust=-.05),
+    axis.title.x = element_blank(), # the size of the texts in plot
+    axis.title.y = element_text(size = 22), # the size of the texts in plot
+    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+    # axis.text.x = element_text(angle = 45, vjust = 0.5),
+    legend.position = "none",
+    legend.title = element_blank(),
+    panel.border = element_blank(),
+    panel.grid = element_blank(),
+    panel.spacing = unit(2.5, "lines"),
+    # remove the facet background color
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+  ) +
+NULL
+
+# ggsave('plot_uni_E2_tb.pdf', plot_uni_tb_E2, width = 11, height = 11*.55)
+plot_uni_tb_E2
+```
+
 
 ```{r fig.width=8, fig.asp=.75}
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "English", after = Inf)
-# df_inex_uni$Stimuli <- fct_relevel(df_inex_uni$Stimuli, "Chinese", after = Inf)
 
-df_uni_tb_1 <- filter(df_uni_tb_all, Stimuli %in% c("faces", "words")) %>% 
-  droplevels()
-
-dat_text_tb_all_lr1 <- data.frame(
-  Stimuli = levels(df_uni_tb_1$Stimuli),
-  Hemisphere = "left",
-  Layout = "Part 1",
-  label = c("Chinese speakers: \nfaces", 
-            "Chinese speakers: \nChinese characters"), #levels(df_uni_tb_1$Stimuli),
-  x     = .5, # c(1, 1.1),
-  y     = 2.65
-)
-
-plot_uni_tb_all_lr1 <- ggplot(df_uni_tb_1, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr1, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-df_uni_tb_2 <- filter(df_uni_tb_all, Stimuli %in% c("English", "Chinese")) %>% 
-  droplevels()
-
-dat_text_tb_all_lr2 <- data.frame(
-  Stimuli = levels(df_uni_tb_2$Stimuli),
-  Hemisphere = "left",
-  Layout = "Part 1",
-  label = c("English speakers: \nEnglish words", 
-            "English speakers: \nChinese characters"), # levels(df_uni_tb_2$Stimuli),
-  x     = .5, # c(1.1, 1.2),
-  y     = 2.65
-)
-
-plot_uni_tb_all_lr2 <- ggplot(df_uni_tb_2, aes(y = emmean, x = ROI, fill = Layout)) +
-  geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
-  scale_fill_manual(values = c("#CDCDC8", "#A9A9A9")) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  # scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0, activationUL)) +
-  labs(x = "ROIs", y = "Beta values") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_tb_all_lr2, mapping = aes(x = x, y = y, label = label), size = 4.5, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 18),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 18),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "bottom",
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    # remove the facet background color
-    strip.text.x = element_text(size = 18), # element_blank(),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-NULL
-
-plot_uni_tb_lr <- ggarrange(plot_uni_tb_all_lr1, plot_uni_tb_all_lr2, ncol = 2, 
+plot_uni_tb_lr <- ggarrange(plot_uni_inex_E1, plot_uni_inex_E2, ncol = 2, 
                               labels = c("A", "B"),
                               # label.x = -0.6,
                               # label.y = 1,
                               font.label = list(size = 24))
 
-# ggsave('plot_uni_all_tb_lr.pdf', plot_uni_tb_lr, width = 15, height = 9)
+# ggsave('plot_uni_all_tb_lr.pdf', plot_uni_tb_lr, width = 22, height = 22*.55)
 plot_uni_tb_lr
 ```
 
@@ -1044,123 +766,34 @@ plot_uni_tb_lr
 
 
 ## For manuscript
-```{r fig.width=8, fig.asp=1.4}
-plot_uni_lr <- ggarrange(plot_uni_inex_all_lr1, 
-                         plot_uni_inex_all_lr2,
-                         plot_uni_tb_all_lr1, 
-                         plot_uni_tb_all_lr2, 
-                         ncol = 2, 
-                         nrow = 2,
-                         labels = c("A", "B", "C", "D"),
+
+### Color
+
+```{r fig.width=8, fig.asp=.75}
+
+plot_uni_E1 <- ggarrange(plot_uni_inex_E1, plot_uni_tb_E1, ncol = 2, 
+                         labels = c("A", "B"),
                          # label.x = -0.6,
                          # label.y = 1,
                          font.label = list(size = 24))
 
-# ggsave('plot_uni_all_lr.pdf', plot_uni_lr, width = 15, height = 18)
-plot_uni_lr
+# ggsave('plot_uni_E1.pdf', plot_uni_E1, width = 22, height = 10)
+plot_uni_E1
 ```
 
 
-```{r fig.width=8, fig.asp=1}
-# intact
-plot_intact_E1 <- ggplot(filter(df_intact, Exp=="E1"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(. ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_intact_all[1,], aes(x = x, y = y, label = label), hjust = 0, size = 5, fontface = "bold") + #
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    
-    # remove the facet background color
-    strip.text.x = element_text(size = 15),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-  NULL
+```{r fig.width=8, fig.asp=.75}
 
-plot_intact_E2 <- ggplot(filter(df_intact, Exp=="E2"), aes(y = mean, x = ROI)) +
-  geom_col(position = "dodge", width = .5, fill = "#CDCDC8") +
-  facet_grid(. ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x",
-             labeller = labeller(Hemisphere = c(left = "left hemisphere", right = "right hemisphere"))) +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.9)) +
-  geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
-  scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-  coord_cartesian(ylim = c(0.4, 1.1)) +
-  labs(x = "ROIs", y = "Accuracy") +  # set the names for main, x and y axises
-  geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  geom_text(data = dat_text_intact_all[2,], aes(x = x, y = y, label = label), hjust = 0, size = 5, fontface = "bold") + #
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    # plot.margin = margin(5, 170, 60, 40, unit = "pt"),
-    text = element_text(colour="black"),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 13),
-    axis.title.x = element_text(face = "bold", size = 20), # the size of the texts in plot
-    axis.title.y = element_text(size = 17, vjust = 2.5), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    panel.border = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.spacing = unit(1.5, "lines"),
-    
-    # remove the facet background color
-    strip.text.x = element_text(size = 15),
-    strip.text.y = element_blank(),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-  ) +
-  NULL
+plot_uni_E2 <- ggarrange(plot_uni_inex_E2, plot_uni_tb_E2, ncol = 2, 
+                         labels = c("A", "B"),
+                         # label.x = -0.6,
+                         # label.y = 1,
+                         font.label = list(size = 24))
 
-plot_inex_lr_pub <- ggarrange(plot_intact_E1,
-                              plot_intact_E2,
-                              plot_inex_E1, 
-                              plot_inex_E2, 
-                              ncol = 2, 
-                              nrow = 2,
-                              labels = c("A", "B", "C", "D"),
-                              # label.x = -0.36,
-                              # label.y = 1,
-                              heights = c(.35, .6),
-                              font.label = list(size = 24))
-
-# ggsave('plot_decode_all_lr_pub.pdf', plot_inex_lr_pub, width = 15, height = 15)
-plot_inex_lr_pub
-
+# ggsave('plot_uni_E2.pdf', plot_uni_E2, width = 22, height = 10)
+plot_uni_E2
 ```
+
 
 ## For VSS2021
 ```{r}
@@ -1170,23 +803,17 @@ plot_inex_lr_pub
 #                 # "#1107F5", "#6e67f0",# VWFA (blue)
 #                 "#d12e11", "#c97263") # LO
 
-vss_colors <- c("#e88b1a", "#e3a65d", # FFA2
-                "#d12e11", "#c97263", # FFA1
-                "#1107F5", "#6e67f0",# VWFA (blue)
-                "#1dd904", "#86db7b") # LO
+# vss_colors <- c("#e88b1a", "#e3a65d", # FFA2
+#                 "#d12e11", "#c97263", # FFA1
+#                 "#1107F5", "#6e67f0",# VWFA (blue)
+#                 "#1dd904", "#86db7b") # LO
 
 ```
 
 ```{r fig.width=5, fig.asp=.618}
 
-df_uni_ie_1_vss <- df_uni_ie_1 %>% 
-  mutate(HemiROI = as_factor(toupper(HemiROI)),
-         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
-         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
-         Hemisphere = fct_rev(Hemisphere))
-
-vssplot_uni_face_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="faces"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_face_ie_E1 <- ggplot(filter(df_uni_ie, Exp=="E1", Stimuli=="faces"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1194,7 +821,7 @@ vssplot_uni_face_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="faces"),
              switch = "x") +
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
+                position = position_dodge(width=0.5)) + 
   scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
   labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
@@ -1224,8 +851,8 @@ vssplot_uni_face_ie_E1
 ```
 
 ```{r fig.width=5, fig.asp=.618}
-vssplot_uni_word_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="words"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_word_ie_E1 <- ggplot(filter(df_uni_ie, Exp=="E1", Stimuli=="words"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1257,22 +884,15 @@ vssplot_uni_word_ie_E1 <- ggplot(filter(df_uni_ie_1_vss, Stimuli=="words"),
     strip.text = element_blank(),
     strip.background = element_blank(),
   ) +
-NULL
+  NULL
 vssplot_uni_word_ie_E1
 # ggsave("vss_plot_uni_ie_word_E1.pdf", vssplot_uni_word_ie_E1, width = 11, height=11*.35)
 ```
 
 ```{r fig.width=4, fig.asp=.618}
 
-df_uni_tb_1_vss <- df_uni_tb_1 %>% 
-  mutate(HemiROI = as_factor(toupper(HemiROI)),
-         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
-         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
-         Hemisphere = fct_rev(Hemisphere)) %>% 
-  filter(Hemisphere=="left")
-
-vssplot_uni_face_tb_E1 <- ggplot(filter(df_uni_tb_1_vss, Stimuli=="faces"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_face_tb_E1 <- ggplot(filter(df_uni_ie, Exp=="E1", Stimuli=="faces"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1311,8 +931,8 @@ vssplot_uni_face_tb_E1
 
 ```{r fig.width=4, fig.asp=.618}
 
-vssplot_uni_tb_word_E1 <- ggplot(filter(df_uni_tb_1_vss, Stimuli=="words"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_tb_word_E1 <- ggplot(filter(df_uni_ie, Exp=="E1", Stimuli=="words"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1351,15 +971,8 @@ vssplot_uni_tb_word_E1
 
 ```{r fig.width=5, fig.asp=.618}
 
-df_uni_ie_2_vss <- df_uni_ie_2 %>% 
-  mutate(HemiROI = as_factor(toupper(HemiROI)),
-         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
-         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
-         Hemisphere = fct_rev(Hemisphere),
-         lower.CL = ifelse(lower.CL<0, 0, lower.CL))
-
-vssplot_uni_en_ie_E2 <- ggplot(filter(df_uni_ie_2_vss, Stimuli=="English"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_en_ie_E2 <- ggplot(filter(df_uni_ie, Exp=="E2", Stimuli=="English"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1398,8 +1011,8 @@ vssplot_uni_en_ie_E2
 
 ```{r fig.width=5, fig.asp=.618}
 
-vssplot_uni_cn_ie_E2 <- ggplot(filter(df_uni_ie_2_vss, Stimuli=="Chinese"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_cn_ie_E2 <- ggplot(filter(df_uni_ie, Exp=="E2", Stimuli=="Chinese"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1439,16 +1052,8 @@ vssplot_uni_cn_ie_E2
 
 ```{r fig.width=4, fig.asp=.618}
 
-df_uni_tb_2_vss <- df_uni_tb_2 %>% 
-  mutate(HemiROI = as_factor(toupper(HemiROI)),
-         HemiROI = fct_relevel(HemiROI, "RFFA2", "RFFA1", "RLO", "LFFA2", "LFFA1", "LVWFA", "LLO"),
-         ROI = fct_relevel(ROI, "FFA2", "FFA1", "VWFA", "LO"),
-         Hemisphere = fct_rev(Hemisphere),
-         lower.CL = ifelse(lower.CL<0, 0, lower.CL)) %>% 
-  filter(Hemisphere=="left")
-
-vssplot_uni_en_tb_E2 <- ggplot(filter(df_uni_tb_2_vss, Stimuli=="English"), 
-                            aes(y = emmean, x = HemiROI, 
+vssplot_uni_en_tb_E2 <- ggplot(filter(df_uni_ie, Exp=="E2", Stimuli=="English"), 
+                            aes(y = emmean, x = HROI, 
                                 fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1487,8 +1092,8 @@ vssplot_uni_en_tb_E2
 
 ```{r fig.width=4, fig.asp=.618}
 
-vssplot_uni_cn_tb_E2 <- ggplot(filter(df_uni_tb_2_vss, Stimuli=="Chinese"), 
-                               aes(y = emmean, x = HemiROI, 
+vssplot_uni_cn_tb_E2 <- ggplot(filter(df_uni_ie, Exp=="E2", Stimuli=="Chinese"), 
+                               aes(y = emmean, x = HROI, 
                                    fill = interaction(ROI, Layout, sep="-", lex.order = T))) +
   geom_col(position = "dodge", width = .5) + # , fill = "#CDCDC8"
   scale_fill_manual(values = vss_colors) +
@@ -1497,7 +1102,8 @@ vssplot_uni_cn_tb_E2 <- ggplot(filter(df_uni_tb_2_vss, Stimuli=="Chinese"),
   geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
                 show.legend = FALSE, width = 0.25, alpha = .5,
                 position = position_dodge(width=0.5)) +
-  scale_y_continuous(lim = c(0, activationUL), expand = expansion(mult = c(0, .2))) +
+  coord_cartesian(ylim = c(0, activationUL)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
   labs(y = "Beta values") +  # set the names for main, x and y axis
   geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
   theme_bw() +
