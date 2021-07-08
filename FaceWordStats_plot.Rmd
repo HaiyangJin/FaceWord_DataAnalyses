@@ -25,7 +25,8 @@ vss_colors <- c("#e88b1a", "#e3a65d", # FFA2
                 "#1107F5", "#6e67f0",# VWFA (blue)
                 "#1dd904", "#86db7b") # LO
 
-```
+area_colors <- c("#e88b1a", "#e09a43", "#dea968", "#dbba91", # FFA2
+                 "#d12e11", "#cf503a", "#cf7767", "#cc968d", # FFA1
                  "#1107F5", "#534bf2", "#847ff0", "#b0adf0", # VWFA (blue)
                  "#1dd904", "#61d651", "#8fd485", "#add4a7") # LO
 
@@ -456,103 +457,225 @@ plot_grid(plot_decode_E2_en_tb, plot_decode_E2_cn_tb,
 # ggsave('plot_decode_E2_tb.pdf', width = 10, height = 7)
 ```
 
-plot_uni_tb_E2 <- ggplot(filter(df_uni_tb_all, Exp=="E2"), aes(y = emmean, x = HROI,
-                                                                 fill= interaction(ROI, Layout, sep="-", lex.order = T))) +
-  geom_col(position = "dodge", width = .5) +
-  facet_grid(Stimuli ~ Hemisphere, scales = "free_x", space = "free_x", 
-             switch = "x") +
-  geom_errorbar(mapping = aes(ymin = lower.CL, ymax = upper.CL), linetype = 1,  # set the error bar
-                show.legend = FALSE, width = 0.25, alpha = .5,
-                position = position_dodge(width=0.5)) +
-  # scale_x_discrete(labels = toTitleCase(df_0$Stimuli)) +
-  coord_cartesian(ylim = c(0, activationUL)) + 
-  scale_y_continuous(expand = expansion(mult = c(0, .2))) +
-  scale_fill_manual(values = vss_colors) +
-  labs(y = "Beta values") +  # set the names for main, x and y axises title = "Top vs. Bottom; Left vs. Right", 
-  geom_text(aes(label = sig_ast(p.value)), size = 7, nudge_y = 0.65) + # add starts to the significant columns
-  # geom_text(aes(label = round(mean, 2)), size = 4, nudge_y = 0.2) +
-  # geom_text(data = dat_text_inex_all, mapping = aes(x = x, y = y, label = label), size = 7, fontface = "bold", hjust=0) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
-    text = element_text(colour="black", size = 22),
-    axis.text = element_text(colour="black"),
-    axis.text.x = element_text(size = 22, vjust=-.05),
-    axis.title.x = element_blank(), # the size of the texts in plot
-    axis.title.y = element_text(size = 22), # the size of the texts in plot
-    axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
-    axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
-    # axis.text.x = element_text(angle = 45, vjust = 0.5),
-    legend.position = "none",
-    legend.title = element_blank(),
-    panel.border = element_blank(),
-    panel.grid = element_blank(),
-    panel.spacing = unit(2.5, "lines"),
-    # remove the facet background color
-    strip.text = element_blank(),
-    strip.background = element_blank(),
-  ) +
-NULL
-
-# ggsave('plot_uni_E2_tb.pdf', plot_uni_tb_E2, width = 11, height = 11*.55)
-plot_uni_tb_E2
-```
-
-
-```{r fig.width=8, fig.asp=.75}
-
-plot_uni_tb_lr <- ggarrange(plot_uni_inex_E1, plot_uni_inex_E2, ncol = 2, 
-                              labels = c("A", "B"),
-                              # label.x = -0.6,
-                              # label.y = 1,
-                              font.label = list(size = 24))
-
-# ggsave('plot_uni_all_tb_lr.pdf', plot_uni_tb_lr, width = 22, height = 22*.55)
-plot_uni_tb_lr
-```
-
-## ROI area
-### Univariate 
+# ROI area plot
+## Univariate 
 
 ```{r}
-
+df_area_uni_plot <- df_area_uni %>% 
+  mutate(Area = fct_rev(Area),
+         Stimuli = FaceWord,
+         Hemisphere = if_else(substr(ROI, 1, 1)=="l", "left", "right"),
+         HROI = toupper(ROI),
+         ROI = substr(ROI, 2, 5),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")),
+         Layout = "intact")
 ```
 
 
+```{r fig.width=6, fig.asp=0.5}
+plot_uni_area <- function(df, exp, stim, contr, is_plot=FALSE){
+  
+  plot_this <- ggplot(filter(df, Exp==exp, Stimuli==stim, contrast==contr), 
+                      aes(x = HROI, y = estimate, fill = interaction(ROI, Area, sep="-", lex.order = T))) +
+    geom_col(position = position_dodge()) +
+    geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                  position=position_dodge2(width=0.5, padding=0.5)) +
+    facet_grid(cols = vars(Hemisphere), scales = "free_x", space = "free_x", 
+               switch = "x") +
+    coord_cartesian(ylim = c(-.5, .45)) + 
+    scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+    labs(y = "Beta values") +  # set the names for main, x and y axises
+    geom_text(aes(y = y_sig, label = sig), size = 3, color="red",
+              position = position_dodge(width=.9)) + # add starts to the significant columns
+    scale_fill_manual(values=area_colors) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+      text = element_text(colour="black", size = 22),
+      axis.text = element_text(colour="black"),
+      axis.text.x = element_text(size = 22, vjust=-.05),
+      axis.title.x = element_blank(), # the size of the texts in plot
+      axis.title.y = element_text(size = 22), # the size of the texts in plot
+      axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+      axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+      # axis.text.x = element_text(angle = 45, vjust = 0.5),
+      legend.position = "none",
+      legend.title = element_blank(),
+      panel.border = element_blank(),
+      panel.grid = element_blank(),
+      panel.spacing = unit(2.5, "lines"),
+      # remove the facet background color
+      strip.text = element_blank(),
+      strip.background = element_blank(),
+      plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")
+    ) +
+    NULL
+  
+  if (is_plot){
+    plot_fn <- sprintf('plot_uni_area_%s_%s_%s.pdf', toupper(exp), stim, contr)
+    ggsave(plot_fn, plot_this, width = 11, height = 11*.4)
+  }
+  
+  return(plot_this)
+}
+```
 
-### Decoding
+### Intact - exchanged
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E1", "faces", "intact - exchange")
+# plot_uni_area(df_area_uni_plot, "E1", "faces", "intact - exchange", 1)
+```
 
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E1", "words", "intact - exchange")
+# plot_uni_area(df_area_uni_plot, "E1", "words", "intact - exchange", 1)
+```
 
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E2", "English", "intact - exchange")
+# plot_uni_area(df_area_uni_plot, "E2", "English", "intact - exchange", 1)
+```
 
-## For manuscript
-
-### Color
-
-```{r fig.width=8, fig.asp=.75}
-
-plot_uni_E1 <- ggarrange(plot_uni_inex_E1, plot_uni_tb_E1, ncol = 2, 
-                         labels = c("A", "B"),
-                         # label.x = -0.6,
-                         # label.y = 1,
-                         font.label = list(size = 24))
-
-# ggsave('plot_uni_E1.pdf', plot_uni_E1, width = 22, height = 10)
-plot_uni_E1
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E2", "Chinese", "intact - exchange")
+# plot_uni_area(df_area_uni_plot, "E2", "Chinese", "intact - exchange", 1)
 ```
 
 
-```{r fig.width=8, fig.asp=.75}
-
-plot_uni_E2 <- ggarrange(plot_uni_inex_E2, plot_uni_tb_E2, ncol = 2, 
-                         labels = c("A", "B"),
-                         # label.x = -0.6,
-                         # label.y = 1,
-                         font.label = list(size = 24))
-
-# ggsave('plot_uni_E2.pdf', plot_uni_E2, width = 22, height = 10)
-plot_uni_E2
+### top - bottom
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E1", "faces", "top - bottom")
+# plot_uni_area(df_area_uni_plot, "E1", "faces", "top - bottom", 1)
 ```
 
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E1", "words", "top - bottom")
+# plot_uni_area(df_area_uni_plot, "E1", "words", "top - bottom", 1)
+```
+
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E2", "English", "top - bottom")
+# plot_uni_area(df_area_uni_plot, "E2", "English", "top - bottom", 1)
+```
+
+```{r fig.width=6, fig.asp=0.4}
+plot_uni_area(df_area_uni_plot, "E2", "Chinese", "top - bottom")
+# plot_uni_area(df_area_uni_plot, "E2", "Chinese", "top - bottom", 1)
+```
+
+## Decoding
+
+```{r}
+df_area_decode_plot <- df_area_decoding %>% 
+  mutate(Hemisphere = if_else(substr(ROI, 1, 1)=="l", "left", "right"),
+         HROI = toupper(ROI),
+         ROI = substr(ROI, 2, 5),
+         ROI = factor(ROI, levels = roi_order_pub),
+         HROI = factor(HROI, levels = hroi_order_pub),
+         Hemisphere = factor(Hemisphere, levels=c("right", "left")))
+```
+
+
+```{r fig.width=6, fig.asp=0.5}
+plot_decode_area <- function(df, exp, pair, is_plot=FALSE, str_plot=""){
+  
+  plot_this <- ggplot(filter(df, Exp==exp, ClassifyPair==pair), 
+                      aes(x = HROI, y = mean, fill = interaction(ROI, Area, sep="-", lex.order = T))) +
+    geom_col(position = position_dodge()) +
+    geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), size = 0.25,
+                  position=position_dodge2(width=0.5, padding=0.5)) +
+    facet_grid(cols = vars(Hemisphere), scales = "free_x", space = "free_x", 
+               switch = "x") +
+    coord_cartesian(ylim = c(0.5, 1)) +
+    geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
+    # scale_y_continuous(expand = expansion(mult = c(0, .2))) +
+    labs(y = "Beta values") +  # set the names for main, x and y axises
+    geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
+              position = position_dodge(width=.9)) + # add starts to the significant columns
+    scale_fill_manual(values=area_colors) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(lineheight=.8, face="bold", size = 24, hjust = 0.5, vjust = -1),
+      text = element_text(colour="black", size = 22),
+      axis.text = element_text(colour="black"),
+      axis.text.x = element_text(size = 22, vjust=-.05),
+      axis.title.x = element_blank(), # the size of the texts in plot
+      axis.title.y = element_text(size = 22), # the size of the texts in plot
+      axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+      axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'), # , arrow = arrow(length = unit(0.3, "cm"))
+      # axis.text.x = element_text(angle = 45, vjust = 0.5),
+      legend.position = "none",
+      legend.title = element_blank(),
+      panel.border = element_blank(),
+      panel.grid = element_blank(),
+      panel.spacing = unit(2.5, "lines"),
+      # remove the facet background color
+      strip.text = element_blank(),
+      strip.background = element_blank(),
+      plot.margin = margin(0.5, 0.5, 0.5, 1, "cm")
+    ) +
+    NULL
+  
+  if (is_plot){
+    plot_fn <- sprintf('plot_decode_area_%s_%s%s.pdf', toupper(exp), pair, str_plot)
+    ggsave(plot_fn, plot_this, width = 11, height = 11*.27)
+  }
+  
+  return(plot_this)
+}
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E1", "face_intact-word_intact")
+# plot_decode_area(df_area_decode_plot, "E1", "face_intact-word_intact", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E1", "face_intact-face_exchange")
+# plot_decode_area(df_area_decode_plot, "E1", "face_intact-face_exchange", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E1", "word_intact-word_exchange")
+# plot_decode_area(df_area_decode_plot, "E1", "word_intact-word_exchange", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E1", "face_top-face_bottom")
+# plot_decode_area(df_area_decode_plot, "E1", "face_top-face_bottom", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E1", "word_top-word_bottom")
+# plot_decode_area(df_area_decode_plot, "E1", "word_top-word_bottom", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E2", "English_intact-Chinese_intact")
+# plot_decode_area(df_area_decode_plot, "E2", "English_intact-Chinese_intact", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E2", "English_intact-English_exchange")
+# plot_decode_area(df_area_decode_plot, "E2", "English_intact-English_exchange", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E2", "Chinese_intact-Chinese_exchange")
+# plot_decode_area(df_area_decode_plot, "E2", "Chinese_intact-Chinese_exchange", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E2", "English_top-English_bottom")
+# plot_decode_area(df_area_decode_plot, "E2", "English_top-English_bottom", 1)
+```
+
+```{r fig.width=6, fig.asp=0.3}
+plot_decode_area(df_area_decode_plot, "E2", "Chinese_top-Chinese_bottom")
+# plot_decode_area(df_area_decode_plot, "E2", "Chinese_top-Chinese_bottom", 1)
+```
 
 ## For VSS2021
 ```{r}
