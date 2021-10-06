@@ -212,7 +212,8 @@ df_uni_tb_sig <- rbind(mutate(as_tibble(simple_E1_lFFA1_tb), Exp = "E1", ROI = "
 
 df_uni_tb <- left_join(df_uni_tb, df_uni_tb_sig) %>% 
   mutate(p.value = if_else(is.na(p.value), 1, p.value),
-         Stimuli = as_factor(Stimuli)) 
+         Stimuli = as_factor(Stimuli),
+         Layout = factor(Layout, levels = c("top", "bottom", "partA", "partB"))) 
 
 # df_uni_tb$Layout <- fct_relevel(df_uni_tb$Layout, "exchange", after = Inf)
 
