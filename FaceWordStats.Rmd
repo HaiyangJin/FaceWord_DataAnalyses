@@ -78,7 +78,6 @@ library(lmerTest)
 library(emmeans)
 library(ggpubr)
 library(tools)
-
 ```
 
 ```{r include=showAll}
@@ -543,7 +542,7 @@ plot_uni_E1_FFA1
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 
 ```{r plots for functional scans E1 (22 anova) FFA1 ie, fig.asp =.4, fig.width = 8}
@@ -606,7 +605,7 @@ plot_decode_E1_FFA1
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E1 FFA1 area}
@@ -917,7 +916,7 @@ plot_uni_E1_FFA2
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E1 (22 anova) FFA2 ie, fig.asp =.4, fig.width = 8}
 # add the column of Hemisphere
@@ -976,7 +975,7 @@ plot_decode_E1_FFA2
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E1 FFA2 area}
@@ -1181,7 +1180,7 @@ plot_uni_E1_VWFA
 ```
 <br/>
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E1 (anova) VWFA ie, fig.asp = .5, fig.width = 6}
 nRow_E1 <-nrow(as.data.frame(emm_E1_VWFA_ie))
@@ -1239,7 +1238,7 @@ plot_decode_E1_VWFA
 ```
 <br/>
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: ***, _p_ <.001
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E1 VWFA area}
@@ -1551,7 +1550,7 @@ plot_uni_E1_LO
 ```
 <br/>
 The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E1 (22 anova) LO ie, fig.asp =.4, fig.width = 8}
 # add the column of Hemisphere
@@ -1612,7 +1611,7 @@ plot_decode_E1_LO
 ```
 <br/>
 The above figure shows the decoding accuracy in LO for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: **, _p_ < .01; ***, _p_ <.001
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E1 LO area}
@@ -2125,7 +2124,7 @@ plot_uni_E2_FFA1
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA1 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals. 
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E2 (22 anova) FFA1 ie, fig.asp =.4, fig.width = 8}
 # add the column of Hemisphere
@@ -2185,7 +2184,7 @@ plot_decode_E2_FFA1
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA1 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E2 FFA1 area}
@@ -2495,7 +2494,7 @@ plot_uni_E2_FFA2
 ```
 <br/>
 The above figure shows the neural respones (beta values) in FFA2 for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E2 (22 anova) FFA2 ie, fig.asp =.4, fig.width = 8}
 # add the column of Hemisphere
@@ -2554,7 +2553,7 @@ plot_decode_E2_FFA2
 ```
 <br/>
 The above figure shows the decoding accuracy in FFA2 for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: "<em>&#42;p&lt;0.1;&#42;&#42;p&lt;0.05;&#42;&#42;&#42;p&lt;0.01</em>"
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E2 FFA2 area}
@@ -2762,7 +2761,7 @@ plot_uni_E2_VWFA
 ```
 <br/>
 The above figure shows the neural respones (beta values) in VWFA for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E2 (anova) VWFA ie, fig.asp = .5, fig.width = 6}
 nRow_E2 <-nrow(as.data.frame(emm_E2_VWFA_ie))
@@ -2820,7 +2819,7 @@ plot_decode_E2_VWFA
 ```
 <br/>
 The above figure shows the decoding accuracy in VWFA for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: ***, _p_ <.001
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E2 VWFA area}
@@ -3129,7 +3128,7 @@ plot_uni_E2_LO
 ```
 <br/>
 The above figure shows the neural respones (beta values) in LO for each condition. The numbers are the p-values for the tests of differences between intact vs. exchange in that condition. Error bars represent 95% confidence intervals.
-Note: *, _p_ < .05
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 ```{r plots for functional scans E2 (22 anova) LO ie, fig.asp =.4, fig.width = 8}
 # add the column of Hemisphere
@@ -3190,7 +3189,7 @@ plot_decode_E2_LO
 ```
 <br/>
 The above figure shows the decoding accuracy in LO for each pair. The numbers are the p-values for the one-tail one-sample t-tests against the chance level (0.5) in that condition. Error bars represent 95% confidence intervals.
-Note: **, _p_ < .01; ***, _p_ <.001
+Note: <em>&#42;p&lt;0.05;&#42;&#42;p&lt;0.01;&#42;&#42;&#42;p&lt;0.001</em>
 
 #### Area
 ```{r one-sample for results of decode E2 LO area}
