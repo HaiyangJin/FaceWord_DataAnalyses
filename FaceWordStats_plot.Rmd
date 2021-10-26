@@ -298,7 +298,7 @@ plot_decoding <- function(df, exp, stim, is_plot=FALSE, str_plot=""){
                   position = position_dodge(width=0.9)) +
     geom_hline(yintercept = 0.5, linetype = 5, alpha = 0.5) +  # add the line for 0.5 and 1 (y)
     scale_y_continuous(expand= c(0, 0), breaks = seq(0, 1, .25)) +  # remove the space between columns and x axis
-    coord_cartesian(ylim = c(0.4, 1.1)) +
+    coord_cartesian(ylim = c(0, 1.1)) +
     scale_fill_manual(values = vss_colors[seq(1,8,2)]) +
     labs(y = "Accuracy") +  # set the names for main, x and y axises title = "Intact vs. Exchange", 
     geom_text(aes(label = sig_ast(p)), size = 7, nudge_y = 0.15) + # add starts to the significant columns
@@ -329,7 +329,8 @@ plot_decoding <- function(df, exp, stim, is_plot=FALSE, str_plot=""){
     NULL
   
   if (is_plot){
-    plot_fn <- sprintf('plot_decode_%s_%s%s.pdf', toupper(exp), stim, str_plot)
+    plot_fn <- sprintf('plot_decode_%s_%s%s.pdf', toupper(exp), str_remove_all(stim, '\n'), str_plot)
+    print(plot_fn)
     ggsave(plot_fn, plot_this, width = 9, height = 4.5)
   }
   
@@ -589,10 +590,11 @@ plot_decode_area <- function(df, exp, pair, is_plot=FALSE, str_plot=""){
                   position=position_dodge2(width=0.5, padding=0.5)) +
     facet_grid(cols = vars(Hemisphere), scales = "free_x", space = "free_x", 
                switch = "x") +
-    coord_cartesian(ylim = c(0.5, 1)) +
+    scale_y_continuous(limits = c(0,1), expand = c(0, 0)) +
+    # coord_cartesian(ylim = c(0, 1)) +
     geom_hline(yintercept = 0.5, linetype="dashed", alpha =0.5) +
     # scale_y_continuous(expand = expansion(mult = c(0, .2))) +
-    labs(y = "Beta values") +  # set the names for main, x and y axises
+    labs(y = "Accuracy") +  # set the names for main, x and y axises
     geom_text(aes(y = mean+0.15, label = sig), size = 3, color="red",
               position = position_dodge(width=.9)) + # add starts to the significant columns
     scale_fill_manual(values=area_colors) +
